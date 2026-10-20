@@ -2,9 +2,12 @@
 
 **A priority rotation helper for World of Warcraft 3.3.5a (WotLK).**
 
+[![CI](https://github.com/Hijackery/RotationCore/actions/workflows/ci.yml/badge.svg)](https://github.com/Hijackery/RotationCore/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/Hijackery/RotationCore?sort=semver)](https://github.com/Hijackery/RotationCore/releases)
 [![Downloads](https://img.shields.io/github/downloads/Hijackery/RotationCore/total)](https://github.com/Hijackery/RotationCore/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![WoW](https://img.shields.io/badge/WoW-3.3.5a-orange.svg)](https://github.com/Hijackery/RotationCore)
+[![Languages](https://img.shields.io/badge/languages-12-blue.svg)](#supported-classes--specs)
 
 **English** · [Русский](./README.ru.md)
 
