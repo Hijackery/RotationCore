@@ -1,0 +1,3 @@
+# Dev/CI dependencies for the verification harness and release build.
+luaparser
+lupa
