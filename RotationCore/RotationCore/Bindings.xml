@@ -1,0 +1,8 @@
+<Bindings>
+	<Binding name="ROTATIONCORE_OPTIONS" header="ROTATIONCORE">
+		if RotationCore and RotationCore.OpenOptions then RotationCore:OpenOptions() end
+	</Binding>
+	<Binding name="ROTATIONCORE_PANELCONFIG">
+		if RotationCore and RotationCore.ns and RotationCore.ns.SetConfigMode then RotationCore.ns.SetConfigMode(true) end
+	</Binding>
+</Bindings>

@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install luaparser
+
+      - name: Static verification
+        run: python3 RotationCore/verify.py
+
+      - name: Lua syntax check (compile only)
+        run: |
+          python3 -m pip install lupa
+          python3 - <<'PY'
+          import sys, glob
+          import lupa
+          L = lupa.LuaRuntime()
+          load = L.eval("load")
+          files = glob.glob("RotationCore/**/*.lua", recursive=True)
+          bad = 0
+          for f in sorted(files):
+              src = open(f, encoding="utf-8").read()
+              res = load(src, "@" + f)
+              if isinstance(res, tuple):
+                  fn, err = (res + (None, None))[:2]
+              else:
+                  fn, err = res, None
+              if fn is None:
+                  print("FAIL", f, err)
+                  bad += 1
+          print(f"compiled {len(files)} files, {bad} failures")
+          sys.exit(1 if bad else 0)
+          PY
+
+      - name: Release build (dry run)
+        run: python3 scripts/build_release.py

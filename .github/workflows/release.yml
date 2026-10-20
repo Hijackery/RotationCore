@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install luaparser
+
+      - name: Verify before release
+        run: python3 RotationCore/verify.py
+
+      - name: Check tag matches addon version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          TOC_VER=$(grep -m1 '## Version:' RotationCore/RotationCore/RotationCore.toc | awk '{print $3}')
+          echo "tag=$TAG toc=$TOC_VER"
+          if [ "$TAG" != "$TOC_VER" ]; then
+            echo "Tag v$TAG does not match .toc version $TOC_VER" >&2
+            exit 1
+          fi
+
+      - name: Build release zip
+        run: python3 scripts/build_release.py
+
+      - name: Extract release notes from CHANGELOG
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          python3 - "$TAG" <<'PY'
+          import re, sys
+          tag = sys.argv[1]
+          text = open("CHANGELOG.md", encoding="utf-8").read()
+          # Grab the section for this tag (## [x.y.z] ... up to next ##)
+          pat = re.compile(rf"^## \[{re.escape(tag.lstrip('v'))}[^\]]*\].*?(?=^## |\Z)", re.S | re.M)
+          m = pat.search(text)
+          notes = m.group(0).strip() if m else f"See CHANGELOG.md for details.\n\nTag: {tag}"
+          open("release_notes.md", "w", encoding="utf-8").write(notes)
+          print(notes[:400])
+          PY
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: RotationCore ${{ github.ref_name }}
+          body_path: release_notes.md
+          files: |
+            dist/*.zip
+            CHANGELOG.md
+          fail_on_unmatched_files: true
