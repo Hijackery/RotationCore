@@ -1,0 +1,24 @@
+name: Config
+description: Ask for help with settings, profiles or installation.
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For setup help, check the README FAQ and run `/rc selfcheck` first.
+  - type: input
+    id: version
+    attributes:
+      label: RotationCore version
+      placeholder: "1.0.0"
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context (class/spec, server, client version)
