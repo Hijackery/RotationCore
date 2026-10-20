@@ -3,6 +3,10 @@
 Thanks for helping improve RotationCore. This project targets **World of Warcraft
 3.3.5a (WotLK)** and is kept intentionally dependency-free and taint-safe.
 
+This is the short contribution guide. For the full technical documentation
+(architecture, registration API, simulation model, data conventions) see
+[docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md).
+
 ## Ways to help
 
 - Report a wrong/missing ability or spell id.

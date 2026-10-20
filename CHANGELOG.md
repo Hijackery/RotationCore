@@ -4,16 +4,18 @@ All notable changes to RotationCore.
 
 ## [1.0.0] - 2026-10-20
 
-First public release.
+First public release (MIT).
 
-- Supports 10 classes and 29 specs, with 12 languages.
-- Highlights the next ability on your action bars and in an icon window.
-- DPS forecast, cooldowns and interrupt windows, boss timeline.
-- Mentor, exam and training modes to help you improve.
-- Custom rotation, boss profiles, per-spec profiles and PvP mode.
-- Healer assist and group-health monitor.
-- Themes, panel configuration and background styles.
-- Works out of the box — no setup required.
+- Core engine plus 10 LoadOnDemand class modules (Death Knight, Druid, Hunter,
+  Mage, Paladin, Priest, Rogue, Shaman, Warlock, Warrior).
+- Rotation highlight, icon window, DPS forecast, cooldowns / interrupt windows,
+  boss timeline, custom APL, exam / mentor / training / PvP modes, healer
+  assist, per-spec profiles, boss presets and analytics.
+- All 12 official WotLK 3.3.5a locales (enUS base + 8 mirrors + ruRU).
+- Static verification harness (`verify.py`), CI workflow and an automated
+  release pipeline (tag `v*` → verify → zip → GitHub Release).
+- Full spell-id audit against the 3.3.5a database (see 3.4.0-hotfix42 below for
+  the detailed corrections folded into this release).
 
 ## [3.4.0-hotfix42] - 2026-10-18
 

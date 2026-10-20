@@ -148,3 +148,4 @@ MIT — см. [LICENSE](./LICENSE).
 ---
 
 Мы рады вкладу сообщества — см. [CONTRIBUTING.md](./CONTRIBUTING.md).
+Технический гайд — [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md).
