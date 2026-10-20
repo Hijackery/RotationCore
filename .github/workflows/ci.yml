@@ -16,16 +16,16 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+          cache-dependency-path: requirements-dev.txt
 
       - name: Install dependencies
-        run: pip install luaparser
+        run: pip install -r requirements-dev.txt
 
       - name: Static verification
         run: python3 RotationCore/verify.py
 
       - name: Lua syntax check (compile only)
         run: |
-          python3 -m pip install lupa
           python3 - <<'PY'
           import sys, glob
           import lupa
