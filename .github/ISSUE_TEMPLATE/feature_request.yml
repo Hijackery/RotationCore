@@ -1,0 +1,34 @@
+name: Feature request
+description: Suggest a new feature, class/spec improvement or option.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / use case
+      description: What are you trying to do?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: input
+    id: class-spec
+    attributes:
+      label: Class / spec (if relevant)
+      placeholder: "Shaman — Elemental"
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues/requests first.
+          required: true
