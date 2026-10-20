@@ -1,0 +1,10 @@
+## Interface: 30300
+## Version: 1.0.0
+## Title: RotationCore - Death Knight
+## Author: Hijackery
+## Notes: Death Knight rotation module for RotationCore (WotLK 3.3.5a)
+## Dependencies: RotationCore
+## LoadOnDemand: 1
+
+DeathKnight.lua
+Core.lua

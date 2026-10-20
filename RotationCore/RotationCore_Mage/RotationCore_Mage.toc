@@ -1,0 +1,10 @@
+## Interface: 30300
+## Version: 1.0.0
+## Title: RotationCore - Mage
+## Author: Hijackery
+## Notes: Mage rotation module for RotationCore (WotLK 3.3.5a)
+## Dependencies: RotationCore
+## LoadOnDemand: 1
+
+Mage.lua
+Core.lua
