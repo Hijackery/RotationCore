@@ -150,4 +150,5 @@ MIT — see [LICENSE](./LICENSE).
 
 ---
 
-Contributions are welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md).
+Contributions are welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md). For the
+technical guide, see [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md).
