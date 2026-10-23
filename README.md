@@ -14,7 +14,7 @@
 ---
 
 RotationCore watches your spec, talents, resources and target, then highlights
-the next ability to press. It works out of the box — no setup required.
+the next ability to press. It works out of the box and needs no setup.
 
 > **10 classes · 29 specs · 12 languages**
 
@@ -62,33 +62,33 @@ the next ability to press. It works out of the box — no setup required.
   `Prepare` / `BURST` hints and optional phase-based target-mode switching.
 
 ### Guidance & learning
-- **Class pulse** — green/yellow/red execution quality (cast accuracy, DoT
+- **Class pulse**: green/yellow/red execution quality (cast accuracy, DoT
   uptime, cooldown usage).
-- **Mentor mode** — explains mistakes after N in a row.
-- **Exam mode** — no action-bar glow, only REC1 shown, accuracy report.
-- **Training mode** — keeps recommending on a dummy and explains *why*.
-- **Adaptive rotation** — adapts to your average item level.
-- **Learning stats** — per-fight accuracy / DPS history (`/rc learning`).
-- **Coach hub** (`/rc hub`) — status/grade, cooldown plan, fight breakdown
+- **Mentor mode**: explains mistakes after N in a row.
+- **Exam mode**: no action-bar glow, only REC1 shown, accuracy report.
+- **Training mode**: keeps recommending on a dummy and explains *why*.
+- **Adaptive rotation**: adapts to your average item level.
+- **Learning stats**: per-fight accuracy / DPS history (`/rc learning`).
+- **Coach hub** (`/rc hub`): status/grade, cooldown plan, fight breakdown
   (`/rc analyze`), simulator (`/rc sim`), APL editor (`/rc apl edit`), talent
   check (`/rc talents`) and a group-health monitor.
 
 ### Automation & customisation
-- **Custom rotation** — a plain-text priority list (`/rc apl import`) that
+- **Custom rotation**: a plain-text priority list (`/rc apl import`) that
   replaces the built-in rotation; export and share it in one line.
-- **Boss profiles** — per-encounter setting overrides (ICC / ToC / Ulduar /
+- **Boss profiles**: per-encounter setting overrides (ICC / ToC / Ulduar /
   Naxx / RS presets).
 - **Per-spec profiles** and text import / export.
-- **PvP mode** — interrupt > control > burst > survival priority branch.
-- **Healer assist** — recommends a heal for the lowest-HP group member, plus a
+- **PvP mode**: interrupt > control > burst > survival priority branch.
+- **Healer assist**: recommends a heal for the lowest-HP group member, plus a
   group-health monitor.
-- **Heal-spec DPS** — keeps doing damage while healing.
-- **Themes** — Class colour (default), Dark, Light, High contrast; compact icon
+- **Heal-spec DPS**: keeps doing damage while healing.
+- **Themes**: Class colour (default), Dark, Light, High contrast; compact icon
   window; large/readable text.
-- **Panel configuration** (Dominos-style) — click a window to configure it,
+- **Panel configuration** (Dominos-style): click a window to configure it,
   snap-to-grid while dragging.
 - **Background styles** (rounded / glass / matte), custom fonts and animations.
-- **Extras** — DoT/debuff panel, enemy counter, resource-cap warnings, racial
+- **Extras**: DoT/debuff panel, enemy counter, resource-cap warnings, racial
   cooldowns, melee swing timer, timeline bars and an end-of-fight report (off by
   default).
 - **Setup Wizard** and **tooltips** for every option.
@@ -131,7 +131,7 @@ the next ability to press. It works out of the box — no setup required.
 ## FAQ
 
 **Does it play the game for me?**
-No. It only highlights the next ability — you press every button yourself.
+No. It only highlights the next ability: you press every button yourself.
 
 **Will it work without DBM/BigWigs?**
 Yes. The boss timeline works on its own; DBM/BigWigs add precise timers.
@@ -149,9 +149,9 @@ It targets the standard 3.3.5a game data and works on private servers running
 
 ## License
 
-MIT — see [LICENSE](./LICENSE).
+MIT. See [LICENSE](./LICENSE).
 
 ---
 
-Contributions are welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md). For the
+Contributions are welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md). For the
 technical guide, see [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md).

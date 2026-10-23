@@ -315,7 +315,7 @@ O (talent/glyph advice), J (healer module).
 - **Cleanup**: removed the legacy `spellframe_locked` and dead `ui_shell`/
   `ui_style` choices, pruned ~17 orphan locale keys.
 - **Translation**: translated ~570 remaining non-tooltip strings across the 8
-  mirrors (headers, labels, intros, format strings) — audit now 0.
+  mirrors (headers, labels, intros, format strings). The audit is now 0.
 - **README** updated; Help updated (colourblind palette, bindings).
 
 ## [3.4.0-hotfix29] - 2026-10-15
@@ -472,7 +472,7 @@ Added (new `Extras.lua`, toggles in Advanced > Extras):
   icon count) whether or not there is a target / picks; the cooldown window
   keeps the size of the configured icon count even when fewer are ready. No
   more size jumps.
-- **Interrupt window**: ticking "Show window" now has a visible effect — while
+- **Interrupt window**: ticking "Show window" now has a visible effect: while
   configuring, the window shows the interrupt spell even when your target is
   not casting.
 
@@ -705,7 +705,7 @@ Added (new `Extras.lua`, toggles in Advanced > Extras):
   SavedVariables file is the only persistent sink; this keeps a bug report to one
   file instead of a live reproduction.
 - Bounded by `log_file_max_lines` (default 3000); oldest lines drop off first.
-  The in-memory decision ring buffer and the separate error log are unchanged —
+  The in-memory decision ring buffer and the separate error log are unchanged;
   decisions/errors are simply mirrored into the file when the option is on.
 - `/rc log file` prints the on-disk path; `/rc log clear` now also clears the
   file log. New localized label + tooltip (EN base + all 9 locale files).

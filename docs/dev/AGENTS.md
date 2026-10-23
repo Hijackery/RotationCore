@@ -1,4 +1,4 @@
-# AGENTS.md — RotationCore
+# RotationCore: AGENTS
 
 Guidance for agents working in this repository.
 
