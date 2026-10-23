@@ -1,4 +1,4 @@
-# RotationCore — чек-лист проверки в игре
+# RotationCore: чек-лист проверки в игре
 
 Версия аддона: 1.0.0. Клиент: 3.3.5a.
 Как читать: отмечай `[x]` при успехе, `[!]` при проблеме + коротко что не так.
@@ -18,9 +18,9 @@
 - [ ] Работает и на низком уровне / без части талантов.
 
 ### Режим цели (single / multi / cleave)
-- [ ] Одна цель — очередь без AoE-способностей.
-- [ ] 2–3 цели рядом — включаются multi-target способности.
-- [ ] 4+ целей — включается cleave-очередь (DnD/Consecration/Blood Boil и т.п.).
+- [ ] Одна цель: очередь без AoE-способностей.
+- [ ] 2–3 цели рядом: включаются multi-target способности.
+- [ ] 4+ целей: включается cleave-очередь (DnD/Consecration/Blood Boil и т.п.).
 
 ### Кулдауны
 - [ ] Большие КД (Avenging Wrath, Rapid Fire, Gargoyle...) появляются в очереди.
@@ -57,18 +57,18 @@
 
 ## B. По классам / спекам
 
-- [ ] Death Knight — Blood (танк/DPS)
-- [ ] Death Knight — Frost (DPS)
-- [ ] Death Knight — Unholy (DPS)
-- [ ] Druid — Balance / Feral (кот) / Feral (медведь) / Restoration
-- [ ] Hunter — Beast Mastery / Marksmanship / Survival
-- [ ] Mage — Arcane / Fire / Frost
-- [ ] Paladin — Retribution / Protection / Holy (DPS)
-- [ ] Priest — Shadow / Discipline / Holy
-- [ ] Rogue — Assassination / Combat / Subtlety
-- [ ] Shaman — Elemental / Enhancement / Restoration
-- [ ] Warlock — Affliction / Demonology / Destruction
-- [ ] Warrior — Arms / Fury / Protection
+- [ ] Death Knight: Blood (танк/DPS)
+- [ ] Death Knight: Frost (DPS)
+- [ ] Death Knight: Unholy (DPS)
+- [ ] Druid: Balance / Feral (кот) / Feral (медведь) / Restoration
+- [ ] Hunter: Beast Mastery / Marksmanship / Survival
+- [ ] Mage: Arcane / Fire / Frost
+- [ ] Paladin: Retribution / Protection / Holy (DPS)
+- [ ] Priest: Shadow / Discipline / Holy
+- [ ] Rogue: Assassination / Combat / Subtlety
+- [ ] Shaman: Elemental / Enhancement / Restoration
+- [ ] Warlock: Affliction / Demonology / Destruction
+- [ ] Warrior: Arms / Fury / Protection
 
 Для каждого спека: single-target + AoE на манекене (5–10 мин), затем
 проверка в подземелье.
@@ -76,22 +76,22 @@
 ## C. По энкаунтерам (смоук-прогон)
 
 ### Подземелья (5 ппл, героик)
-- [ ] Утгард-Пик (Utgarde Pinnacle) — треш с плотной группой (AoE).
-- [ ] Кузня Душ (Halls of Reflection) — быстрые переключения цели.
-- [ ] Цитадель Ледяной Короны (5 ппл) — боссы + треш.
-- [ ] Логово Ониксии / другие 5 ппл — утилити-прерывания.
+- [ ] Утгард-Пик (Utgarde Pinnacle): треш с плотной группой (AoE).
+- [ ] Кузня Душ (Halls of Reflection): быстрые переключения цели.
+- [ ] Цитадель Ледяной Короны (5 ппл): боссы + треш.
+- [ ] Логово Ониксии / другие 5 ппл: утилити-прерывания.
 
 ### Рейды
 - [ ] Наксрамас: Патчверк (single-target DPS-check).
 - [ ] Наксрамас: Хейган / Лоскутик (движение + переключение целей).
-- [ ] Обсидиановое святилище (Sartharion) — переключение драконов (multi).
-- [ ] Око вечности (Malygos) — фазы, бурст.
+- [ ] Обсидиановое святилище (Sartharion): переключение драконов (multi).
+- [ ] Око вечности (Malygos): фазы, бурст.
 - [ ] Ульдуар: Кологарн/Игнис (механика + движение).
-- [ ] Ульдуар: Йогг-Сарон (переключение на щупальца — cleave).
+- [ ] Ульдуар: Йогг-Сарон (переключение на щупальца: cleave).
 - [ ] Испытание крестоносца: Борьба (наложение), Ануб'арак (adds).
 - [ ] ЦЛК: Саурфанг (single), Леди (adds), Лана'тель (AoE треш).
-- [ ] ЦЛК: Профессор / Королева / Лич — проверка переработки очереди в фазах.
-- [ ] Рубиновое святилище: Халион — переключение фаз.
+- [ ] ЦЛК: Профессор / Королева / Лич: проверка переработки очереди в фазах.
+- [ ] Рубиновое святилище: Халион: переключение фаз.
 
 ### Общие проверки на любом боссе
 - [ ] Очередь не «залипает» на невыполнимой способности.

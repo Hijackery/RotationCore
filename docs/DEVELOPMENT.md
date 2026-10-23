@@ -1,4 +1,4 @@
-# RotationCore — Developer Guide
+# RotationCore Developer Guide
 
 This is the technical guide for working on RotationCore. For the user-facing
 overview see [README.md](../README.md); for the contribution workflow see
@@ -46,7 +46,7 @@ loads a module with `DH:LoadClassModule()` when the player's class is detected.
 
 - Namespace: `RotationCore` (`DH`) and internal `DH.ns`.
 - `DH.Version` must equal the `## Version:` of all 11 `.toc` files.
-- Registration API — class modules call these at file scope:
+- Registration API. Class modules call these at file scope:
 
   | Function | Purpose |
   |---|---|
@@ -68,7 +68,7 @@ loads a module with `DH:LoadClassModule()` when the player's class is detected.
   `baseCDs`, `auras`).
 - `DH:CanUseCooldown(sim, key, setting)` enforces `auto_cooldowns`,
   `cooldown_order == "manual"`, the "simple" complexity rule for long CDs and
-  `IsAbilityKnown`. **Do not** wrap core rotation abilities in it — gate those
+  `IsAbilityKnown`. **Do not** wrap core rotation abilities in it; gate those
   with `DH:GetSetting("use_x")` directly.
 - `DH:PickKnownAction` calls `config.getPriority`, then requires
   `IsAbilityKnown`; `config.onCast(sim, action)` is called every loop (use it to
@@ -78,14 +78,14 @@ loads a module with `DH:LoadClassModule()` when the player's class is detected.
 
 `State:Update...` fills the table passed to rotations:
 
-- `s.mana` — `{ current, max, pct, regen }` from `UnitPower("player", 0)`.
-- `s.buff[key]` — `{ up, stacks, remains }`; seeded from `RegisterBuffs`, mapped
+- `s.mana`: `{ current, max, pct, regen }` from `UnitPower("player", 0)`.
+- `s.buff[key]`: `{ up, stacks, remains }`; seeded from `RegisterBuffs`, mapped
   by `buffMap`, with a name-pattern fallback. `expirationTime == 0` is treated
   as permanent (≈2h).
-- `s.debuff[key]` — same model for target debuffs.
-- `s.glyph[key]` — `{ enabled }`; resolved by direct spell-id lookup, then by
+- `s.debuff[key]`: same model for target debuffs.
+- `s.glyph[key]`: `{ enabled }`; resolved by direct spell-id lookup, then by
   glyph-name fallback.
-- `s.talent[key].rank` — from `GetTalentInfo` (rank index **5**).
+- `s.talent[key].rank`: from `GetTalentInfo` (rank index **5**).
 - `s.spec`, `s.ttd`, `s.in_execute`, `s.battle_phase`, etc.
 
 3.3.5a API notes: `GetTalentTabInfo(tab).pointsSpent` is index **3**;
@@ -106,7 +106,7 @@ newer than 3.3.5a.
 
 ## 3. Class module anatomy
 
-### 3.1 `<Class>.lua` — data
+### 3.1 `<Class>.lua` (data)
 
 ```lua
 local DH = RotationCore
@@ -137,7 +137,7 @@ DH:RegisterCommonDefaults()
 DH:RegisterSpecDetector(function() ... end)
 ```
 
-### 3.2 `Core.lua` — simulation
+### 3.2 `Core.lua` (simulation)
 
 ```lua
 local config = {
@@ -182,7 +182,7 @@ the simulated cooldown. Off-GCD abilities should return `0` from
   is a real bug (the name fallback may hide it on one locale only).
 - **Buffs/debuffs:** each rank needs its own map entry; do not use a rank for a
   different spell.
-- **Talents:** positions are `{tab, talentIndex, key}` — keep keys unique and
+- **Talents:** positions are `{tab, talentIndex, key}`; keep keys unique and
   positions within the tree.
 - **Cosmetic name mismatches** (e.g. a proc whose DB name differs from the key)
   are harmless; the key is internal.
@@ -227,7 +227,7 @@ In-game checks: `/rc selfcheck`, `/rc test rotation`. See
 ## 7. Release process
 
 1. Bump `DH.Version` in `RotationCore/RotationCore/RotationCore.lua` **and**
-   `## Version:` in all 11 `.toc` files (identical — `verify.py` enforces it).
+   `## Version:` in all 11 `.toc` files (identical; `verify.py` enforces it).
 2. Add a section to `CHANGELOG.md`.
 3. Commit, tag `v<version>`, push the tag:
 
