@@ -3,6 +3,7 @@
 ## Title: RotationCore
 ## Author: Hijackery
 ## Notes: Rotation helper for WotLK 3.3.5a - core (glow, settings, icon window)
+## IconTexture: Interface\AddOns\RotationCore\icon
 ## SavedVariables: RotationCoreDB, RotationCoreErrors, RotationCoreAnalytics
 
 Libs\LibStub\LibStub.lua

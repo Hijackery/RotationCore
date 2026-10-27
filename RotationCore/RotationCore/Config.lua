@@ -48,7 +48,7 @@ local function RegisterMinimapButton()
 
     local dataObj = LDB:NewDataObject("RotationCore", {
         type = "launcher",
-        icon = "Interface\\Icons\\INV_Misc_QuestionMark",
+        icon = "Interface\\AddOns\\RotationCore\\icon",
         label = "RotationCore",
         OnClick = function(_, mouseButton)
             if mouseButton == "RightButton" then
