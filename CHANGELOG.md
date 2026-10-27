@@ -2,6 +2,11 @@
 
 All notable changes to RotationCore.
 
+## [1.0.1] - 2026-10-27
+
+- Removed the end-of-fight report popup. It appeared after trash kills and is
+  gone from the core module and the options window.
+
 ## [1.0.0] - 2026-10-20
 
 First public release (MIT).

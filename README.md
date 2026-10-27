@@ -89,8 +89,7 @@ the next ability to press. It works out of the box and needs no setup.
   snap-to-grid while dragging.
 - **Background styles** (rounded / glass / matte), custom fonts and animations.
 - **Extras**: DoT/debuff panel, enemy counter, resource-cap warnings, racial
-  cooldowns, melee swing timer, timeline bars and an end-of-fight report (off by
-  default).
+  cooldowns, melee swing timer and timeline bars.
 - **Setup Wizard** and **tooltips** for every option.
 
 ## Supported classes & specs

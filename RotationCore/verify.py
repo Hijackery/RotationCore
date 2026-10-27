@@ -35,7 +35,7 @@ except ImportError:  # pragma: no cover
 
 ROOT = Path(__file__).resolve().parent
 CORE = ROOT / "RotationCore"
-EXPECTED_VERSION = "1.0.0"
+EXPECTED_VERSION = "1.0.1"
 
 # Key registrations that intentionally live outside Locale._xx_ files.
 # Forbidden token scan: only hard *calls* in addon (non-Lib) code count; the

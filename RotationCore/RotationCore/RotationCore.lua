@@ -6,7 +6,7 @@
 RotationCore = {}
 local DH = RotationCore
 
-DH.Version = "1.0.0"
+DH.Version = "1.0.1"
 
 -- Namespace for internal data
 local ns = {}
@@ -1510,7 +1510,6 @@ local coreDefaults = {
         dot_panel_position = { x = 250, y = 80 },
         swing_timer_enabled = false,   -- optional melee swing timer
         swing_timer_position = { x = 0, y = -330 },
-        session_report_enabled = false, -- end-of-fight report popup
         timeline_bars_enabled = true,  -- draw bars in the timeline window
         auto_cooldowns = true,
         cooldown_order = "priority",   -- "manual" skips cooldowns in the queue
