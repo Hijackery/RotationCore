@@ -6,7 +6,7 @@
 RotationCore = {}
 local DH = RotationCore
 
-DH.Version = "1.0.2"
+DH.Version = "1.0.3"
 
 -- Namespace for internal data
 local ns = {}
@@ -377,11 +377,33 @@ local function AdvanceSimTime(DH, sim, config, seconds)
     end
 end
 
+-- Shared sim methods. Keeping them on a metatable avoids allocating two
+-- closures on every simulation call; class initState may still override them
+-- with plain fields on the sim table (raw fields shadow the metatable).
+local simMT = {
+    ready = function(self, key)
+        return (self.cd[key] or 0) <= 0
+    end,
+    remains = function(self, key)
+        return self.cd[key] or 0
+    end,
+}
+
+-- Older class modules paired with a newer core could receive a plain table
+-- without the shared methods and crash on sim:ready / sim:remains. Attach
+-- them before any class code runs.
+local function EnsureSimMethods(sim)
+    if type(sim) ~= "table" then return end
+    if type(sim.ready) ~= "function" then sim.ready = simMT.ready end
+    if type(sim.remains) ~= "function" then sim.remains = simMT.remains end
+end
+
 -- Ask the class rotation for the next action, skipping abilities the player
 -- has not learned yet (wrong level, talents not taken, ...). The class keeps
 -- returning the same unlearned action until we mark it unavailable, so block
 -- it inside the sim and ask again.
 local function PickKnownAction(self, sim, config, recommendations)
+    EnsureSimMethods(sim)
     -- cooldown_order "burst" (part 3.3): queue every ready major cooldown
     -- (base CD >= 30s) before falling back to the normal rotation
     if self:GetSetting("cooldown_order") == "burst" and sim.baseCDs then
@@ -405,18 +427,6 @@ local function PickKnownAction(self, sim, config, recommendations)
     end
     return nil
 end
-
--- Shared sim methods. Keeping them on a metatable avoids allocating two
--- closures on every simulation call; class initState may still override them
--- with plain fields on the sim table (raw fields shadow the metatable).
-local simMT = {
-    ready = function(self, key)
-        return (self.cd[key] or 0) <= 0
-    end,
-    remains = function(self, key)
-        return self.cd[key] or 0
-    end,
-}
 
 function DH:RunSimulation(s, config)
     local recommendations = {}

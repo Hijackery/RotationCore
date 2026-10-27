@@ -1,5 +1,5 @@
 ## Interface: 30300
-## Version: 1.0.2
+## Version: 1.0.3
 ## Title: RotationCore - Mage
 ## Author: Hijackery
 ## Notes: Mage rotation module for RotationCore (WotLK 3.3.5a)

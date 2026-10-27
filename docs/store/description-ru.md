@@ -47,7 +47,7 @@ Project Epoch и другие реалмы WotLK.
 
 ## Установка
 
-1. Скачайте `RotationCore-1.0.2.zip` со страницы релизов.
+1. Скачайте `RotationCore-1.0.3.zip` со страницы релизов.
 2. Распакуйте в `World of Warcraft/Interface/AddOns/` так, чтобы папки легли как
    `AddOns/RotationCore` и `AddOns/RotationCore_<Class>`.
 3. Включите **«Загружать устаревшие аддоны»** в списке аддонов.

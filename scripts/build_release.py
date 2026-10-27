@@ -8,7 +8,7 @@ Produces: dist/RotationCore-<version>.zip
 The zip contains the addon folders at its top level so users can extract it
 straight into Interface/AddOns/:
 
-    RotationCore-1.0.2.zip
+    RotationCore-1.0.3.zip
     ├── RotationCore/                (core addon folder)
     └── RotationCore_<Class>/        (LoadOnDemand class modules)
 

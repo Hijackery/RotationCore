@@ -2,6 +2,12 @@
 
 All notable changes to RotationCore.
 
+## [1.0.3] - 2026-10-27
+
+- Hardened the simulation: class rotations now always receive `sim:ready` and
+  `sim:remains`, fixing the Mage Frost "attempt to call method 'ready'" error
+  that could appear with mixed addon versions.
+
 ## [1.0.2] - 2026-10-27
 
 - Added the addon logo: in-game addon list icon and minimap button, plus a
