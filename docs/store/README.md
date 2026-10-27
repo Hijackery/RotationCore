@@ -9,17 +9,19 @@ community forums. Version: **1.0.3**.
 |---|---|
 | `description-en.md` | Long description, English |
 | `description-ru.md` | Long description, Russian |
-| `../icon/RotationCore-512.png` | Store icon 512×512 |
-| `../icon/RotationCore-256.png` | Store icon 256×256 |
-| `../icon/RotationCore-128.png` | Store icon 128×128 |
-| `../icon/RotationCore-64.png` | Small icon 64×64 |
-| `../icon/RotationCore-social-1280x640.png` | GitHub social preview, 1280×640 |
-| `../screenshots/options.jpg` | Options window screenshot |
-| `../screenshots/first-launch.jpg` | First launch wizard |
-| `../screenshots/in-combat.jpg` | In-combat HUD |
+| `https://raw.githubusercontent.com/Hijackery/RotationCore/assets/icon/RotationCore-512.png` | Store icon 512×512 |
+| `https://raw.githubusercontent.com/Hijackery/RotationCore/assets/icon/RotationCore-256.png` | Store icon 256×256 |
+| `https://raw.githubusercontent.com/Hijackery/RotationCore/assets/icon/RotationCore-128.png` | Store icon 128×128 |
+| `https://raw.githubusercontent.com/Hijackery/RotationCore/assets/icon/RotationCore-64.png` | Small icon 64×64 |
+| `https://raw.githubusercontent.com/Hijackery/RotationCore/assets/social/RotationCore-social-1280x640.png` | GitHub social preview, 1280×640 |
+| `https://raw.githubusercontent.com/Hijackery/RotationCore/assets/screenshots/options.jpg` | Options window screenshot |
+| `https://raw.githubusercontent.com/Hijackery/RotationCore/assets/screenshots/first-launch.jpg` | First launch wizard |
+| `https://raw.githubusercontent.com/Hijackery/RotationCore/assets/screenshots/in-combat.jpg` | In-combat HUD |
 
 Release file to upload: `dist/RotationCore-1.0.3.zip` (also attached to the
 GitHub release `v1.0.3`).
+
+Binary files live on the [`assets` branch](https://github.com/Hijackery/RotationCore/tree/assets).
 
 ## Short description, English (240 chars)
 

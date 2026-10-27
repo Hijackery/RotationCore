@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/icon/RotationCore-256.png" width="112" height="112" alt="RotationCore logo">
+  <img src="https://raw.githubusercontent.com/Hijackery/RotationCore/assets/icon/RotationCore-256.png" width="112" height="112" alt="RotationCore logo">
 </p>
 
 <h1 align="center">RotationCore</h1>
@@ -48,7 +48,7 @@ the next ability to press. It works out of the box and needs no setup.
 
 | Options | First launch | In combat |
 |:---:|:---:|:---:|
-| ![Options window](docs/screenshots/options.jpg) | ![First launch wizard](docs/screenshots/first-launch.jpg) | ![In combat](docs/screenshots/in-combat.jpg) |
+| ![Options window](https://raw.githubusercontent.com/Hijackery/RotationCore/assets/screenshots/options.jpg) | ![First launch wizard](https://raw.githubusercontent.com/Hijackery/RotationCore/assets/screenshots/first-launch.jpg) | ![In combat](https://raw.githubusercontent.com/Hijackery/RotationCore/assets/screenshots/in-combat.jpg) |
 
 ## Features
 

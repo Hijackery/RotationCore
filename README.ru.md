@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/icon/RotationCore-256.png" width="112" height="112" alt="Логотип RotationCore">
+  <img src="https://raw.githubusercontent.com/Hijackery/RotationCore/assets/icon/RotationCore-256.png" width="112" height="112" alt="Логотип RotationCore">
 </p>
 
 <h1 align="center">RotationCore</h1>
@@ -48,7 +48,7 @@ RotationCore следит за вашей специализацией, тала
 
 | Настройки | Первый запуск | В бою |
 |:---:|:---:|:---:|
-| ![Окно настроек](docs/screenshots/options.jpg) | ![Мастер первого запуска](docs/screenshots/first-launch.jpg) | ![В бою](docs/screenshots/in-combat.jpg) |
+| ![Окно настроек](https://raw.githubusercontent.com/Hijackery/RotationCore/assets/screenshots/options.jpg) | ![Мастер первого запуска](https://raw.githubusercontent.com/Hijackery/RotationCore/assets/screenshots/first-launch.jpg) | ![В бою](https://raw.githubusercontent.com/Hijackery/RotationCore/assets/screenshots/in-combat.jpg) |
 
 ## Возможности
 

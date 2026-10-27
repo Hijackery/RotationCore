@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Generate the RotationCore store icon set (512/256/128/64 PNG)."""
+"""Generate the RotationCore store icon set (512/256/128/64 PNG).
+
+Writes to dist/icon. Copy the result to the assets branch when publishing.
+"""
 import math
 import os
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 S = 2048
-OUT = "docs/icon"
+OUT = "dist/icon"
 FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
 
