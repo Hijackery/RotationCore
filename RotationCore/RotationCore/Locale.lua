@@ -2126,7 +2126,6 @@ local ru = {
     ["Auto-switch rotation by deep phase"] = "Автопереключение ротации по глубокой фазе",
     ["Announce phase changes in chat"] = "Сообщать о смене фаз в чат",
     ["Shares your current recommendation with party/raid members who also run RotationCore (optional)."] = "Делится текущей рекомендацией с участниками группы/рейда, у которых тоже установлен RotationCore (необязательно).",
-    ["Done"] = "Готово",
     ["Interface style (System): UI skins and an options-window opacity slider."] = "Стиль интерфейса (Система): скины интерфейса и ползунок прозрачности окна настроек.",
     ["I. Indicators and forecasts"] = "I. Индикаторы и прогнозы",
     ["GCD - the global cooldown (~1.5 s) shared by most abilities; the queue waits for it."] = "ГКД — общий глобальный кулдаун (~1.5 с) для большинства способностей; очередь ждёт его.",

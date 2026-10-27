@@ -8,7 +8,7 @@ Checks (no WoW client required):
   2. Locale parity: each Locale_*.lua has exactly the RU key set (missing=0,
      extra=0; ignores the EN tooltips base table in Locale.lua).
   3. Version consistency: all 11 .toc files and DH.Version report the same
-     version (3.4.0).
+     version (1.0.1).
   4. No obviously forbidden API tokens in addon code (C_*, loadstring,
      securecallfunction, GetSpecialization global, WeakAuras, Ace3) outside
      the bundled Libs and comments-only matches.
