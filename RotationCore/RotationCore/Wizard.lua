@@ -666,9 +666,15 @@ local function EnsureFrameRaw()
     end)
 
     titleFs = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    titleFs:SetPoint("TOPLEFT", frame, "TOPLEFT", 22, -16)
+    titleFs:SetPoint("TOPLEFT", frame, "TOPLEFT", 54, -16)
     titleFs:SetTextColor(th.title[1], th.title[2], th.title[3])
     frame.title = titleFs
+
+    local logo = frame:CreateTexture(nil, "ARTWORK")
+    logo:SetTexture("Interface\\AddOns\\RotationCore\\icon")
+    logo:SetSize(24, 24)
+    logo:SetPoint("TOPLEFT", frame, "TOPLEFT", 22, -9)
+    frame.logo = logo
     if ns.ApplyWindowChrome then ns.ApplyWindowChrome(frame) end
 
     progressFs = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")

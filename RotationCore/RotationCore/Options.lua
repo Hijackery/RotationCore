@@ -3079,10 +3079,16 @@ local function EnsureFrameRaw()
     end)
 
     local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    title:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -14)
+    title:SetPoint("TOPLEFT", frame, "TOPLEFT", 52, -14)
     title:SetText(L("RotationCore Settings"))
     title:SetTextColor(th.title[1], th.title[2], th.title[3])
     frame.title = title
+
+    local logo = frame:CreateTexture(nil, "ARTWORK")
+    logo:SetTexture("Interface\\AddOns\\RotationCore\\icon")
+    logo:SetSize(28, 28)
+    logo:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -9)
+    frame.logo = logo
 
     local close = CreateFrame("Button", NewName(), frame, "UIPanelCloseButton")
     close:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -4, -4)

@@ -2,6 +2,11 @@
 
 All notable changes to RotationCore.
 
+## [1.0.4] - 2026-10-27
+
+- Added the addon logo to the options window header and the setup wizard
+  header.
+
 ## [1.0.3] - 2026-10-27
 
 - Hardened the simulation: class rotations now always receive `sim:ready` and
