@@ -46,12 +46,9 @@ the next ability to press. It works out of the box and needs no setup.
 
 ## Screenshots
 
-<!-- Replace with real images (docs/screenshots/). Suggested shots:
-     icon window + glow, cooldowns window, DPS forecast, options window. -->
-
-| Icon window & glow | Cooldowns & interrupts | Options |
+| Options | First launch | In combat |
 |:---:|:---:|:---:|
-| _screenshot_ | _screenshot_ | _screenshot_ |
+| ![Options window](docs/screenshots/options.jpg) | ![First launch wizard](docs/screenshots/first-launch.jpg) | ![In combat](docs/screenshots/in-combat.jpg) |
 
 ## Features
 

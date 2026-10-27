@@ -1,5 +1,5 @@
 ## Interface: 30300
-## Version: 1.0.1
+## Version: 1.0.2
 ## Title: RotationCore - Priest
 ## Author: Hijackery
 ## Notes: Priest rotation module for RotationCore (WotLK 3.3.5a)

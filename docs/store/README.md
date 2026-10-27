@@ -1,7 +1,7 @@
 # Store listing kit
 
 Ready-to-paste material for Warperia, CurseForge, WoWInterface, Felbite and
-community forums. Version: **1.0.1**.
+community forums. Version: **1.0.2**.
 
 ## Files
 
@@ -13,9 +13,13 @@ community forums. Version: **1.0.1**.
 | `../icon/RotationCore-256.png` | Store icon 256×256 |
 | `../icon/RotationCore-128.png` | Store icon 128×128 |
 | `../icon/RotationCore-64.png` | Small icon 64×64 |
+| `../icon/RotationCore-social-1280x640.png` | GitHub social preview, 1280×640 |
+| `../screenshots/options.jpg` | Options window screenshot |
+| `../screenshots/first-launch.jpg` | First launch wizard |
+| `../screenshots/in-combat.jpg` | In-combat HUD |
 
-Release file to upload: `dist/RotationCore-1.0.1.zip` (also attached to the
-GitHub release `v1.0.1`).
+Release file to upload: `dist/RotationCore-1.0.2.zip` (also attached to the
+GitHub release `v1.0.2`).
 
 ## Short description, English (240 chars)
 
@@ -59,6 +63,11 @@ Take 16:9 PNG screenshots, 1920×1080 or larger, with a clean UI:
 ## Changelog for the listing
 
 ```
+## 1.0.2
+- Added the addon logo: addon list icon and minimap button.
+- Added the logo header to the READMEs and a social preview image.
+- Translated the remaining UI strings in all 8 locale mirrors.
+
 ## 1.0.1
 - Removed the end-of-fight report popup.
 
@@ -76,9 +85,9 @@ Take 16:9 PNG screenshots, 1920×1080 or larger, with a clean UI:
 
 1. Log in at https://warperia.com/.
 2. Open https://warperia.com/upload-wotlk-addon/.
-3. Fill name `RotationCore`, version `1.0.1`, category `Class`, description and
+3. Fill name `RotationCore`, version `1.0.2`, category `Class`, description and
    the GitHub link.
-4. Upload `RotationCore-1.0.1.zip` and the icon.
+4. Upload `RotationCore-1.0.2.zip` and the icon.
 5. Add the changelog text above.
 6. Wait for the file scan and moderation.
 7. Keep the GitHub link attached so new releases are picked up.
@@ -88,7 +97,7 @@ Take 16:9 PNG screenshots, 1920×1080 or larger, with a clean UI:
 1. Sign in at https://authors.curseforge.com/.
 2. Create a project for `World of Warcraft`, game version `3.3.5`.
 3. Add icon, screenshots and the long description.
-4. Upload `RotationCore-1.0.1.zip` with the changelog.
+4. Upload `RotationCore-1.0.2.zip` with the changelog.
 5. Set license to MIT and link the GitHub repository.
 
 ### WoWInterface

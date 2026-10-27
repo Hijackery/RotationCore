@@ -2,6 +2,15 @@
 
 All notable changes to RotationCore.
 
+## [1.0.2] - 2026-10-27
+
+- Added the addon logo: in-game addon list icon and minimap button, plus a
+  centered logo header in the English and Russian READMEs.
+- Translated the remaining UI strings in all 8 locale mirrors and removed a
+  duplicate Russian key.
+- Added the store listing kit, icon set, social preview artwork and product
+  screenshots.
+
 ## [1.0.1] - 2026-10-27
 
 - Removed the end-of-fight report popup. It appeared after trash kills and is

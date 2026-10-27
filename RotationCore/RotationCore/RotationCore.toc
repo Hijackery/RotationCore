@@ -1,5 +1,5 @@
 ## Interface: 30300
-## Version: 1.0.1
+## Version: 1.0.2
 ## Title: RotationCore
 ## Author: Hijackery
 ## Notes: Rotation helper for WotLK 3.3.5a - core (glow, settings, icon window)
