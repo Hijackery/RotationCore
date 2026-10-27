@@ -1,15 +1,21 @@
-# RotationCore
+<p align="center">
+  <img src="docs/icon/RotationCore-256.png" width="112" height="112" alt="RotationCore logo">
+</p>
 
-**A rotation helper for World of Warcraft 3.3.5a (WotLK).**
+<h1 align="center">RotationCore</h1>
 
-[![CI](https://github.com/Hijackery/RotationCore/actions/workflows/ci.yml/badge.svg)](https://github.com/Hijackery/RotationCore/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/Hijackery/RotationCore?sort=semver)](https://github.com/Hijackery/RotationCore/releases)
-[![Downloads](https://img.shields.io/github/downloads/Hijackery/RotationCore/total)](https://github.com/Hijackery/RotationCore/releases)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![WoW](https://img.shields.io/badge/WoW-3.3.5a-orange.svg)](https://github.com/Hijackery/RotationCore)
-[![Languages](https://img.shields.io/badge/languages-12-blue.svg)](#supported-classes--specs)
+<p align="center"><strong>A rotation helper for World of Warcraft 3.3.5a (WotLK).</strong></p>
 
-**English** · [Русский](./README.ru.md)
+<p align="center">
+  <a href="https://github.com/Hijackery/RotationCore/actions/workflows/ci.yml"><img src="https://github.com/Hijackery/RotationCore/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/Hijackery/RotationCore/releases"><img src="https://img.shields.io/github/v/release/Hijackery/RotationCore?sort=semver" alt="Release"></a>
+  <a href="https://github.com/Hijackery/RotationCore/releases"><img src="https://img.shields.io/github/downloads/Hijackery/RotationCore/total" alt="Downloads"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://github.com/Hijackery/RotationCore"><img src="https://img.shields.io/badge/WoW-3.3.5a-orange.svg" alt="WoW 3.3.5a"></a>
+  <a href="#supported-classes--specs"><img src="https://img.shields.io/badge/languages-12-blue.svg" alt="12 languages"></a>
+</p>
+
+<p align="center"><strong>English</strong> · <a href="./README.ru.md">Русский</a></p>
 
 ---
 
