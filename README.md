@@ -48,7 +48,9 @@ the next ability to press. It works out of the box and needs no setup.
 
 | Options | First launch | In combat |
 |:---:|:---:|:---:|
-| ![Options window](https://raw.githubusercontent.com/Hijackery/RotationCore/assets/screenshots/options.jpg) | ![First launch wizard](https://raw.githubusercontent.com/Hijackery/RotationCore/assets/screenshots/first-launch.jpg) | ![In combat](https://raw.githubusercontent.com/Hijackery/RotationCore/assets/screenshots/in-combat.jpg) |
+| ![Options window](https://raw.githubusercontent.com/Hijackery/RotationCore/assets/screenshots/screen2.jpg) | ![First launch wizard](https://raw.githubusercontent.com/Hijackery/RotationCore/assets/screenshots/screen3.jpg) | ![In combat](https://raw.githubusercontent.com/Hijackery/RotationCore/assets/screenshots/screen.jpg) |
+
+![RotationCore demo](https://raw.githubusercontent.com/Hijackery/RotationCore/assets/demo/rc.gif)
 
 ## Features
 

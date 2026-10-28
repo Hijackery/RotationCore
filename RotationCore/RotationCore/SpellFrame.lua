@@ -817,7 +817,9 @@ function ns.UpdateSpellFrame(recs)
                     frame:SetBackdropBorderColor(0, 0, 0, 0)
                 end
             end
-            if frame.title then frame.title:SetShown(showTitle) end
+            if frame.title then
+                if showTitle then frame.title:Show() else frame.title:Hide() end
+            end
         end
 
         -- Apply the configured font (LSM name or raw path). The size setting,
@@ -2116,7 +2118,7 @@ local function MakeConfigPanel(id, title, x, y)
             end
         end
         for k, sw in pairs(swatches) do
-            sw.sel:SetShown(k == nxt)
+            if k == nxt then sw.sel:Show() else sw.sel:Hide() end
         end
     end
     for i, key in ipairs(order) do

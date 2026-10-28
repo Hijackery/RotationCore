@@ -6,7 +6,7 @@
 RotationCore = {}
 local DH = RotationCore
 
-DH.Version = "1.0.4"
+DH.Version = "1.0.5"
 
 -- Namespace for internal data
 local ns = {}

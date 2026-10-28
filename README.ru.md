@@ -48,7 +48,9 @@ RotationCore следит за вашей специализацией, тала
 
 | Настройки | Первый запуск | В бою |
 |:---:|:---:|:---:|
-| ![Окно настроек](https://raw.githubusercontent.com/Hijackery/RotationCore/assets/screenshots/options.jpg) | ![Мастер первого запуска](https://raw.githubusercontent.com/Hijackery/RotationCore/assets/screenshots/first-launch.jpg) | ![В бою](https://raw.githubusercontent.com/Hijackery/RotationCore/assets/screenshots/in-combat.jpg) |
+| ![Окно настроек](https://raw.githubusercontent.com/Hijackery/RotationCore/assets/screenshots/screen2.jpg) | ![Мастер первого запуска](https://raw.githubusercontent.com/Hijackery/RotationCore/assets/screenshots/screen3.jpg) | ![В бою](https://raw.githubusercontent.com/Hijackery/RotationCore/assets/screenshots/screen.jpg) |
+
+![Демонстрация RotationCore](https://raw.githubusercontent.com/Hijackery/RotationCore/assets/demo/rc.gif)
 
 ## Возможности
 

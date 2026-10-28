@@ -801,7 +801,7 @@ local function AddScrollList(label, items, get, set, cond)
             local top = (i - 1) * ROW_H - offset
             e.btn:ClearAllPoints()
             e.btn:SetPoint("TOPLEFT", box, "TOPLEFT", 1, -top)
-            e.btn:SetShown(top >= 0 and top <= VIEW_H - ROW_H)
+            if top >= 0 and top <= VIEW_H - ROW_H then e.btn:Show() else e.btn:Hide() end
         end
     end
     local function refresh()

@@ -48,7 +48,7 @@ Project Epoch and other WotLK realms.
 
 ## Installation
 
-1. Download `RotationCore-1.0.4.zip` from the releases page.
+1. Download `RotationCore-1.0.5.zip` from the releases page.
 2. Extract it into `World of Warcraft/Interface/AddOns/` so the folders land as
    `AddOns/RotationCore` and `AddOns/RotationCore_<Class>`.
 3. Enable **Load out of date AddOns** in the addon list.

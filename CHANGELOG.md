@@ -2,6 +2,13 @@
 
 All notable changes to RotationCore.
 
+## [1.0.5] - 2026-10-28
+
+- Fixed a Lua error in the icon window settings on WotLK 3.3.5a clients:
+  replaced unsupported `SetShown` calls on FontString and Texture regions with
+  `Show()` / `Hide()`.
+- Refreshed the README screenshots and added an animated demo GIF.
+
 ## [1.0.4] - 2026-10-27
 
 - Added the addon logo to the options window header and the setup wizard
