@@ -10,6 +10,7 @@ globals = {
     "UnitCastingInfo", "UnitChannelInfo", "UnitLevel", "UnitCreatureType",
     "GetSpellBookItemInfo", "GetSpellBookItemName", "GetSpellLink",
     "GetCursorPosition", "GameTooltip", "UISpecialFrames", "ReloadUI", "PlaySoundFile",
+    "SetCursor", "wipe",
     "GetRealmName", "GetLocale", "UnitExists", "UnitIsDeadOrGhost",
     "UnitIsConnected", "UnitCanAssist", "UnitIsFriend", "UnitCanAttack",
     "UnitIsUnit", "UnitHealth", "UnitHealthMax", "UnitPower", "UnitPowerMax",
