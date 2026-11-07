@@ -2,7 +2,9 @@
 -- Priority rotation logic for Druid specs (3.3.5a compatible)
 
 local DH = RotationCore
-if not DH then return end
+if not DH then
+    return
+end
 
 -- Only load for Druids
 if select(2, UnitClass("player")) ~= "DRUID" then
@@ -23,7 +25,7 @@ local state = DH.State
 
 -- Simulated state for prediction (copy of real state values)
 local sim = {}
-local modeBearweave = false  -- Set by rotation mode before calling recommendations
+local modeBearweave = false -- Set by rotation mode before calling recommendations
 -- Furor 5/5 grants 10 Rage on shifting into Bear and a flat +25 max Energy
 -- (already reflected in energy_max). It does NOT add Energy when shifting
 -- into Cat, so no cat-shift energy constant is needed.
@@ -33,7 +35,7 @@ local function ResetSimState(s)
     -- Resources via framework
     DH:SimInitEnergy(sim, s)
     DH:SimInitRage(sim, s)
-    DH:SimInitGCD(sim, s, "melee")  -- Feral uses melee haste
+    DH:SimInitGCD(sim, s, "melee") -- Feral uses melee haste
     DH:SimInitTarget(sim, s)
 
     -- CanUseCooldown / ResolveTargetMode prerequisites
@@ -58,7 +60,7 @@ local function ResetSimState(s)
     sim.rake_remains = s.debuff.rake.remains
     sim.mangle_up = s.debuff.mangle.up
     sim.mangle_remains = s.debuff.mangle.remains
-    sim.bleed_debuff_up = s.debuff.bleed_debuff.up  -- External Mangle/Trauma
+    sim.bleed_debuff_up = s.debuff.bleed_debuff.up -- External Mangle/Trauma
     sim.has_mangle_talent = s.talent.mangle.rank > 0
     sim.has_berserk_talent = s.talent.berserk.rank > 0
     sim.has_ooc_talent = s.talent.omen_of_clarity.rank > 0
@@ -217,12 +219,28 @@ end
 -- ============================================================================
 
 local function GetNextCatAbility()
-    -- target_mode AOE: Swipe (Cat) when enough enemies, keep SR up
+    -- target_mode AOE: keep Savage Roar and the main-target bleeds up, then
+    -- spend the remaining energy on Swipe. This avoids the old behaviour where
+    -- the AoE branch dropped Rake/Rip/Mangle maintenance entirely.
     if DH:IsMultiTarget(sim) then
-        if (not sim.sr_up or sim.sr_remains < 3) and sim.cp >= 1 and sim.energy >= 25 then
+        local swipe_cost = sim.berserk and 25 or 50
+        local rake_cost = sim.berserk and 17 or 35
+        local rip_cost = sim.berserk and 15 or 30
+        local mangle_cost = sim.berserk and 17 or 35
+        local sr_cost = sim.berserk and 12 or 25
+
+        if (not sim.sr_up or sim.sr_remains < 3) and sim.cp >= 1 and sim.energy >= sr_cost then
             return "savage_roar"
         end
-        local swipe_cost = sim.berserk and 25 or 50
+        if (not sim.rake_up or sim.rake_remains < 3) and sim.energy >= rake_cost then
+            return "rake"
+        end
+        if sim.cp >= 5 and (not sim.rip_up or sim.rip_remains < 3) and sim.energy >= rip_cost then
+            return "rip"
+        end
+        if not sim.bleed_debuff_up and (not sim.mangle_up or sim.mangle_remains < 3) and sim.energy >= mangle_cost then
+            return "mangle_cat"
+        end
         if sim.energy >= swipe_cost then
             return "swipe_cat"
         end
@@ -247,7 +265,9 @@ local function GetNextCatAbility()
 
     local bite_at_end = sim.cp == 5 and (sim.ttd < 10 or (sim.rip_up and sim.ttd - sim.rip_remains < 10))
 
-    local bite_before_rip = sim.cp == 5 and sim.rip_up and sim.sr_up
+    local bite_before_rip = sim.cp == 5
+        and sim.rip_up
+        and sim.sr_up
         and sim.rip_remains >= min_bite_rip_remains
         and sim.sr_remains >= min_bite_sr_remains
 
@@ -263,9 +283,12 @@ local function GetNextCatAbility()
     end
 
     -- Priority 2: Berserk when TF on CD for 15+ sec
-    if sim.has_berserk_talent
+    if
+        sim.has_berserk_talent
         and DH:CanUseCooldown(sim, "berserk", "use_berserk")
-        and not sim.tf_ready and sim.tf_cd_remains >= 15 then
+        and not sim.tf_ready
+        and sim.tf_cd_remains >= 15
+    then
         return "berserk"
     end
 
@@ -323,7 +346,9 @@ end
 -- ============================================================================
 
 local function SimulateTime(seconds)
-    if seconds <= 0 then return end
+    if seconds <= 0 then
+        return
+    end
 
     -- Energy regen via framework
     DH:SimTickEnergy(sim, seconds)
@@ -386,7 +411,9 @@ local function SimulateTime(seconds)
 
     if sim.gcd_remains > 0 then
         sim.gcd_remains = sim.gcd_remains - seconds
-        if sim.gcd_remains < 0 then sim.gcd_remains = 0 end
+        if sim.gcd_remains < 0 then
+            sim.gcd_remains = 0
+        end
     end
 
     if sim.berserk and sim.berserk_remains then
@@ -410,56 +437,53 @@ local function SimulateAbility(action)
         sim.tf_ready = false
         sim.tf_cd_remains = 30
         sim.cd.tigers_fury = 30
-
     elseif action == "berserk" then
         sim.berserk = true
         sim.berserk_ready = false
         sim.cd.berserk = 180
-
     elseif action == "savage_roar" then
         sim.energy = sim.energy - sr_cost
         sim.sr_up = true
         sim.sr_remains = 14 + (sim.cp * 5)
         sim.cp = 0
-
     elseif action == "mangle_cat" then
         sim.energy = sim.energy - mangle_cost
         sim.mangle_up = true
         sim.mangle_remains = 60
         sim.cp = math.min(5, sim.cp + 1)
-        if sim.clearcasting then sim.clearcasting = false end
-
+        if sim.clearcasting then
+            sim.clearcasting = false
+        end
     elseif action == "shred" then
         if not sim.clearcasting then
             sim.energy = sim.energy - shred_cost
         end
         sim.cp = math.min(5, sim.cp + 1)
         sim.clearcasting = false
-
     elseif action == "rake" then
         sim.energy = sim.energy - rake_cost
         sim.rake_up = true
         sim.rake_remains = 9
         sim.cp = math.min(5, sim.cp + 1)
-        if sim.clearcasting then sim.clearcasting = false end
-
+        if sim.clearcasting then
+            sim.clearcasting = false
+        end
     elseif action == "rip" then
         sim.energy = sim.energy - rip_cost
         sim.rip_up = true
         sim.rip_remains = 12 + (sim.cp * 2)
         sim.cp = 0
-
     elseif action == "faerie_fire_feral" then
         sim.ff_ready = false
         sim.ff_cd_remains = 6
-
     elseif action == "ferocious_bite" then
         local bite_cost = sim.berserk and 17 or 35
         local extra_energy = math.min(30, sim.energy - bite_cost)
         sim.energy = sim.energy - bite_cost - extra_energy
         sim.cp = 0
-        if sim.clearcasting then sim.clearcasting = false end
-
+        if sim.clearcasting then
+            sim.clearcasting = false
+        end
     elseif action == "swipe_cat" then
         local swipe_cost = sim.berserk and 25 or 50
         if not sim.clearcasting then
@@ -474,22 +498,22 @@ local function SimulateAbility(action)
         if sim.has_furor then
             sim.rage = 10
         end
-
     elseif action == "cat_form" then
         sim.in_cat = true
         sim.in_bear = false
         -- Furor does not grant Energy on shifting into Cat (flat max Energy
         -- is already part of energy_max); only the Bear-shift Rage above.
 
-    -- Bear abilities
+        -- Bear abilities
     elseif action == "mangle_bear" then
         sim.rage = sim.rage - 15
         sim.mangle_up = true
         sim.mangle_remains = 60
         sim.mangle_bear_ready = false
         sim.mangle_bear_cd_remains = 6
-        if sim.clearcasting then sim.clearcasting = false end
-
+        if sim.clearcasting then
+            sim.clearcasting = false
+        end
     elseif action == "lacerate" then
         if not sim.clearcasting then
             sim.rage = sim.rage - 13
@@ -498,10 +522,11 @@ local function SimulateAbility(action)
         sim.lacerate_stacks = math.min(5, sim.lacerate_stacks + 1)
         sim.lacerate_remains = 15
         sim.clearcasting = false
-
     elseif action == "maul" then
         sim.rage = sim.rage - 15
-        if sim.clearcasting then sim.clearcasting = false end
+        if sim.clearcasting then
+            sim.clearcasting = false
+        end
     end
 
     -- Advance by one GCD (haste-adjusted via framework)
@@ -567,10 +592,18 @@ local function GetFeralCatRecommendations(addon)
                 local sr_needs_refresh = not sim.sr_up or sim.sr_remains < 3
                 local rip_needs_refresh = not sim.rip_up or sim.rip_remains < 2
 
-                if sr_needs_refresh and sim.cp >= 1 then needed_energy = math.min(needed_energy, sr_cost) end
-                if mangle_needs_refresh and sim.has_mangle_talent then needed_energy = math.min(needed_energy, mangle_cost) end
-                if rake_needs_refresh then needed_energy = math.min(needed_energy, rake_cost) end
-                if rip_needs_refresh and sim.cp == 5 then needed_energy = math.min(needed_energy, rip_cost) end
+                if sr_needs_refresh and sim.cp >= 1 then
+                    needed_energy = math.min(needed_energy, sr_cost)
+                end
+                if mangle_needs_refresh and sim.has_mangle_talent then
+                    needed_energy = math.min(needed_energy, mangle_cost)
+                end
+                if rake_needs_refresh then
+                    needed_energy = math.min(needed_energy, rake_cost)
+                end
+                if rip_needs_refresh and sim.cp == 5 then
+                    needed_energy = math.min(needed_energy, rip_cost)
+                end
 
                 local time_to_energy = math.max(0, (needed_energy - sim.energy) / sim.energy_regen)
                 -- Wait at least one GCD
@@ -621,75 +654,157 @@ local function GetFeralBearRecommendations(addon)
         end
     end
 
-    -- target_mode AOE: swipe spam, keep Lacerate stacks for threat
+    -- target_mode AOE: keep Lacerate rolling, use Berserk/defensives, then
+    -- Swipe/Maul. The old branch returned before any cooldown or survival
+    -- logic, which made bear AoE strictly worse than the single-target list.
     if DH:IsMultiTarget({ active_enemies = s.active_enemies or 1, ttd = ttd }) then
+        if
+            settings.use_berserk
+            and s.talent.berserk.rank > 0
+            and s.cooldown.berserk.ready
+            and not DH:IsSnoozed("berserk")
+        then
+            addRec("berserk")
+            if #recommendations >= 4 then
+                return recommendations
+            end
+        end
+        if
+            settings.use_survival_instincts
+            and s.cooldown.survival_instincts.ready
+            and not DH:IsSnoozed("survival_instincts")
+            and (s.health and s.health.pct or 100) < 35
+        then
+            addRec("survival_instincts")
+            if #recommendations >= 4 then
+                return recommendations
+            end
+        end
+        if
+            s.glyph.omen_of_clarity
+            and s.glyph.omen_of_clarity.enabled
+            and not s.buff.clearcasting.up
+            and s.cooldown.faerie_fire_feral.ready
+        then
+            addRec("faerie_fire_feral")
+            if #recommendations >= 4 then
+                return recommendations
+            end
+        end
         if not lacerate_up or lacerate_stack < 5 or lacerate_remains < 3 then
             addRec("lacerate")
-            if #recommendations >= 4 then return recommendations end
-        elseif rage >= 20 then
-            addRec("swipe_bear")
-            if #recommendations >= 4 then return recommendations end
+            if #recommendations >= 4 then
+                return recommendations
+            end
         end
         if mangle_ready then
             addRec("mangle_bear")
+            if #recommendations >= 4 then
+                return recommendations
+            end
+        end
+        if rage >= 20 then
+            addRec("swipe_bear")
+            if #recommendations >= 4 then
+                return recommendations
+            end
+        end
+        if rage >= 45 and not s.buff.clearcasting.up then
+            addRec("maul")
         end
         return recommendations
     end
 
     -- 1. Faerie Fire for OoC procs
-    if s.glyph.omen_of_clarity and s.glyph.omen_of_clarity.enabled and not s.buff.clearcasting.up and s.cooldown.faerie_fire_feral.ready then
+    if
+        s.glyph.omen_of_clarity
+        and s.glyph.omen_of_clarity.enabled
+        and not s.buff.clearcasting.up
+        and s.cooldown.faerie_fire_feral.ready
+    then
         addRec("faerie_fire_feral")
-        if #recommendations >= 4 then return recommendations end
+        if #recommendations >= 4 then
+            return recommendations
+        end
     end
 
     -- 2. Berserk
-    if settings.use_berserk and s.talent.berserk.rank > 0 and s.cooldown.berserk.ready and not DH:IsSnoozed("berserk") then
+    if
+        settings.use_berserk
+        and s.talent.berserk.rank > 0
+        and s.cooldown.berserk.ready
+        and not DH:IsSnoozed("berserk")
+    then
         addRec("berserk")
-        if #recommendations >= 4 then return recommendations end
+        if #recommendations >= 4 then
+            return recommendations
+        end
     end
 
     -- 2b. Survival Instincts when low (tank CD)
-    if settings.use_survival_instincts and s.cooldown.survival_instincts.ready and not DH:IsSnoozed("survival_instincts")
-        and (s.target.health and s.target.health.pct or (s.health and s.health.pct) or 100) < 35 then
+    if
+        settings.use_survival_instincts
+        and s.cooldown.survival_instincts.ready
+        and not DH:IsSnoozed("survival_instincts")
+        and (s.target.health and s.target.health.pct or (s.health and s.health.pct) or 100) < 35
+    then
         addRec("survival_instincts")
-        if #recommendations >= 4 then return recommendations end
+        if #recommendations >= 4 then
+            return recommendations
+        end
     end
 
     -- 2c. Barkskin on damage intake (tank CD)
-    if settings.use_barkskin and s.cooldown.barkskin.ready and not DH:IsSnoozed("barkskin")
-        and (s.target.health and s.target.health.pct or (s.health and s.health.pct) or 100) < 60 then
+    if
+        settings.use_barkskin
+        and s.cooldown.barkskin.ready
+        and not DH:IsSnoozed("barkskin")
+        and (s.target.health and s.target.health.pct or (s.health and s.health.pct) or 100) < 60
+    then
         addRec("barkskin")
-        if #recommendations >= 4 then return recommendations end
+        if #recommendations >= 4 then
+            return recommendations
+        end
     end
 
     -- 3. Emergency Lacerate
     if lacerate_up and lacerate_remains < 4.5 then
         addRec("lacerate")
-        if #recommendations >= 4 then return recommendations end
+        if #recommendations >= 4 then
+            return recommendations
+        end
     end
 
     -- 4. Mangle
     if s.talent.mangle.rank > 0 and mangle_ready then
         addRec("mangle_bear")
-        if #recommendations >= 4 then return recommendations end
+        if #recommendations >= 4 then
+            return recommendations
+        end
     end
 
     -- 5. Faerie Fire for debuff
     if s.cooldown.faerie_fire_feral.ready and not s.debuff.faerie_fire_feral.up then
         addRec("faerie_fire_feral")
-        if #recommendations >= 4 then return recommendations end
+        if #recommendations >= 4 then
+            return recommendations
+        end
     end
 
     -- 6. Build Lacerate stacks
     if not lacerate_up or lacerate_stack < 5 or lacerate_remains < 8 then
         addRec("lacerate")
-        if #recommendations >= 4 then return recommendations end
+        if #recommendations >= 4 then
+            return recommendations
+        end
     end
 
     -- 7. Swipe as rage dump / filler
     if rage > 30 then
         addRec("swipe_bear")
-        if #recommendations >= 4 then return recommendations end
+        if #recommendations >= 4 then
+            return recommendations
+        end
     end
 
     -- Filler
@@ -709,7 +824,7 @@ end
 -- Same approach as cat: copy state, get next ability, simulate, repeat for 3
 -- ============================================================================
 
-local bsim = {}  -- Balance simulated state
+local bsim = {} -- Balance simulated state
 
 -- Reset balance sim from real state
 local function ResetBalanceSim(s)
@@ -737,8 +852,8 @@ local function ResetBalanceSim(s)
     end
 
     -- Haste-adjusted cast times
-    bsim.wrath_cast = DH:SimCastTime(bsim, 1.5)     -- 1.5s base with 5/5 Starlight Wrath
-    bsim.starfire_cast = DH:SimCastTime(bsim, 3.0)   -- 3.0s base with talents
+    bsim.wrath_cast = DH:SimCastTime(bsim, 1.5) -- 1.5s base with 5/5 Starlight Wrath
+    bsim.starfire_cast = DH:SimCastTime(bsim, 3.0) -- 3.0s base with talents
 
     -- DoT durations (haste adds ticks in WotLK but doesn't change duration)
     bsim.moonfire_duration = s.talent.natures_splendor and s.talent.natures_splendor.rank > 0 and 15 or 12
@@ -751,8 +866,7 @@ local function ResetBalanceSim(s)
     bsim.solar_remains = s.buff.eclipse_solar.remains
 
     -- ICD tracking
-    bsim.lunar_icd_ready = s.buff.eclipse_lunar.last_applied == 0
-        or (now - s.buff.eclipse_lunar.last_applied) >= 30
+    bsim.lunar_icd_ready = s.buff.eclipse_lunar.last_applied == 0 or (now - s.buff.eclipse_lunar.last_applied) >= 30
     bsim.lunar_icd_remains = 0
     if not bsim.lunar_icd_ready and s.buff.eclipse_lunar.last_applied > 0 then
         bsim.lunar_icd_remains = 30 - (now - s.buff.eclipse_lunar.last_applied)
@@ -778,7 +892,9 @@ end
 
 -- Simulate time passing for balance
 local function SimulateBalanceTime(seconds)
-    if seconds <= 0 then return end
+    if seconds <= 0 then
+        return
+    end
 
     -- Tick down Eclipse buffs
     if bsim.lunar_remains > 0 then
@@ -790,7 +906,7 @@ local function SimulateBalanceTime(seconds)
             -- Since it just fell off, most of the ICD has already elapsed
             -- but we can't proc it again immediately
             bsim.lunar_icd_ready = false
-            bsim.lunar_icd_remains = 15  -- ~15s left on ICD after 15s Eclipse
+            bsim.lunar_icd_remains = 15 -- ~15s left on ICD after 15s Eclipse
         end
     end
     if bsim.solar_remains > 0 then
@@ -813,11 +929,15 @@ local function SimulateBalanceTime(seconds)
     -- Tick down DoTs
     if bsim.moonfire_remains > 0 then
         bsim.moonfire_remains = bsim.moonfire_remains - seconds
-        if bsim.moonfire_remains < 0 then bsim.moonfire_remains = 0 end
+        if bsim.moonfire_remains < 0 then
+            bsim.moonfire_remains = 0
+        end
     end
     if bsim.is_remains > 0 then
         bsim.is_remains = bsim.is_remains - seconds
-        if bsim.is_remains < 0 then bsim.is_remains = 0 end
+        if bsim.is_remains < 0 then
+            bsim.is_remains = 0
+        end
     end
 
     -- Tick down cooldowns via framework
@@ -834,7 +954,9 @@ local function SimulateBalanceTime(seconds)
     -- Tick down GCD
     if bsim.gcd_remains > 0 then
         bsim.gcd_remains = bsim.gcd_remains - seconds
-        if bsim.gcd_remains < 0 then bsim.gcd_remains = 0 end
+        if bsim.gcd_remains < 0 then
+            bsim.gcd_remains = 0
+        end
     end
 end
 
@@ -843,33 +965,26 @@ local function SimulateBalanceAbility(action)
     if action == "moonfire" then
         bsim.moonfire_remains = bsim.moonfire_duration
         SimulateBalanceTime(bsim.gcd)
-
     elseif action == "insect_swarm" then
         bsim.is_remains = bsim.is_duration
         SimulateBalanceTime(bsim.gcd)
-
     elseif action == "starfire" then
         SimulateBalanceTime(bsim.starfire_cast)
-
     elseif action == "wrath" then
         SimulateBalanceTime(bsim.wrath_cast)
-
     elseif action == "force_of_nature" then
         bsim.fon_ready = false
         bsim.fon_cd = 180
         bsim.cd.force_of_nature = 180
         SimulateBalanceTime(bsim.gcd)
-
     elseif action == "starfall" then
         bsim.starfall_ready = false
         bsim.starfall_cd = 90
         bsim.cd.starfall = 90
         SimulateBalanceTime(bsim.gcd)
-
     elseif action == "faerie_fire" then
         bsim.ff_up = true
         SimulateBalanceTime(bsim.gcd)
-
     elseif action == "hurricane" then
         -- Channeled filler for AOE
         SimulateBalanceTime(bsim.gcd)
@@ -878,10 +993,21 @@ end
 
 -- Get the next balance ability based on simulated state
 local function GetNextBalanceAbility()
-    -- target_mode AOE: Hurricane with DoTs/Starfall upkeep
+    -- target_mode AOE: Starfall / Force of Nature first, keep the main-target
+    -- DoTs alive, then channel Hurricane as the filler. The previous branch
+    -- only toggled Starfall and Hurricane and skipped cooldowns and DoTs.
     if DH:IsMultiTarget(bsim) then
         if bsim.has_starfall and DH:CanUseCooldown(bsim, "starfall", "use_starfall") then
             return "starfall"
+        end
+        if bsim.fon_ready and DH:CanUseCooldown(bsim, "force_of_nature", "use_force_of_nature") then
+            return "force_of_nature"
+        end
+        if bsim.has_is and bsim.is_remains < 1 and bsim.ttd > 6 then
+            return "insect_swarm"
+        end
+        if bsim.moonfire_remains < 1 and bsim.ttd > 6 then
+            return "moonfire"
         end
         return "hurricane"
     end
@@ -895,9 +1021,9 @@ local function GetNextBalanceAbility()
     elseif bsim.solar_up then
         spamSpell = "wrath"
     elseif not bsim.lunar_icd_ready then
-        spamSpell = "starfire"   -- Fish for Solar
+        spamSpell = "starfire" -- Fish for Solar
     else
-        spamSpell = "wrath"      -- Fish for Lunar
+        spamSpell = "wrath" -- Fish for Lunar
     end
 
     -- During Eclipse: only interrupt for Moonfire refresh
@@ -1078,12 +1204,99 @@ DH:RegisterMode("resto_druid_dps", {
     rotation = BoomkinModeRotation,
 })
 
--- Heal spec: no heal rotation implemented. A safe mode prevents a Restoration
--- druid from being driven by the Feral Cat rotation; enabling the heal-DPS
--- mode borrows resto_druid_dps instead.
-DH:RegisterSafeMode("resto_druid", "Restoration (Healer)",
+-- ============================================================================
+-- RESTORATION HEAL ROTATION
+-- Isolated from the DPS rotations. It only emits heal/utility recommendations
+-- and never borrows a DPS list unless heal_dps_mode explicitly allows it.
+-- ============================================================================
+local function GetRestoDruidHealRecommendations(addon)
+    local ctx = ns.GetHealContext()
+    local recs = {}
+    local function push(key, target)
+        if ns.CanHeal(key, target) then
+            ns.PushHeal(recs, key, target)
+        end
+    end
+
+    local tank = ns.GetTankTarget(ctx)
+    local low = ns.GetHealTarget(ctx, { below = 100 })
+    local critical = ns.GetHealTarget(ctx, { below = 35 })
+    local injured = ns.GetInjuredCount(ctx, 80)
+
+    -- Emergency: instant Healing Touch.
+    if critical then
+        if not ns.GetAbilityAura("player", "natures_swiftness") then
+            push("natures_swiftness", critical)
+        end
+        push("healing_touch", critical)
+    end
+
+    -- Dispel first when a curse/poison is present.
+    local dispelUnit, _, dispelType = ns.FindDispelTarget(ctx, { Curse = true, Poison = true })
+    if dispelUnit then
+        if dispelType == "Curse" then
+            push("remove_curse", dispelUnit)
+        elseif dispelType == "Poison" then
+            push("abolish_poison", dispelUnit)
+        end
+    end
+
+    -- Swiftmend needs one of our HoTs on the target.
+    if low and (ns.GetAbilityAura(low.unit, "rejuvenation") or ns.GetAbilityAura(low.unit, "regrowth")) then
+        push("swiftmend", low)
+    end
+
+    -- Wild Growth on stacked group damage.
+    if injured >= 3 then
+        push("wild_growth", low or tank)
+    end
+
+    -- Tank maintenance.
+    if tank then
+        local lb = ns.GetAbilityAura(tank.unit, "lifebloom")
+        if not lb or (lb.count or 0) < 3 or lb.remains < 2 then
+            push("lifebloom", tank)
+        end
+        if not ns.GetAbilityAura(tank.unit, "rejuvenation") then
+            push("rejuvenation", tank)
+        end
+        if tank.pct < 85 and not ns.GetAbilityAura(tank.unit, "regrowth") then
+            push("regrowth", tank)
+        end
+    end
+
+    -- Spot healing.
+    if low then
+        if not ns.GetAbilityAura(low.unit, "rejuvenation") then
+            push("rejuvenation", low)
+        end
+        if low.pct < 70 and not ns.GetAbilityAura(low.unit, "regrowth") then
+            push("regrowth", low)
+        end
+        if low.pct < 55 then
+            push("healing_touch", low)
+        else
+            push("nourish", low)
+        end
+    end
+
+    -- Raid damage and mana tools.
+    if injured >= 5 then
+        push("tranquility", "player")
+    end
+    if ctx.manaPct < 20 and not ns.GetAbilityAura("player", "innervate") then
+        push("innervate", "player")
+    end
+
+    return recs
+end
+
+DH:RegisterHealMode(
+    "resto_druid",
+    "Restoration (Healer)",
     select(3, GetSpellInfo(18562)) or "Interface\\Icons\\Spell_Nature_HealingTouch",
-    (DH.L and DH.L["safe_mode_resto_druid"]) or "Healer rotations are not supported (Restoration Druid)")
+    GetRestoDruidHealRecommendations
+)
 
 -- v3.4.0 battle context: defensive-phase recommendation.
 DH:RegisterDefensiveAbility("barkskin")

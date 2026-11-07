@@ -3,7 +3,9 @@
 -- Uses core RunSimulation for CD-aware predictions
 
 local DH = RotationCore
-if not DH then return end
+if not DH then
+    return
+end
 
 if select(2, UnitClass("player")) ~= "SHAMAN" then
     return
@@ -35,8 +37,8 @@ local enhancementConfig = {
         lava_lash = 6,
         feral_spirit = 180,
         shamanistic_rage = 60,
-        flame_shock = 6,   -- shared shock CD
-        earth_shock = 6,   -- shared shock CD
+        flame_shock = 6, -- shared shock CD
+        earth_shock = 6, -- shared shock CD
         fire_nova = 10,
     },
     auras = {
@@ -71,19 +73,27 @@ local enhancementConfig = {
     getPriority = function(sim, recs)
         -- target_mode: AOE rotation (Fire Nova)
         if DH:IsCleave(sim) then
-            if sim.has_fire_nova and sim.flame_shock_up and sim:ready("fire_nova") then
+            if sim.has_fire_nova and sim.flame_shock_up and DH:Ready(sim, "fire_nova") then
                 return "fire_nova"
             end
-            if (not sim.flame_shock_up or sim.flame_shock_remains < 2) and sim:ready("flame_shock") and sim.ttd > 6 then
+            if
+                (not sim.flame_shock_up or sim.flame_shock_remains < 2)
+                and DH:Ready(sim, "flame_shock")
+                and sim.ttd > 6
+            then
                 return "flame_shock"
             end
         end
 
         if DH:IsMultiTarget(sim) then
-            if sim.has_fire_nova and sim.flame_shock_up and sim:ready("fire_nova") then
+            if sim.has_fire_nova and sim.flame_shock_up and DH:Ready(sim, "fire_nova") then
                 return "fire_nova"
             end
-            if (not sim.flame_shock_up or sim.flame_shock_remains < 2) and sim:ready("flame_shock") and sim.ttd > 6 then
+            if
+                (not sim.flame_shock_up or sim.flame_shock_remains < 2)
+                and DH:Ready(sim, "flame_shock")
+                and sim.ttd > 6
+            then
                 return "flame_shock"
             end
         end
@@ -94,8 +104,11 @@ local enhancementConfig = {
         end
 
         -- Shamanistic Rage (mana recovery)
-        if sim.has_shamanistic_rage and sim.mana_pct < 30
-            and DH:CanUseCooldown(sim, "shamanistic_rage", "use_shamanistic_rage") then
+        if
+            sim.has_shamanistic_rage
+            and sim.mana_pct < 30
+            and DH:CanUseCooldown(sim, "shamanistic_rage", "use_shamanistic_rage")
+        then
             return "shamanistic_rage"
         end
 
@@ -110,27 +123,27 @@ local enhancementConfig = {
         end
 
         -- Stormstrike on CD
-        if sim.has_stormstrike and sim:ready("stormstrike") then
+        if sim.has_stormstrike and DH:Ready(sim, "stormstrike") then
             return "stormstrike"
         end
 
         -- Flame Shock: maintain DoT
-        if (not sim.flame_shock_up or sim.flame_shock_remains < 2) and sim:ready("flame_shock") and sim.ttd > 6 then
+        if (not sim.flame_shock_up or sim.flame_shock_remains < 2) and DH:Ready(sim, "flame_shock") and sim.ttd > 6 then
             return "flame_shock"
         end
 
         -- Earth Shock: when Flame Shock is healthy and shock CD is up
-        if sim.flame_shock_up and sim.flame_shock_remains > 6 and sim:ready("earth_shock") then
+        if sim.flame_shock_up and sim.flame_shock_remains > 6 and DH:Ready(sim, "earth_shock") then
             return "earth_shock"
         end
 
         -- Fire Nova (if near fire totem)
-        if sim.has_fire_nova and sim:ready("fire_nova") then
+        if sim.has_fire_nova and DH:Ready(sim, "fire_nova") then
             return "fire_nova"
         end
 
         -- Lava Lash
-        if sim.has_lava_lash and sim:ready("lava_lash") then
+        if sim.has_lava_lash and DH:Ready(sim, "lava_lash") then
             return "lava_lash"
         end
 
@@ -138,7 +151,9 @@ local enhancementConfig = {
         return nil
     end,
     onCast = function(sim, key)
-        if DH.SimSpendMana then DH:SimSpendMana(sim, key) end
+        if DH.SimSpendMana then
+            DH:SimSpendMana(sim, key)
+        end
         if key == "flame_shock" then
             sim.flame_shock_up = true
             sim.flame_shock_remains = 18
@@ -151,7 +166,7 @@ local enhancementConfig = {
             sim.stormstrike_up = true
             sim.stormstrike_remains = 12
         elseif key == "lightning_bolt" then
-            sim.mw_stacks = 0  -- consume MW stacks
+            sim.mw_stacks = 0 -- consume MW stacks
         elseif key == "lightning_shield" then
             sim.ls_up = true
         elseif key == "shamanistic_rage" then
@@ -218,7 +233,7 @@ local elementalConfig = {
         sim.ls_up = s.buff.lightning_shield.up
 
         -- Talents
-        sim.has_lava_burst = s.talent.lava_flows.rank > 0 or true  -- all ele have LvB
+        sim.has_lava_burst = s.talent.lava_flows.rank > 0 or true -- all ele have LvB
         sim.has_em = s.talent.elemental_mastery.rank > 0
         sim.has_ns = s.talent.natures_swiftness.rank > 0
         sim.has_thunderstorm = s.talent.thunderstorm.rank > 0
@@ -227,35 +242,46 @@ local elementalConfig = {
     getPriority = function(sim, recs)
         -- target_mode: AOE rotation (Chain Lightning)
         if DH:IsCleave(sim) then
-            if sim.has_fire_nova and sim.flame_shock_up and sim:ready("fire_nova") then
+            if sim.has_fire_nova and sim.flame_shock_up and DH:Ready(sim, "fire_nova") then
                 return "fire_nova"
             end
-            if sim:ready("chain_lightning") then
+            if DH:Ready(sim, "chain_lightning") then
                 return "chain_lightning"
             end
         end
 
         if DH:IsMultiTarget(sim) then
-            if sim:ready("chain_lightning") then
+            if DH:Ready(sim, "chain_lightning") then
                 return "chain_lightning"
             end
         end
 
         -- Elemental Mastery (major CD)
-        if sim.has_em and sim:ready("elemental_mastery")
-            and DH:CanUseCooldown(sim, "elemental_mastery", "use_elemental_mastery") then
+        if
+            sim.has_em
+            and DH:Ready(sim, "elemental_mastery")
+            and DH:CanUseCooldown(sim, "elemental_mastery", "use_elemental_mastery")
+        then
             return "elemental_mastery"
         end
 
         -- Natures Swiftness (instant next spell, mana saver)
-        if sim.has_ns and sim:ready("natures_swiftness")
-            and DH:CanUseCooldown(sim, "natures_swiftness", "use_natures_swiftness") then
+        if
+            sim.has_ns
+            and DH:Ready(sim, "natures_swiftness")
+            and DH:CanUseCooldown(sim, "natures_swiftness", "use_natures_swiftness")
+        then
             return "natures_swiftness"
         end
 
         -- Thunderstorm (mana return every 45s)
-        if sim.has_thunderstorm and sim.mana_pct < 30 and sim:ready("thunderstorm")
-            and DH:CanUseCooldown(sim, "thunderstorm", "use_thunderstorm") and sim.ttd > 10 then
+        if
+            sim.has_thunderstorm
+            and sim.mana_pct < 30
+            and DH:Ready(sim, "thunderstorm")
+            and DH:CanUseCooldown(sim, "thunderstorm", "use_thunderstorm")
+            and sim.ttd > 10
+        then
             return "thunderstorm"
         end
 
@@ -265,17 +291,17 @@ local elementalConfig = {
         end
 
         -- Flame Shock: must be up for Lava Burst auto-crit
-        if (not sim.flame_shock_up or sim.flame_shock_remains < 2) and sim:ready("flame_shock") and sim.ttd > 6 then
+        if (not sim.flame_shock_up or sim.flame_shock_remains < 2) and DH:Ready(sim, "flame_shock") and sim.ttd > 6 then
             return "flame_shock"
         end
 
         -- Lava Burst on CD (guaranteed crit with Flame Shock up)
-        if sim:ready("lava_burst") and sim.flame_shock_up then
+        if DH:Ready(sim, "lava_burst") and sim.flame_shock_up then
             return "lava_burst"
         end
 
         -- Chain Lightning (if off CD, good DPS filler between LvB)
-        if sim:ready("chain_lightning") then
+        if DH:Ready(sim, "chain_lightning") then
             return "chain_lightning"
         end
 
@@ -305,10 +331,16 @@ local elementalConfig = {
     end,
     getAdvanceTime = function(sim, action)
         local h = sim.haste or 1
-        if action == "lightning_bolt" then return math.max(sim.gcd, 2.5 / h) end
-        if action == "chain_lightning" then return math.max(sim.gcd, 2.0 / h) end
-        if action == "lava_burst" then return math.max(sim.gcd, 2.0 / h) end
-        return sim.gcd  -- instants: flame shock, earth shock, EM, LS, thunderstorm
+        if action == "lightning_bolt" then
+            return math.max(sim.gcd, 2.5 / h)
+        end
+        if action == "chain_lightning" then
+            return math.max(sim.gcd, 2.0 / h)
+        end
+        if action == "lava_burst" then
+            return math.max(sim.gcd, 2.0 / h)
+        end
+        return sim.gcd -- instants: flame shock, earth shock, EM, LS, thunderstorm
     end,
 }
 
@@ -356,9 +388,91 @@ DH:RegisterMode("resto_shaman_dps", {
     end,
 })
 
--- Heal spec: no heal rotation implemented. A safe mode keeps a Restoration
--- shaman from being driven by the Enhancement melee rotation; enabling the
--- heal-DPS mode borrows resto_shaman_dps instead.
-DH:RegisterSafeMode("resto_shaman", "Restoration (Healer)",
+-- ============================================================================
+-- RESTORATION HEAL ROTATION
+-- Isolated from the Enhancement/Elemental rotations. It only emits heal and
+-- utility recommendations.
+-- ============================================================================
+local function GetRestoShamanHealRecommendations(addon)
+    local ctx = ns.GetHealContext()
+    local recs = {}
+    local function push(key, target)
+        if ns.CanHeal(key, target) then
+            ns.PushHeal(recs, key, target)
+        end
+    end
+
+    local tank = ns.GetTankTarget(ctx)
+    local low = ns.GetHealTarget(ctx, { below = 100 })
+    local critical = ns.GetHealTarget(ctx, { below = 30 })
+    local target = critical or low
+    local injured = ns.GetInjuredCount(ctx, 80)
+
+    -- Shield upkeep.
+    if not ns.GetAbilityAura("player", "water_shield") then
+        push("water_shield", "player")
+    end
+    if tank then
+        local es = ns.GetAbilityAura(tank.unit, "earth_shield")
+        if not es or (es.count or 0) < 3 then
+            push("earth_shield", tank)
+        end
+    end
+
+    -- Dispel before healing through avoidable damage.
+    local dispelUnit, _, dispelType = ns.FindDispelTarget(ctx, { Curse = true, Disease = true, Poison = true })
+    if dispelUnit then
+        if dispelType == "Curse" then
+            push("cleanse_spirit", dispelUnit)
+        elseif dispelType == "Disease" then
+            push("cure_disease", dispelUnit)
+        elseif dispelType == "Poison" then
+            push("cure_poison", dispelUnit)
+        end
+    end
+
+    -- Emergency instant heal.
+    if critical then
+        if not ns.GetAbilityAura("player", "natures_swiftness") then
+            push("natures_swiftness", critical)
+        end
+        push("healing_wave", critical)
+    end
+
+    -- Riptide on the tank and injured players.
+    if tank and not ns.GetAbilityAura(tank.unit, "riptide") then
+        push("riptide", tank)
+    end
+    if low and not ns.GetAbilityAura(low.unit, "riptide") then
+        push("riptide", low)
+    end
+
+    -- Chain Heal for stacked damage, direct heals otherwise.
+    if injured >= 3 then
+        push("chain_heal", low or tank)
+    end
+    if target then
+        if target.pct < 55 then
+            push("lesser_healing_wave", target)
+        else
+            push("healing_wave", target)
+        end
+    end
+
+    -- Sustained raid damage and mana recovery.
+    if injured >= 2 then
+        push("healing_stream_totem", "player")
+    end
+    if ctx.manaPct < 30 then
+        push("mana_tide_totem", "player")
+    end
+
+    return recs
+end
+
+DH:RegisterHealMode(
+    "resto_shaman",
+    "Restoration (Healer)",
     select(3, GetSpellInfo(61295)) or "Interface\\Icons\\Spell_Nature_HealingWay",
-    (DH.L and DH.L["safe_mode_resto_shaman"]) or "Healer rotations are not supported (Restoration Shaman)")
+    GetRestoShamanHealRecommendations
+)

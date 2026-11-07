@@ -3,7 +3,9 @@
 -- Uses core RunSimulation for CD-aware predictions
 
 local DH = RotationCore
-if not DH then return end
+if not DH then
+    return
+end
 
 if select(2, UnitClass("player")) ~= "PALADIN" then
     return
@@ -46,10 +48,11 @@ local retConfig = {
         sim.aow_up = s.buff.art_of_war.up
         sim.aw_up = s.buff.avenging_wrath.up
         sim.has_ds = s.talent.divine_storm.rank > 0
-        sim.seal_up = s.buff.seal_of_vengeance.up or s.buff.seal_of_command.up
-            or s.buff.seal_of_wisdom.up or s.buff.seal_of_righteousness.up
-        sim.is_undead_demon = (UnitCreatureType("target") == "Undead"
-            or UnitCreatureType("target") == "Demon")
+        sim.seal_up = s.buff.seal_of_vengeance.up
+            or s.buff.seal_of_command.up
+            or s.buff.seal_of_wisdom.up
+            or s.buff.seal_of_righteousness.up
+        sim.is_undead_demon = (UnitCreatureType("target") == "Undead" or UnitCreatureType("target") == "Demon")
     end,
     getPriority = function(sim, recs)
         -- Seal upkeep: a missing seal is a large DPS loss. Only acts when no
@@ -62,87 +65,96 @@ local retConfig = {
         end
 
         -- Avenging Wrath
-        if sim:ready("avenging_wrath") and not sim.aw_up
-            and DH:CanUseCooldown(sim, "avenging_wrath", "use_avenging_wrath") then
+        if
+            DH:Ready(sim, "avenging_wrath")
+            and not sim.aw_up
+            and DH:CanUseCooldown(sim, "avenging_wrath", "use_avenging_wrath")
+        then
             return "avenging_wrath"
         end
 
         -- Divine Plea (high priority when mana is critical)
-        if sim.mana_pct < (DH:GetSetting("mana_threshold_divine_plea") or 40)
-            and DH:CanUseCooldown(sim, "divine_plea", "use_divine_plea") then
+        if
+            sim.mana_pct < (DH:GetSetting("mana_threshold_divine_plea") or 40)
+            and DH:CanUseCooldown(sim, "divine_plea", "use_divine_plea")
+        then
             return "divine_plea"
         end
 
         -- target_mode: AOE rotation (Divine Storm / Consecration)
         if DH:IsCleave(sim) then
-            if sim.has_ds and sim:ready("divine_storm") then
+            if sim.has_ds and DH:Ready(sim, "divine_storm") then
                 return "divine_storm"
             end
-            if sim:ready("consecration") and sim.ttd > 4 then
+            if DH:Ready(sim, "consecration") and sim.ttd > 4 then
                 return "consecration"
             end
-            if sim:ready("crusader_strike") then
+            if DH:Ready(sim, "crusader_strike") then
                 return "crusader_strike"
             end
         end
 
         if DH:IsMultiTarget(sim) then
-            if sim.has_ds and sim:ready("divine_storm") then
+            if sim.has_ds and DH:Ready(sim, "divine_storm") then
                 return "divine_storm"
             end
-            if sim:ready("consecration") and sim.ttd > 4 then
+            if DH:Ready(sim, "consecration") and sim.ttd > 4 then
                 return "consecration"
             end
         end
 
         -- Execute: Hammer of Wrath
-        if sim.in_execute and sim:ready("hammer_of_wrath") then
+        if sim.in_execute and DH:Ready(sim, "hammer_of_wrath") then
             return "hammer_of_wrath"
         end
 
         -- Exorcism vs Undead/Demon with AoW (100% crit)
-        if sim.is_undead_demon and sim.aow_up and sim:ready("exorcism")
-            and DH:GetSetting("use_exorcism") then
+        if sim.is_undead_demon and sim.aow_up and DH:Ready(sim, "exorcism") and DH:GetSetting("use_exorcism") then
             return "exorcism"
         end
 
         -- Core FCFS (wotlk sim APL order: Judge > CS > DS)
-        if sim:ready("judgement_of_wisdom") then
+        if DH:Ready(sim, "judgement_of_wisdom") then
             return "judgement_of_wisdom"
         end
 
-        if sim:ready("crusader_strike") then
+        if DH:Ready(sim, "crusader_strike") then
             return "crusader_strike"
         end
 
-        if sim.has_ds and sim:ready("divine_storm") then
+        if sim.has_ds and DH:Ready(sim, "divine_storm") then
             return "divine_storm"
         end
 
         -- Consecration
-        if sim:ready("consecration") and sim.ttd > 4 then
+        if DH:Ready(sim, "consecration") and sim.ttd > 4 then
             return "consecration"
         end
 
         -- Exorcism vs normal targets with AoW
-        if not sim.is_undead_demon and sim.aow_up and sim:ready("exorcism")
-            and DH:GetSetting("use_exorcism") then
+        if not sim.is_undead_demon and sim.aow_up and DH:Ready(sim, "exorcism") and DH:GetSetting("use_exorcism") then
             return "exorcism"
         end
 
         -- Holy Wrath (undead/demons only)
-        if sim.is_undead_demon and sim:ready("holy_wrath") then
+        if sim.is_undead_demon and DH:Ready(sim, "holy_wrath") then
             return "holy_wrath"
         end
 
         -- Nothing ready — return nearest FCFS ability not already recommended
         local function hasRec(key)
-            for _, r in ipairs(recs) do if r.ability == key then return true end end
+            for _, r in ipairs(recs) do
+                if r.ability == key then
+                    return true
+                end
+            end
             return false
         end
         local nearest, nearestCD = nil, 999
         local fcfs = { "judgement_of_wisdom", "crusader_strike" }
-        if sim.has_ds then table.insert(fcfs, "divine_storm") end
+        if sim.has_ds then
+            table.insert(fcfs, "divine_storm")
+        end
         table.insert(fcfs, "consecration")
         for _, key in ipairs(fcfs) do
             if not hasRec(key) then
@@ -159,7 +171,7 @@ local retConfig = {
         if key == "avenging_wrath" then
             sim.aw_up = true
         elseif key == "exorcism" then
-            sim.aow_up = false  -- Consumes AoW proc
+            sim.aow_up = false -- Consumes AoW proc
         elseif key == "seal_of_vengeance" or key == "seal_of_command" then
             sim.seal_up = true
         end
@@ -200,8 +212,10 @@ local protConfig = {
     initState = function(sim, s)
         sim.rf_up = s.buff.righteous_fury.up
         sim.has_ds = s.talent.divine_storm.rank > 0
-        sim.seal_up = s.buff.seal_of_vengeance.up or s.buff.seal_of_command.up
-            or s.buff.seal_of_wisdom.up or s.buff.seal_of_righteousness.up
+        sim.seal_up = s.buff.seal_of_vengeance.up
+            or s.buff.seal_of_command.up
+            or s.buff.seal_of_wisdom.up
+            or s.buff.seal_of_righteousness.up
     end,
     getPriority = function(sim, recs)
         -- Righteous Fury always first
@@ -220,7 +234,9 @@ local protConfig = {
         -- Helper: is ability already recommended?
         local function hasRec(key)
             for _, r in ipairs(recs) do
-                if r.ability == key then return true end
+                if r.ability == key then
+                    return true
+                end
             end
             return false
         end
@@ -230,13 +246,13 @@ local protConfig = {
 
         -- target_mode: AOE rotation (Hammer of the Righteous / Consecration)
         if DH:IsCleave(sim) then
-            if sim.has_ds and sim:ready("divine_storm") then
+            if sim.has_ds and DH:Ready(sim, "divine_storm") then
                 return "divine_storm"
             end
             if hotr_cd <= 0 then
                 return "hammer_of_the_righteous"
             end
-            if sim:ready("consecration") and sim.ttd > 4 then
+            if DH:Ready(sim, "consecration") and sim.ttd > 4 then
                 return "consecration"
             end
         end
@@ -245,7 +261,7 @@ local protConfig = {
             if hotr_cd <= 0 then
                 return "hammer_of_the_righteous"
             end
-            if sim:ready("consecration") and sim.ttd > 4 then
+            if DH:Ready(sim, "consecration") and sim.ttd > 4 then
                 return "consecration"
             end
         end
@@ -260,13 +276,12 @@ local protConfig = {
         end
 
         -- Execute: Hammer of Wrath
-        if sim.in_execute and sim:ready("hammer_of_wrath") then
+        if sim.in_execute and DH:Ready(sim, "hammer_of_wrath") then
             return "hammer_of_wrath"
         end
 
         -- Avengers Shield (30s CD, high ranged threat/damage)
-        if sim:ready("avengers_shield")
-            and DH:CanUseCooldown(sim, "avengers_shield", "use_avengers_shield") then
+        if DH:Ready(sim, "avengers_shield") and DH:CanUseCooldown(sim, "avengers_shield", "use_avengers_shield") then
             return "avengers_shield"
         end
 
@@ -282,31 +297,38 @@ local protConfig = {
         end
 
         -- Divine Plea (high priority when mana is critical)
-        if sim.mana_pct < (DH:GetSetting("mana_threshold_divine_plea") or 40)
-            and DH:CanUseCooldown(sim, "divine_plea", "use_divine_plea") then
+        if
+            sim.mana_pct < (DH:GetSetting("mana_threshold_divine_plea") or 40)
+            and DH:CanUseCooldown(sim, "divine_plea", "use_divine_plea")
+        then
             return "divine_plea"
         end
 
         -- 9s abilities in priority order: Cons > HS > JoW
-        if sim:ready("consecration") then
+        if DH:Ready(sim, "consecration") then
             return "consecration"
         end
 
-        if sim:ready("holy_shield") and DH:CanUseCooldown(sim, "holy_shield", "use_holy_shield") then
+        if DH:Ready(sim, "holy_shield") and DH:CanUseCooldown(sim, "holy_shield", "use_holy_shield") then
             return "holy_shield"
         end
 
-        if sim:ready("judgement_of_wisdom") then
+        if DH:Ready(sim, "judgement_of_wisdom") then
             return "judgement_of_wisdom"
         end
 
         -- Nothing ready — return whichever ability comes off CD soonest
         local nearest, nearestCD = nil, 999
         local all = {
-            "shield_of_righteousness", "hammer_of_the_righteous",
-            "consecration", "holy_shield", "judgement_of_wisdom",
+            "shield_of_righteousness",
+            "hammer_of_the_righteous",
+            "consecration",
+            "holy_shield",
+            "judgement_of_wisdom",
         }
-        if sim.in_execute then table.insert(all, "hammer_of_wrath") end
+        if sim.in_execute then
+            table.insert(all, "hammer_of_wrath")
+        end
         for _, key in ipairs(all) do
             if not hasRec(key) then
                 local cd = sim:remains(key)
@@ -356,24 +378,41 @@ DH:RegisterMode("prot_paladin", {
 local function GetHolyDpsRecommendations(addon)
     local s = addon.State
     local recs = {}
-    local function push(key) recs[#recs + 1] = { ability = key, priority = #recs + 1 } end
+    local function push(key)
+        recs[#recs + 1] = { ability = key, priority = #recs + 1 }
+    end
     local function Ready(key)
         local a = class.abilities[key]
         return DH:SpellReady(a and a.id)
     end
     local function Build()
         -- Seal upkeep (only if the aura is registered/known)
-        if s.buff.seal_of_wisdom and not s.buff.seal_of_wisdom.up
-            and not (s.buff.seal_of_vengeance and s.buff.seal_of_vengeance.up) then
+        if
+            s.buff.seal_of_wisdom
+            and not s.buff.seal_of_wisdom.up
+            and not (s.buff.seal_of_vengeance and s.buff.seal_of_vengeance.up)
+        then
             push("seal_of_wisdom")
         end
         local hp = s.target and s.target.health and s.target.health.pct or 100
-        if Ready("holy_shock") then push("holy_shock") end
-        if Ready("exorcism") then push("exorcism") end
-        if Ready("consecration") then push("consecration") end
-        if Ready("judgement_of_wisdom") then push("judgement_of_wisdom") end
-        if hp < 20 and Ready("hammer_of_wrath") then push("hammer_of_wrath") end
-        if #recs == 0 then push("exorcism") end
+        if Ready("holy_shock") then
+            push("holy_shock")
+        end
+        if Ready("exorcism") then
+            push("exorcism")
+        end
+        if Ready("consecration") then
+            push("consecration")
+        end
+        if Ready("judgement_of_wisdom") then
+            push("judgement_of_wisdom")
+        end
+        if hp < 20 and Ready("hammer_of_wrath") then
+            push("hammer_of_wrath")
+        end
+        if #recs == 0 then
+            push("exorcism")
+        end
     end
     Build()
     return recs
@@ -387,12 +426,77 @@ DH:RegisterMode("holy_paladin_dps", {
     end,
 })
 
--- Heal spec: no heal rotation implemented. A safe mode prevents a Holy
--- paladin from being driven by the Retribution rotation; enabling the
--- heal-DPS mode borrows holy_paladin_dps instead.
-DH:RegisterSafeMode("holy_paladin", "Holy (Healer)",
+-- ============================================================================
+-- HOLY HEAL ROTATION
+-- Isolated from the Retribution/Protection rotations. It only emits heal and
+-- utility recommendations.
+-- ============================================================================
+local function GetHolyHealRecommendations(addon)
+    local ctx = ns.GetHealContext()
+    local recs = {}
+    local function push(key, target)
+        if ns.CanHeal(key, target) then
+            ns.PushHeal(recs, key, target)
+        end
+    end
+
+    local tank = ns.GetTankTarget(ctx)
+    local low = ns.GetHealTarget(ctx, { below = 100 })
+    local critical = ns.GetHealTarget(ctx, { below = 30 })
+    local target = critical or low
+
+    -- Beacon and Sacred Shield maintenance on the tank.
+    if tank then
+        if not ns.GetAbilityAura(tank.unit, "beacon_of_light") then
+            push("beacon_of_light", tank)
+        end
+        local shield = ns.GetAbilityAura(tank.unit, "sacred_shield")
+        if not shield or shield.remains < 5 then
+            push("sacred_shield", tank)
+        end
+    end
+
+    -- Cleanse magic, poison or disease before healing through it.
+    local dispelUnit = ns.FindDispelTarget(ctx, { Magic = true, Poison = true, Disease = true })
+    if dispelUnit then
+        push("cleanse", dispelUnit)
+    end
+
+    -- Emergency tools.
+    if critical then
+        if critical.pct < 20 then
+            push("lay_on_hands", critical)
+        end
+        push("holy_shock", critical)
+    end
+
+    -- Main heals: Holy Light is the efficient workhorse, Flash of Light the
+    -- fast top-up. Holy Shock is used on cooldown on an injured target.
+    if target then
+        if target.pct < 55 then
+            push("flash_of_light", target)
+        else
+            push("holy_light", target)
+        end
+        if not critical and target.pct < 85 then
+            push("holy_shock", target)
+        end
+    end
+
+    -- Mana and throughput cooldowns.
+    if ctx.manaPct < 35 and not ns.GetAbilityAura("player", "divine_illumination") then
+        push("divine_illumination", "player")
+    end
+
+    return recs
+end
+
+DH:RegisterHealMode(
+    "holy_paladin",
+    "Holy (Healer)",
     select(3, GetSpellInfo(635)) or "Interface\\Icons\\Spell_Holy_HolyBolt",
-    (DH.L and DH.L["safe_mode_holy_paladin"]) or "Healer rotations are not supported (Holy Paladin)")
+    GetHolyHealRecommendations
+)
 
 -- Post-phase 4: PvP priority branch
 DH:RegisterPvPSpec({

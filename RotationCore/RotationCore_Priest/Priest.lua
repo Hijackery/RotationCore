@@ -36,6 +36,25 @@ local SPELLS = {
     HOLY_FIRE = 48135,
     HOLY_NOVA = 48078,
 
+    -- Healer
+    GREATER_HEAL = 48063,
+    FLASH_HEAL = 48071,
+    RENEW = 48068,
+    PRAYER_OF_MENDING = 48113,
+    PENANCE = 53007,
+    PRAYER_OF_HEALING = 48072,
+    CIRCLE_OF_HEALING = 48089,
+    BINDING_HEAL = 48120,
+    GUARDIAN_SPIRIT = 47788,
+    PAIN_SUPPRESSION = 33206,
+    POWER_INFUSION = 10060,
+    DIVINE_HYMN = 64843,
+    HYMN_OF_HOPE = 64901,
+    DISPEL_MAGIC = 988,
+    ABOLISH_DISEASE = 552,
+    CURE_DISEASE = 528,
+    MASS_DISPEL = 32375,
+
     -- PvP
     PSYCHIC_SCREAM = 10890,
     SILENCE = 15487,
@@ -129,6 +148,109 @@ class.abilities = {
         id = SPELLS.HOLY_NOVA,
         name = "Holy Nova",
         texture = 135922,
+    },
+
+    -- Healer
+    greater_heal = {
+        id = SPELLS.GREATER_HEAL,
+        name = "Greater Heal",
+        texture = 135937,
+        heal = true,
+    },
+    flash_heal = {
+        id = SPELLS.FLASH_HEAL,
+        name = "Flash Heal",
+        texture = 135935,
+        heal = true,
+    },
+    renew = {
+        id = SPELLS.RENEW,
+        name = "Renew",
+        texture = 135953,
+        heal = true,
+    },
+    prayer_of_mending = {
+        id = SPELLS.PRAYER_OF_MENDING,
+        name = "Prayer of Mending",
+        texture = 135944,
+        heal = true,
+    },
+    penance = {
+        id = SPELLS.PENANCE,
+        name = "Penance",
+        texture = 237550,
+        heal = true,
+    },
+    prayer_of_healing = {
+        id = SPELLS.PRAYER_OF_HEALING,
+        name = "Prayer of Healing",
+        texture = 135943,
+        heal = true,
+    },
+    circle_of_healing = {
+        id = SPELLS.CIRCLE_OF_HEALING,
+        name = "Circle of Healing",
+        texture = 135943,
+        heal = true,
+    },
+    binding_heal = {
+        id = SPELLS.BINDING_HEAL,
+        name = "Binding Heal",
+        texture = 135889,
+        heal = true,
+    },
+    guardian_spirit = {
+        id = SPELLS.GUARDIAN_SPIRIT,
+        name = "Guardian Spirit",
+        texture = 237542,
+        heal = true,
+    },
+    pain_suppression = {
+        id = SPELLS.PAIN_SUPPRESSION,
+        name = "Pain Suppression",
+        texture = 135936,
+    },
+    power_infusion = {
+        id = SPELLS.POWER_INFUSION,
+        name = "Power Infusion",
+        texture = 135754,
+    },
+    divine_hymn = {
+        id = SPELLS.DIVINE_HYMN,
+        name = "Divine Hymn",
+        texture = 237540,
+        heal = true,
+    },
+    hymn_of_hope = {
+        id = SPELLS.HYMN_OF_HOPE,
+        name = "Hymn of Hope",
+        texture = 237541,
+    },
+    dispel_magic = {
+        id = SPELLS.DISPEL_MAGIC,
+        name = "Dispel Magic",
+        texture = 135894,
+    },
+    abolish_disease = {
+        id = SPELLS.ABOLISH_DISEASE,
+        name = "Abolish Disease",
+        texture = 136067,
+    },
+    cure_disease = {
+        id = SPELLS.CURE_DISEASE,
+        name = "Cure Disease",
+        texture = 136067,
+    },
+    mass_dispel = {
+        id = SPELLS.MASS_DISPEL,
+        name = "Mass Dispel",
+        texture = 135739,
+    },
+    power_word_shield = {
+        id = SPELLS.POWER_WORD_SHIELD,
+        name = "Power Word: Shield",
+        texture = 135940,
+        heal = true,
     },
 
     -- PvP

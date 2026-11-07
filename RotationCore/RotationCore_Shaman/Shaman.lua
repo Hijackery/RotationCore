@@ -38,6 +38,21 @@ local SPELLS = {
     FIRE_NOVA = 61657,
     WIND_SHEAR = 57994,
 
+    -- Restoration
+    HEALING_WAVE = 49273,
+    LESSER_HEALING_WAVE = 49276,
+    RIPTIDE = 61301,
+    EARTH_SHIELD = 49284,
+    CHAIN_HEAL = 55459,
+    TIDAL_FORCE = 55198,
+    MANA_TIDE_TOTEM = 16190,
+    CLEANSE_SPIRIT = 51886,
+    CURE_DISEASE = 2870,
+    CURE_POISON = 526,
+    HEALING_STREAM_TOTEM = 58756,
+    FLAMETONGUE_TOTEM = 58656,
+    EARTHLIVING_WEAPON = 51994,
+
     -- Shields
     LIGHTNING_SHIELD = 49281,
     WATER_SHIELD = 57960,
@@ -150,6 +165,78 @@ class.abilities = {
         id = SPELLS.WATER_SHIELD,
         name = "Water Shield",
         texture = 132315,
+    },
+
+    -- Restoration
+    healing_wave = {
+        id = SPELLS.HEALING_WAVE,
+        name = "Healing Wave",
+        texture = 136052,
+        heal = true,
+    },
+    lesser_healing_wave = {
+        id = SPELLS.LESSER_HEALING_WAVE,
+        name = "Lesser Healing Wave",
+        texture = 136052,
+        heal = true,
+    },
+    riptide = {
+        id = SPELLS.RIPTIDE,
+        name = "Riptide",
+        texture = 237548,
+        heal = true,
+    },
+    earth_shield = {
+        id = SPELLS.EARTH_SHIELD,
+        name = "Earth Shield",
+        texture = 136089,
+        heal = true,
+    },
+    chain_heal = {
+        id = SPELLS.CHAIN_HEAL,
+        name = "Chain Heal",
+        texture = 136042,
+        heal = true,
+    },
+    tidal_force = {
+        id = SPELLS.TIDAL_FORCE,
+        name = "Tidal Force",
+        texture = 135861,
+    },
+    mana_tide_totem = {
+        id = SPELLS.MANA_TIDE_TOTEM,
+        name = "Mana Tide Totem",
+        texture = 135861,
+    },
+    cleanse_spirit = {
+        id = SPELLS.CLEANSE_SPIRIT,
+        name = "Cleanse Spirit",
+        texture = 136075,
+    },
+    cure_disease = {
+        id = SPELLS.CURE_DISEASE,
+        name = "Cure Disease",
+        texture = 136067,
+    },
+    cure_poison = {
+        id = SPELLS.CURE_POISON,
+        name = "Cure Poison",
+        texture = 136067,
+    },
+    healing_stream_totem = {
+        id = SPELLS.HEALING_STREAM_TOTEM,
+        name = "Healing Stream Totem",
+        texture = 135127,
+    },
+    flametongue_totem = {
+        id = SPELLS.FLAMETONGUE_TOTEM,
+        name = "Flametongue Totem",
+        texture = 135814,
+    },
+    earthliving_weapon = {
+        id = SPELLS.EARTHLIVING_WEAPON,
+        name = "Earthliving Weapon",
+        texture = 136051,
     },
 
     -- Totems

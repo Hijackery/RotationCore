@@ -3,7 +3,9 @@
 -- Uses core RunSimulation for CD-aware predictions
 
 local DH = RotationCore
-if not DH then return end
+if not DH then
+    return
+end
 
 if select(2, UnitClass("player")) ~= "HUNTER" then
     return
@@ -62,7 +64,7 @@ local bmConfig = {
 
         -- Talents
         sim.has_bestial_wrath = s.talent.bestial_wrath.rank > 0
-        sim.has_kill_command = true  -- all BM have this
+        sim.has_kill_command = true -- all BM have this
         sim.has_aimed = s.talent.aimed_shot.rank > 0
 
         -- Glyph of Kill Shot
@@ -86,22 +88,22 @@ local bmConfig = {
             if (not sim.serpent_sting_up or sim.serpent_sting_remains < 2) and sim.ttd > 6 then
                 return "serpent_sting"
             end
-            if sim:ready("multi_shot") then
+            if DH:Ready(sim, "multi_shot") then
                 return "multi_shot"
             end
         end
 
         if DH:IsMultiTarget(sim) then
-            if not sim.explosive_trap_up and sim.ttd > 10 and sim:ready("explosive_trap") then
+            if not sim.explosive_trap_up and sim.ttd > 10 and DH:Ready(sim, "explosive_trap") then
                 return "explosive_trap"
             end
-            if sim:ready("multi_shot") then
+            if DH:Ready(sim, "multi_shot") then
                 return "multi_shot"
             end
         end
 
         -- Kill Shot (execute phase)
-        if sim.in_execute and sim:ready("kill_shot") then
+        if sim.in_execute and DH:Ready(sim, "kill_shot") then
             return "kill_shot"
         end
 
@@ -126,17 +128,17 @@ local bmConfig = {
         end
 
         -- Multi-Shot
-        if sim:ready("multi_shot") then
+        if DH:Ready(sim, "multi_shot") then
             return "multi_shot"
         end
 
         -- Aimed Shot
-        if sim.has_aimed and sim:ready("aimed_shot") then
+        if sim.has_aimed and DH:Ready(sim, "aimed_shot") then
             return "aimed_shot"
         end
 
         -- Arcane Shot
-        if sim:ready("arcane_shot") then
+        if DH:Ready(sim, "arcane_shot") then
             return "arcane_shot"
         end
 
@@ -158,9 +160,15 @@ local bmConfig = {
     end,
     getAdvanceTime = function(sim, action)
         local h = sim.haste or 1
-        if action == "steady_shot" then return math.max(sim.gcd, 2.0 / h) end
-        if action == "kill_command" then return 0 end
-        if action == "aspect_of_the_viper" or action == "aspect_of_the_dragonhawk" then return 0 end
+        if action == "steady_shot" then
+            return math.max(sim.gcd, 2.0 / h)
+        end
+        if action == "kill_command" then
+            return 0
+        end
+        if action == "aspect_of_the_viper" or action == "aspect_of_the_dragonhawk" then
+            return 0
+        end
         return sim.gcd
     end,
 }
@@ -213,7 +221,7 @@ local mmConfig = {
         sim.explosive_trap_remains = s.debuff.explosive_trap.remains
 
         -- Procs
-        sim.iss_up = s.buff.improved_steady_shot.up  -- +15% damage buff
+        sim.iss_up = s.buff.improved_steady_shot.up -- +15% damage buff
 
         -- Resources
         sim.mana_pct = s.mana.pct or 0
@@ -245,22 +253,22 @@ local mmConfig = {
             if (not sim.serpent_sting_up or sim.serpent_sting_remains < 2) and sim.ttd > 6 then
                 return "serpent_sting"
             end
-            if sim:ready("multi_shot") then
+            if DH:Ready(sim, "multi_shot") then
                 return "multi_shot"
             end
         end
 
         if DH:IsMultiTarget(sim) then
-            if not sim.explosive_trap_up and sim.ttd > 10 and sim:ready("explosive_trap") then
+            if not sim.explosive_trap_up and sim.ttd > 10 and DH:Ready(sim, "explosive_trap") then
                 return "explosive_trap"
             end
-            if sim:ready("multi_shot") then
+            if DH:Ready(sim, "multi_shot") then
                 return "multi_shot"
             end
         end
 
         -- Kill Shot (execute phase)
-        if sim.in_execute and sim:ready("kill_shot") then
+        if sim.in_execute and DH:Ready(sim, "kill_shot") then
             return "kill_shot"
         end
 
@@ -275,22 +283,22 @@ local mmConfig = {
         end
 
         -- Chimera Shot on CD (refreshes Serpent Sting + bonus damage)
-        if sim.has_chimera and sim:ready("chimera_shot") then
+        if sim.has_chimera and DH:Ready(sim, "chimera_shot") then
             return "chimera_shot"
         end
 
         -- Aimed Shot
-        if sim.has_aimed and sim:ready("aimed_shot") then
+        if sim.has_aimed and DH:Ready(sim, "aimed_shot") then
             return "aimed_shot"
         end
 
         -- Multi-Shot
-        if sim:ready("multi_shot") then
+        if DH:Ready(sim, "multi_shot") then
             return "multi_shot"
         end
 
         -- Arcane Shot (when others on CD)
-        if sim:ready("arcane_shot") then
+        if DH:Ready(sim, "arcane_shot") then
             return "arcane_shot"
         end
 
@@ -321,9 +329,15 @@ local mmConfig = {
     end,
     getAdvanceTime = function(sim, action)
         local h = sim.haste or 1
-        if action == "steady_shot" then return math.max(sim.gcd, 2.0 / h) end
-        if action == "kill_command" then return 0 end
-        if action == "aspect_of_the_viper" or action == "aspect_of_the_dragonhawk" then return 0 end
+        if action == "steady_shot" then
+            return math.max(sim.gcd, 2.0 / h)
+        end
+        if action == "kill_command" then
+            return 0
+        end
+        if action == "aspect_of_the_viper" or action == "aspect_of_the_dragonhawk" then
+            return 0
+        end
         return sim.gcd
     end,
 }
@@ -414,22 +428,22 @@ local svConfig = {
             if (not sim.serpent_sting_up or sim.serpent_sting_remains < 2) and sim.ttd > 6 then
                 return "serpent_sting"
             end
-            if sim:ready("multi_shot") then
+            if DH:Ready(sim, "multi_shot") then
                 return "multi_shot"
             end
         end
 
         if DH:IsMultiTarget(sim) then
-            if not sim.explosive_trap_up and sim.ttd > 10 and sim:ready("explosive_trap") then
+            if not sim.explosive_trap_up and sim.ttd > 10 and DH:Ready(sim, "explosive_trap") then
                 return "explosive_trap"
             end
-            if sim:ready("multi_shot") then
+            if DH:Ready(sim, "multi_shot") then
                 return "multi_shot"
             end
         end
 
         -- Kill Shot (execute phase)
-        if sim.in_execute and sim:ready("kill_shot") then
+        if sim.in_execute and DH:Ready(sim, "kill_shot") then
             return "kill_shot"
         end
 
@@ -454,17 +468,17 @@ local svConfig = {
         end
 
         -- Explosive Shot on CD
-        if sim.has_explosive and sim:ready("explosive_shot") then
+        if sim.has_explosive and DH:Ready(sim, "explosive_shot") then
             return "explosive_shot"
         end
 
         -- Multi-Shot
-        if sim:ready("multi_shot") then
+        if DH:Ready(sim, "multi_shot") then
             return "multi_shot"
         end
 
         -- Aimed Shot
-        if sim.has_aimed and sim:ready("aimed_shot") then
+        if sim.has_aimed and DH:Ready(sim, "aimed_shot") then
             return "aimed_shot"
         end
 
@@ -500,9 +514,15 @@ local svConfig = {
     end,
     getAdvanceTime = function(sim, action)
         local h = sim.haste or 1
-        if action == "steady_shot" then return math.max(sim.gcd, 2.0 / h) end
-        if action == "kill_command" then return 0 end
-        if action == "aspect_of_the_viper" or action == "aspect_of_the_dragonhawk" then return 0 end
+        if action == "steady_shot" then
+            return math.max(sim.gcd, 2.0 / h)
+        end
+        if action == "kill_command" then
+            return 0
+        end
+        if action == "aspect_of_the_viper" or action == "aspect_of_the_dragonhawk" then
+            return 0
+        end
         return sim.gcd
     end,
 }

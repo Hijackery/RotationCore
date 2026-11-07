@@ -39,6 +39,18 @@ local SPELLS = {
     -- Holy
     HOLY_SHOCK = 48825,
     HOLY_LIGHT = 48782,
+    FLASH_OF_LIGHT = 48785,
+    SACRED_SHIELD = 53601,
+    BEACON_OF_LIGHT = 53563,
+    LAY_ON_HANDS = 48788,
+    DIVINE_FAVOR = 20216,
+    DIVINE_ILLUMINATION = 31842,
+    AURA_MASTERY = 31821,
+    CLEANSE = 4987,
+    HAND_OF_FREEDOM = 1044,
+    HAND_OF_PROTECTION = 10278,
+    HAND_OF_SACRIFICE = 6940,
+    CONCENTRATION_AURA = 19746,
 
     -- Shared
     HOLY_WRATH = 48817,
@@ -57,6 +69,7 @@ local SPELLS = {
 
     -- Blessings
     BLESSING_OF_MIGHT = 48934,
+    BLESSING_OF_WISDOM = 48936,
     BLESSING_OF_KINGS = 20217,
 }
 
@@ -174,6 +187,75 @@ class.abilities = {
         name = "Holy Light",
         texture = 135907,
         heal = true,
+    },
+    flash_of_light = {
+        id = SPELLS.FLASH_OF_LIGHT,
+        name = "Flash of Light",
+        texture = 135907,
+        heal = true,
+    },
+    sacred_shield = {
+        id = SPELLS.SACRED_SHIELD,
+        name = "Sacred Shield",
+        texture = 135874,
+        heal = true,
+    },
+    beacon_of_light = {
+        id = SPELLS.BEACON_OF_LIGHT,
+        name = "Beacon of Light",
+        texture = 135907,
+        heal = true,
+    },
+    lay_on_hands = {
+        id = SPELLS.LAY_ON_HANDS,
+        name = "Lay on Hands",
+        texture = 135907,
+        heal = true,
+    },
+    divine_favor = {
+        id = SPELLS.DIVINE_FAVOR,
+        name = "Divine Favor",
+        texture = 135895,
+    },
+    divine_illumination = {
+        id = SPELLS.DIVINE_ILLUMINATION,
+        name = "Divine Illumination",
+        texture = 135895,
+    },
+    aura_mastery = {
+        id = SPELLS.AURA_MASTERY,
+        name = "Aura Mastery",
+        texture = 135872,
+    },
+    cleanse = {
+        id = SPELLS.CLEANSE,
+        name = "Cleanse",
+        texture = 135952,
+    },
+    hand_of_freedom = {
+        id = SPELLS.HAND_OF_FREEDOM,
+        name = "Hand of Freedom",
+        texture = 135968,
+    },
+    hand_of_protection = {
+        id = SPELLS.HAND_OF_PROTECTION,
+        name = "Hand of Protection",
+        texture = 135964,
+    },
+    hand_of_sacrifice = {
+        id = SPELLS.HAND_OF_SACRIFICE,
+        name = "Hand of Sacrifice",
+        texture = 135966,
+    },
+    concentration_aura = {
+        id = SPELLS.CONCENTRATION_AURA,
+        name = "Concentration Aura",
+        texture = 135933,
+    },
+    blessing_of_wisdom = {
+        id = SPELLS.BLESSING_OF_WISDOM,
+        name = "Blessing of Wisdom",
+        texture = 135970,
     },
 
     -- PvP

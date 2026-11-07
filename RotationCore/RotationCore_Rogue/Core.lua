@@ -3,7 +3,9 @@
 -- Uses core RunSimulation with energy/CP tracking
 
 local DH = RotationCore
-if not DH then return end
+if not DH then
+    return
+end
 
 if select(2, UnitClass("player")) ~= "ROGUE" then
     return
@@ -35,9 +37,13 @@ local assConfig = {
         {
             field = "energy",
             max = "energy_max",
-            regen = 10,  -- base energy regen
-            initFrom = function(s) return s.energy.current end,
-            initMaxFrom = function(s) return s.energy.max end,
+            regen = 10, -- base energy regen
+            initFrom = function(s)
+                return s.energy.current
+            end,
+            initMaxFrom = function(s)
+                return s.energy.max
+            end,
         },
     },
     auras = {
@@ -99,16 +105,25 @@ local assConfig = {
 
         -- Hunger for Blood: maintain (requires a bleed on the target, which
         -- is what unlocks its damage bonus -- not Deadly Poison)
-        if sim.has_hfb and (not sim.hfb_up or sim.hfb_remains < 2) and sim.energy >= 15 and sim.rupture_up
-            and DH:CanUseCooldown(sim, "hunger_for_blood", "use_hunger_for_blood") then
+        if
+            sim.has_hfb
+            and (not sim.hfb_up or sim.hfb_remains < 2)
+            and sim.energy >= 15
+            and sim.rupture_up
+            and DH:CanUseCooldown(sim, "hunger_for_blood", "use_hunger_for_blood")
+        then
             return "hunger_for_blood"
         end
 
         -- Cold Blood right before the damage finisher so its guaranteed crit
         -- is not wasted on a maintenance finisher (Slice and Dice).
-        if sim.cp >= 4 and sim.energy >= 35 and (not sim.envenom_up or sim.energy >= 85)
-            and sim:ready("cold_blood")
-            and DH:CanUseCooldown(sim, "cold_blood", "use_cold_blood") then
+        if
+            sim.cp >= 4
+            and sim.energy >= 35
+            and (not sim.envenom_up or sim.energy >= 85)
+            and DH:Ready(sim, "cold_blood")
+            and DH:CanUseCooldown(sim, "cold_blood", "use_cold_blood")
+        then
             return "cold_blood"
         end
 
@@ -123,8 +138,12 @@ local assConfig = {
         end
 
         -- Vanish (stealth opener for extra CP)
-        if sim.cp == 0 and sim:ready("vanish")
-            and DH:CanUseCooldown(sim, "vanish", "use_vanish") and sim.energy >= 55 then
+        if
+            sim.cp == 0
+            and DH:Ready(sim, "vanish")
+            and DH:CanUseCooldown(sim, "vanish", "use_vanish")
+            and sim.energy >= 55
+        then
             return "vanish"
         end
 
@@ -146,15 +165,15 @@ local assConfig = {
         elseif key == "slice_and_dice" then
             sim.energy = sim.energy - 25
             sim.snd_up = true
-            sim.snd_remains = 6 + (sim.cp * 3)  -- 6s base + 3s per CP
+            sim.snd_remains = 6 + (sim.cp * 3) -- 6s base + 3s per CP
             sim.cp = 0
         elseif key == "envenom" then
             sim.energy = sim.energy - 35
             sim.envenom_up = true
-            sim.envenom_remains = sim.cp  -- 1s per CP
+            sim.envenom_remains = sim.cp -- 1s per CP
             -- Cut to the Chase refreshes SnD
             if sim.has_cut_to_chase and sim.snd_up then
-                sim.snd_remains = 6 + (5 * 3)  -- refreshes to max (5 CP value)
+                sim.snd_remains = 6 + (5 * 3) -- refreshes to max (5 CP value)
             end
             sim.cp = 0
         elseif key == "rupture" then
@@ -173,8 +192,12 @@ local assConfig = {
     getWaitTime = function(sim)
         -- Wait for energy to afford next ability
         local needed = sim.muti_cost
-        if sim.cp >= 4 then needed = 35 end  -- envenom cost
-        if not sim.snd_up or sim.snd_remains < 2 then needed = 25 end
+        if sim.cp >= 4 then
+            needed = 35
+        end -- envenom cost
+        if not sim.snd_up or sim.snd_remains < 2 then
+            needed = 25
+        end
         local wait = math.max(0, (needed - sim.energy) / 10)
         return math.max(wait, sim.gcd)
     end,
@@ -197,8 +220,12 @@ local combatConfig = {
             field = "energy",
             max = "energy_max",
             regen = 10,
-            initFrom = function(s) return s.energy.current end,
-            initMaxFrom = function(s) return s.energy.max end,
+            initFrom = function(s)
+                return s.energy.current
+            end,
+            initMaxFrom = function(s)
+                return s.energy.max
+            end,
         },
     },
     cds = {
@@ -234,7 +261,7 @@ local combatConfig = {
 
         -- Energy cost (improved sinister strike reduces cost)
         local iss_rank = s.talent.improved_sinister_strike.rank or 0
-        sim.ss_cost = 45 - (iss_rank * 3)  -- 45/42/40
+        sim.ss_cost = 45 - (iss_rank * 3) -- 45/42/40
 
         -- Glyph of Killing Spree
         sim.ks_cd = (s.glyph.killing_spree and s.glyph.killing_spree.enabled) and 75 or 120
@@ -270,7 +297,14 @@ local combatConfig = {
         end
 
         -- Rupture at 5 CP when SnD is healthy
-        if sim.cp == 5 and not sim.rupture_up and sim.snd_up and sim.snd_remains > 4 and sim.energy >= 25 and sim.ttd > 10 then
+        if
+            sim.cp == 5
+            and not sim.rupture_up
+            and sim.snd_up
+            and sim.snd_remains > 4
+            and sim.energy >= 25
+            and sim.ttd > 10
+        then
             return "rupture"
         end
 
@@ -286,14 +320,16 @@ local combatConfig = {
         end
 
         -- Killing Spree (low energy, dump)
-        if sim.has_killing_spree and sim.energy < 35
-            and DH:CanUseCooldown(sim, "killing_spree", "use_killing_spree") then
+        if
+            sim.has_killing_spree
+            and sim.energy < 35
+            and DH:CanUseCooldown(sim, "killing_spree", "use_killing_spree")
+        then
             return "killing_spree"
         end
 
         -- Adrenaline Rush
-        if sim.has_ar and sim.energy < 35
-            and DH:CanUseCooldown(sim, "adrenaline_rush", "use_adrenaline_rush") then
+        if sim.has_ar and sim.energy < 35 and DH:CanUseCooldown(sim, "adrenaline_rush", "use_adrenaline_rush") then
             return "adrenaline_rush"
         end
 
@@ -331,9 +367,15 @@ local combatConfig = {
     end,
     getWaitTime = function(sim)
         local needed = sim.ss_cost
-        if DH:IsMultiTarget(sim) then needed = 35 end
-        if sim.cp >= 4 then needed = 25 end
-        if not sim.snd_up or sim.snd_remains < 2 then needed = 25 end
+        if DH:IsMultiTarget(sim) then
+            needed = 35
+        end
+        if sim.cp >= 4 then
+            needed = 25
+        end
+        if not sim.snd_up or sim.snd_remains < 2 then
+            needed = 25
+        end
         local wait = math.max(0, (needed - sim.energy) / 10)
         return math.max(wait, sim.gcd)
     end,
@@ -356,8 +398,12 @@ local subConfig = {
             field = "energy",
             max = "energy_max",
             regen = 10,
-            initFrom = function(s) return s.energy.current end,
-            initMaxFrom = function(s) return s.energy.max end,
+            initFrom = function(s)
+                return s.energy.current
+            end,
+            initMaxFrom = function(s)
+                return s.energy.max
+            end,
         },
     },
     cds = {
@@ -425,14 +471,12 @@ local subConfig = {
         end
 
         -- Shadow Dance (major CD, enables stealth abilities)
-        if sim.has_shadow_dance and sim.snd_up
-            and DH:CanUseCooldown(sim, "shadow_dance", "use_shadow_dance") then
+        if sim.has_shadow_dance and sim.snd_up and DH:CanUseCooldown(sim, "shadow_dance", "use_shadow_dance") then
             return "shadow_dance"
         end
 
         -- Preparation (resets Shadowstep + Vanish CDs while SnD up)
-        if sim.snd_up and sim:ready("preparation")
-            and DH:CanUseCooldown(sim, "preparation", "use_preparation") then
+        if sim.snd_up and DH:Ready(sim, "preparation") and DH:CanUseCooldown(sim, "preparation", "use_preparation") then
             return "preparation"
         end
 
@@ -442,7 +486,14 @@ local subConfig = {
         end
 
         -- Rupture at 5 CP
-        if sim.cp == 5 and not sim.rupture_up and sim.snd_up and sim.snd_remains > 4 and sim.energy >= 25 and sim.ttd > 10 then
+        if
+            sim.cp == 5
+            and not sim.rupture_up
+            and sim.snd_up
+            and sim.snd_remains > 4
+            and sim.energy >= 25
+            and sim.ttd > 10
+        then
             return "rupture"
         end
 
@@ -464,8 +515,7 @@ local subConfig = {
         end
 
         -- Shadowstep (positioning CD, low energy window)
-        if sim.has_shadowstep and sim.energy < 25
-            and DH:CanUseCooldown(sim, "shadowstep", "use_shadowstep") then
+        if sim.has_shadowstep and sim.energy < 25 and DH:CanUseCooldown(sim, "shadowstep", "use_shadowstep") then
             return "shadowstep"
         end
 
@@ -511,9 +561,15 @@ local subConfig = {
     end,
     getWaitTime = function(sim)
         local needed = sim.hemo_cost
-        if DH:IsMultiTarget(sim) then needed = 35 end
-        if sim.cp >= 4 then needed = 25 end
-        if not sim.snd_up or sim.snd_remains < 2 then needed = 25 end
+        if DH:IsMultiTarget(sim) then
+            needed = 35
+        end
+        if sim.cp >= 4 then
+            needed = 25
+        end
+        if not sim.snd_up or sim.snd_remains < 2 then
+            needed = 25
+        end
         local wait = math.max(0, (needed - sim.energy) / 10)
         return math.max(wait, sim.gcd)
     end,

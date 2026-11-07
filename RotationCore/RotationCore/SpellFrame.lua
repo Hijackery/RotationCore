@@ -6,21 +6,32 @@
 -- The window is draggable, the position is saved per profile.
 
 local DH = RotationCore
-if not DH then return end
+if not DH then
+    return
+end
 
 local ns = DH.ns
 
 local function L(s)
-    if type(s) ~= "string" then return s end
+    if type(s) ~= "string" then
+        return s
+    end
     local tbl = DH.L
-    if tbl and tbl[s] then return tbl[s] end
+    if tbl and tbl[s] then
+        return tbl[s]
+    end
     return s
 end
 
 local MAX_SLOTS = 10
 local BASE_ICON = 36
 local GAP = 4
-local TITLE_H = 16
+local TITLE_H = 24
+local FRAME_PAD_X = 8
+local FRAME_PAD_BOTTOM = 8
+ns.FRAME_TITLE_H = TITLE_H
+ns.FRAME_PAD_X = FRAME_PAD_X
+ns.FRAME_PAD_BOTTOM = FRAME_PAD_BOTTOM
 local GLOW_TEXTURE = "Interface\\Buttons\\UI-ActionButton-Border"
 
 local FALLBACK_STYLE = {
@@ -31,7 +42,7 @@ local FALLBACK_STYLE = {
 
 local frame
 local slots = {}
-local moveMode = false   -- /rc move: show labelled boxes and live coordinates
+ns.moveMode = false -- /rc move: show labelled boxes and live coordinates
 
 -- ============================================================================
 -- PROMPT 3.2: animated transitions (appear / crossfade / disappear).
@@ -49,8 +60,14 @@ end
 
 local function AnimSpeed()
     local s = (DH.GetSetting and DH:GetSetting("animation_speed")) or 1.0
-    if type(s) ~= "number" or s <= 0 then s = 1.0 end
-    if s < 0.5 then s = 0.5 elseif s > 2.0 then s = 2.0 end
+    if type(s) ~= "number" or s <= 0 then
+        s = 1.0
+    end
+    if s < 0.5 then
+        s = 0.5
+    elseif s > 2.0 then
+        s = 2.0
+    end
     return s
 end
 
@@ -73,8 +90,12 @@ local function SnapSlot(slot)
     StopSlotAnim(slot)
     slot.alpha = 1
     slot:SetAlpha(1)
-    if slot.icon then slot.icon:SetAlpha(1) end
-    if slot.iconPrev then slot.iconPrev:SetAlpha(0) end
+    if slot.icon then
+        slot.icon:SetAlpha(1)
+    end
+    if slot.iconPrev then
+        slot.iconPrev:SetAlpha(0)
+    end
     slot:Show()
 end
 
@@ -82,24 +103,36 @@ local function UpdateSlotAnim(slot, elapsed)
     slot.animElapsed = (slot.animElapsed or 0) + elapsed
     local dur = slot.animDur or 0
     local t = dur > 0 and (slot.animElapsed / dur) or 1
-    if t > 1 then t = 1 end
+    if t > 1 then
+        t = 1
+    end
     local from = slot.animFrom or 1
     local a = from + ((slot.animTarget or 1) - from) * t
     slot.alpha = a
     if slot.animCross then
         -- Crossfade: the new icon fades in on top of the outgoing one.
-        if slot.icon then slot.icon:SetAlpha(a) end
-        if slot.iconPrev then slot.iconPrev:SetAlpha(1 - a) end
+        if slot.icon then
+            slot.icon:SetAlpha(a)
+        end
+        if slot.iconPrev then
+            slot.iconPrev:SetAlpha(1 - a)
+        end
         slot:SetAlpha(1)
     else
         slot:SetAlpha(a)
-        if slot.icon then slot.icon:SetAlpha(1) end
-        if slot.iconPrev then slot.iconPrev:SetAlpha(0) end
+        if slot.icon then
+            slot.icon:SetAlpha(1)
+        end
+        if slot.iconPrev then
+            slot.iconPrev:SetAlpha(0)
+        end
     end
     if t >= 1 then
         StopSlotAnim(slot)
         slot.alpha = slot.animTarget
-        if slot.animTarget and slot.animTarget <= 0 then slot:Hide() end
+        if slot.animTarget and slot.animTarget <= 0 then
+            slot:Hide()
+        end
     end
 end
 
@@ -151,7 +184,9 @@ end
 
 -- "SHIFT-2" -> "S2", "CTRL-F" -> "CF", "ALT-BUTTON5" -> "A5"
 local function FormatBinding(key)
-    if not key or key == "" then return nil end
+    if not key or key == "" then
+        return nil
+    end
     key = key:gsub("CTRL%-", "C"):gsub("SHIFT%-", "S"):gsub("ALT%-", "A")
     key = key:gsub("NUMPAD", "N"):gsub("BUTTON", ""):gsub("%-", "")
     return key
@@ -175,8 +210,12 @@ end
 
 -- Returns the display string for a spell id (nil when unbound)
 function ns.GetSpellKeybind(spellId)
-    if not spellId then return nil end
-    if keybindDirty then BuildKeybindCache() end
+    if not spellId then
+        return nil
+    end
+    if keybindDirty then
+        BuildKeybindCache()
+    end
     return keybindCache[spellId]
 end
 
@@ -205,7 +244,9 @@ end
 -- Position table for the window: shared, or per-spec when
 -- spellFrame_pos_per_spec is enabled (created on demand)
 local function GetPosTable()
-    if not DH.db then return nil end
+    if not DH.db then
+        return nil
+    end
     if DH.GetSetting and DH:GetSetting("spellFrame_pos_per_spec") then
         if not DH.db.spellFrame_per_spec then
             DH.db.spellFrame_per_spec = {}
@@ -222,15 +263,21 @@ local function GetPosTable()
 end
 
 local function SavePosition()
-    if not frame then return end
+    if not frame then
+        return
+    end
     local pos = GetPosTable()
-    if not pos then return end
+    if not pos then
+        return
+    end
     local cx, cy = frame:GetCenter()
     local ux, uy = UIParent:GetCenter()
     pos.x = cx - ux
     pos.y = cy - uy
     -- Manually moving a window means the layout is no longer a preset.
-    if DH.SetSetting then DH:SetSetting("display_layout", "custom") end
+    if DH.SetSetting then
+        DH:SetSetting("display_layout", "custom")
+    end
 end
 
 local function ApplyPosition()
@@ -256,9 +303,18 @@ local function AttachMoveOverlay(f, showCoords)
     f.moveShowCoords = showCoords ~= false
     -- Installed only while dragging (OnDragStart/OnDragStop) so idle frames
     -- do not pay for a per-frame script (L2).
-    f.moveUpdate = function(self)
-        if not self.moveText then return end
-        if not self.moveText:IsShown() then self.moveText:Show() end
+    f.moveUpdate = function(self, elapsed)
+        if not self.moveText then
+            return
+        end
+        self.moveTextElapsed = (self.moveTextElapsed or 0) + (elapsed or 0)
+        if self.moveTextElapsed < 0.05 then
+            return
+        end
+        self.moveTextElapsed = 0
+        if not self.moveText:IsShown() then
+            self.moveText:Show()
+        end
         if self.moveShowCoords == false then
             self.moveText:SetText(self.moveLabel or "")
             return
@@ -266,11 +322,14 @@ local function AttachMoveOverlay(f, showCoords)
         local cx, cy = self:GetCenter()
         local ux, uy = UIParent:GetCenter()
         if cx and ux and cy and uy then
-            self.moveText:SetText(string.format("%s   %d, %d",
-                self.moveLabel or "", math.floor(cx - ux + 0.5), math.floor(cy - uy + 0.5)))
+            self.moveText:SetText(
+                string.format("%s   %d, %d", self.moveLabel or "", math.floor(cx - ux + 0.5), math.floor(cy - uy + 0.5))
+            )
         end
     end
 end
+
+ns.AttachMoveOverlay = AttachMoveOverlay
 
 -- ============================================================================
 -- WINDOW CONTROLS: wheel = scale, double-click = hide, resize grip
@@ -279,20 +338,30 @@ end
 local EnsureFrame -- forward declaration (defined below)
 
 local function ClampScale(v)
-    if v < 0.5 then v = 0.5 elseif v > 2.5 then v = 2.5 end
+    if v < 0.5 then
+        v = 0.5
+    elseif v > 2.5 then
+        v = 2.5
+    end
     return math.floor(v * 10 + 0.5) / 10
 end
 
 -- Safe accessor for the profile-scoped display table: a corrupt or partially
 -- migrated profile may lack it. Returns nil when the DB is not ready.
 local function Display()
-    if not DH.db then return nil end
-    if not DH.db.display then DH.db.display = {} end
+    if not DH.db then
+        return nil
+    end
+    if not DH.db.display then
+        DH.db.display = {}
+    end
     return DH.db.display
 end
 
 EnsureFrame = function()
-    if frame then return frame end
+    if frame then
+        return frame
+    end
 
     frame = CreateFrame("Frame", "RotationCoreSpellFrame", UIParent)
     frame:SetFrameStrata("MEDIUM")
@@ -306,9 +375,13 @@ EnsureFrame = function()
     -- Window controls: wheel = scale, double-click = hide
     frame:EnableMouseWheel(true)
     frame:SetScript("OnMouseWheel", function(self, delta)
-        local d = Display(); if not d then return end
+        local d = Display()
+        if not d then
+            return
+        end
         d.spellframe_scale = ClampScale((d.spellframe_scale or 1) + (delta > 0 and 0.1 or -0.1))
-        DH:UpdateUI(); DH:NotifyOptions()
+        DH:UpdateUI()
+        DH:NotifyOptions()
     end)
     frame:SetScript("OnMouseUp", function(self, button)
         if button == "LeftButton" and not ns.configMode then
@@ -333,12 +406,15 @@ EnsureFrame = function()
     grip:SetFrameLevel(frame:GetFrameLevel() + 20)
     local grow = false
     local function GripUpdate()
-        if not grow then return end
+        if not grow then
+            return
+        end
         local _, cy = GetCursorPosition()
         local d = Display()
-        if not d then return end
-        d.spellframe_scale = ClampScale((d.spellframe_scale or 1)
-            + (grow.y - cy) / (grow.scale or 1) / 90)
+        if not d then
+            return
+        end
+        d.spellframe_scale = ClampScale((d.spellframe_scale or 1) + (grow.y - cy) / (grow.scale or 1) / 90)
         DH:UpdateUI()
         DH:NotifyOptions()
     end
@@ -370,8 +446,12 @@ EnsureFrame = function()
     frame.title:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -5)
     frame.title:SetJustifyH("LEFT")
     frame.title:SetText("RotationCore")
-    if ns.ApplyWindowChrome then ns.ApplyWindowChrome(frame) end
-    if ns.ApplyFont then ns.ApplyFont(frame.title) end
+    if ns.ApplyWindowChrome then
+        ns.ApplyWindowChrome(frame)
+    end
+    if ns.ApplyFont then
+        ns.ApplyFont(frame.title)
+    end
 
     -- Idle reason (phase 1.2): shown instead of the icons when nothing is
     -- recommended, so the player knows why the window is empty.
@@ -427,8 +507,12 @@ EnsureFrame = function()
     modeBtn:SetScript("OnClick", function()
         local cur = (DH.GetSetting and DH:GetSetting("target_mode")) or "single"
         local nextMode = (cur == "single" and "aoe") or (cur == "aoe" and "auto") or "single"
-        if DH.SetSetting then DH:SetSetting("target_mode", nextMode) end
-        if DH.UpdateRecommendations then DH:UpdateRecommendations() end
+        if DH.SetSetting then
+            DH:SetSetting("target_mode", nextMode)
+        end
+        if DH.UpdateRecommendations then
+            DH:UpdateRecommendations()
+        end
     end)
     modeBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -436,7 +520,9 @@ EnsureFrame = function()
         GameTooltip:AddLine(L("Click to cycle Single / AOE / Auto"), 0.8, 0.8, 0.8)
         GameTooltip:Show()
     end)
-    modeBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    modeBtn:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
     frame.modeButton = modeBtn
 
     for i = 1, MAX_SLOTS do
@@ -489,7 +575,9 @@ EnsureFrame = function()
         -- Per-icon tooltip (name / reason / cooldown). Data is filled by
         -- UpdateSpellFrame (slot.tipName / tipId / tipReason).
         slot:SetScript("OnEnter", function(self)
-            if not self.tipName and not self.tipId then return end
+            if not self.tipName and not self.tipId then
+                return
+            end
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             if self.tipId then
                 GameTooltip:SetHyperlink("spell:" .. self.tipId)
@@ -501,8 +589,7 @@ EnsureFrame = function()
             end
             if self.tipId and type(GetSpellCooldown) == "function" then
                 local start, duration = GetSpellCooldown(self.tipId)
-                local remains = (start and duration and duration > 0)
-                    and math.max(0, start + duration - GetTime()) or 0
+                local remains = (start and duration and duration > 0) and math.max(0, start + duration - GetTime()) or 0
                 if remains <= 0 then
                     GameTooltip:AddLine(L("Ready"), 0.3, 1, 0.3, false)
                 else
@@ -511,7 +598,9 @@ EnsureFrame = function()
             end
             GameTooltip:Show()
         end)
-        slot:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        slot:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+        end)
         slot:Hide()
         slots[i] = slot
     end
@@ -520,7 +609,9 @@ EnsureFrame = function()
         -- v3.4.0-hotfix6: windows are movable by default; lock via /rc lock
         -- or the "Lock windows" option. Dragging over an icon slot is blocked
         -- (slots enable the mouse), so the click still casts.
-        if DH.WindowsLocked and DH:WindowsLocked() then return end
+        if DH.WindowsLocked and DH:WindowsLocked() then
+            return
+        end
         self.isMoving = true
         if self.moveText then
             self.moveLabel = self.title and self.title:GetText() or ""
@@ -532,17 +623,25 @@ EnsureFrame = function()
     frame:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
         self.isMoving = false
-        if self.moveText then self.moveText:Hide() end
-        if ns.configMode and ns.SnapToGrid then ns.SnapToGrid(self) end
+        if self.moveText then
+            self.moveText:Hide()
+        end
+        if ns.configMode and ns.SnapToGrid then
+            ns.SnapToGrid(self)
+        end
         SavePosition()
-        if SetCursor then SetCursor(nil) end
+        if SetCursor then
+            SetCursor(nil)
+        end
     end)
 
     frame:SetScript("OnEnter", function(self)
         -- No custom cursor here. On 3.3.5a SetCursor() treats an unknown string
         -- as a texture path; "UI_CURSOR_HAND" does not exist, and a non-existent
         -- path HIDES the cursor (WoWWiki API_SetCursor). Use the default arrow.
-        if not self.lines or #self.lines == 0 then return end
+        if not self.lines or #self.lines == 0 then
+            return
+        end
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         for i = 1, #self.lines do
             if i == 1 then
@@ -555,12 +654,16 @@ EnsureFrame = function()
     end)
     frame:SetScript("OnLeave", function()
         GameTooltip:Hide()
-        if SetCursor then SetCursor(nil) end
+        if SetCursor then
+            SetCursor(nil)
+        end
     end)
     frame:SetScript("OnHide", function()
         -- Safety: if the window is hidden (or move-mode ends) while the mouse is
         -- over it, OnLeave never fires; reset the cursor so it never sticks.
-        if SetCursor then SetCursor(nil) end
+        if SetCursor then
+            SetCursor(nil)
+        end
     end)
 
     AttachMoveOverlay(frame)
@@ -575,7 +678,9 @@ end
 
 -- Phase 1.5: S / A / Au indicator on the window title
 local function UpdateModeIndicator()
-    if not frame or not frame.modeButton then return end
+    if not frame or not frame.modeButton then
+        return
+    end
     if (DH.GetSetting and DH:GetSetting("show_mode_indicator")) == false then
         frame.modeButton:Hide()
         return
@@ -590,12 +695,22 @@ local function HideWindow()
     if frame then
         frame:Hide()
         frame.lines = {}
-        if frame.reason then frame.reason:Hide() end
-        if frame.timeline then frame.timeline:Hide() end
-        if frame.dpsForecast then frame.dpsForecast:Hide() end
-        if frame.pulse then frame.pulse:Hide() end
+        if frame.reason then
+            frame.reason:Hide()
+        end
+        if frame.timeline then
+            frame.timeline:Hide()
+        end
+        if frame.dpsForecast then
+            frame.dpsForecast:Hide()
+        end
+        if frame.pulse then
+            frame.pulse:Hide()
+        end
         for i = 1, MAX_SLOTS do
-            if slots[i] then StopSlotAnim(slots[i]) end
+            if slots[i] then
+                StopSlotAnim(slots[i])
+            end
         end
     end
 end
@@ -609,14 +724,16 @@ end
 -- Fixed window size derived only from the configured icon count / size, so the
 -- window keeps its size and proportions whether or not there are picks / a
 -- target. Used by both the idle placeholder and the active render.
-local function ComputeFixedFrameSize()
+local function ComputeFixedFrameSize(shownCount)
     local scale = (DH.db and DH.db.display and DH.db.display.spellframe_scale) or 1
     local baseIcon = (DH.GetSetting and DH:GetSetting("icon_size")) or BASE_ICON
     local baseGap = (DH.GetSetting and DH:GetSetting("icon_gap")) or GAP
     local iconSize = math.max(16, math.floor(baseIcon * scale + 0.5))
     local gap = math.max(2, math.floor(baseGap * scale))
-    local showCount = tonumber((DH.db and DH.db.display and DH.db.display.spellframe_icons)
-        or (DH.GetSetting and DH:GetSetting("spellframe_icons"))) or 3
+    local showCount = tonumber(
+        (DH.db and DH.db.display and DH.db.display.spellframe_icons)
+            or (DH.GetSetting and DH:GetSetting("spellframe_icons"))
+    ) or 3
     showCount = math.max(1, math.min(showCount, MAX_SLOTS))
     local orientation = (DH.GetSetting and DH:GetSetting("orientation")) or "horizontal"
     local columns
@@ -626,13 +743,14 @@ local function ComputeFixedFrameSize()
         local iconColumns = tonumber(DH.GetSetting and DH:GetSetting("icon_columns")) or showCount
         columns = math.max(1, math.min(iconColumns, showCount))
     end
-    local rows = math.ceil(showCount / columns)
-    local colCount = math.min(columns, showCount)
-    -- Tight padding so the frame hugs the icons (matches the extras windows).
-    local w = colCount * iconSize + (colCount - 1) * gap + 4
-    local h = rows * iconSize + (rows - 1) * gap + TITLE_H + 6
-    local titleW = (frame and frame.title and frame.title.GetStringWidth
-        and frame.title:GetStringWidth()) or 0
+    local layoutCount = tonumber(shownCount) or showCount
+    layoutCount = math.max(1, math.min(layoutCount, showCount, MAX_SLOTS))
+    local rows = math.ceil(layoutCount / columns)
+    local colCount = math.min(columns, layoutCount)
+    -- Shared padding with the extras windows (cooldowns / interrupts / timeline).
+    local w = colCount * iconSize + (colCount - 1) * gap + FRAME_PAD_X * 2
+    local h = rows * iconSize + (rows - 1) * gap + TITLE_H + FRAME_PAD_BOTTOM
+    local titleW = (frame and frame.title and frame.title.GetStringWidth and frame.title:GetStringWidth()) or 0
     local modeExtra = 0
     if frame and frame.modeButton and frame.modeButton:IsShown() then
         modeExtra = 30
@@ -653,20 +771,26 @@ local function ShowIdle(reason)
     frame.lines = {}
     frame.reason:SetText(reason or "")
     frame.reason:Show()
-    if frame.timeline then frame.timeline:Hide() end
-    if frame.dpsForecast then frame.dpsForecast:Hide() end
-    if frame.pulse then frame.pulse:Hide() end
+    if frame.timeline then
+        frame.timeline:Hide()
+    end
+    if frame.dpsForecast then
+        frame.dpsForecast:Hide()
+    end
+    if frame.pulse then
+        frame.pulse:Hide()
+    end
     UpdateModeIndicator()
     if not frame.isMoving then
         local fixedSize = (DH.GetSetting and DH:GetSetting("spellframe_fixed_size")) ~= false
         local w, h
         if fixedSize then
-            w, h = ComputeFixedFrameSize()
+            w, h = ComputeFixedFrameSize(1)
         else
             w = math.max(frame.title:GetStringWidth() + 44, 150)
             h = TITLE_H + 30
         end
-        frame.reason:SetWidth(w - 12)
+        frame.reason:SetWidth(w - FRAME_PAD_X * 2)
         frame:SetSize(w, h)
         ApplyPosition()
         frame:Show()
@@ -676,14 +800,18 @@ end
 -- Called from ns.UpdateUI() with the abilities that are currently shown
 function ns.UpdateSpellFrame(recs)
     if ns.playerDead then
-        if frame then frame:Hide() end
+        if frame then
+            frame:Hide()
+        end
         return
     end
     -- v3.3.0: position the forecast / pulse labels around the window. Cached
     -- per label so we only re-point when the setting actually changes.
     local function AuxPoint(label, side)
         side = side or "above_spellframe"
-        if label._side == side then return end
+        if label._side == side then
+            return
+        end
         label._side = side
         label:ClearAllPoints()
         if side == "below_spellframe" then
@@ -716,23 +844,29 @@ function ns.UpdateSpellFrame(recs)
     end
 
     -- Double-click temporarily hides the window; cleared at the next combat start
-    if ns.spellFrameDoubleHidden and not moveMode then
+    if ns.spellFrameDoubleHidden and not ns.moveMode then
         HideWindow()
         return
     end
 
     -- Optional: hide the window out of combat (training mode still shows it)
-    if (DH.GetSetting and DH:GetSetting("spellframe_combat_only"))
-       and not (DH.GetSetting and DH:GetSetting("training_mode"))
-       and UnitAffectingCombat and not UnitAffectingCombat("player") then
+    if
+        (DH.GetSetting and DH:GetSetting("spellframe_combat_only"))
+        and not (DH.GetSetting and DH:GetSetting("training_mode"))
+        and UnitAffectingCombat
+        and not UnitAffectingCombat("player")
+    then
         HideWindow()
         return
     end
 
     -- New visibility toggles (parts 4/8): out of combat / no target.
-    if (DH.GetSetting and DH:GetSetting("hide_out_of_combat"))
-       and not (DH.GetSetting and DH:GetSetting("training_mode"))
-       and UnitAffectingCombat and not UnitAffectingCombat("player") then
+    if
+        (DH.GetSetting and DH:GetSetting("hide_out_of_combat"))
+        and not (DH.GetSetting and DH:GetSetting("training_mode"))
+        and UnitAffectingCombat
+        and not UnitAffectingCombat("player")
+    then
         HideWindow()
         return
     end
@@ -744,10 +878,13 @@ function ns.UpdateSpellFrame(recs)
     recs = recs or {}
     if #recs == 0 then
         -- /rc move: keep a labelled, positionable box even with no picks
-        if moveMode then
+        if ns.moveMode then
             frame.moveLabel = L("Primary")
             ShowIdle(L("Primary"))
-            if frame.moveText then frame.moveText:SetText(L("Primary")); frame.moveText:Show() end
+            if frame.moveText then
+                frame.moveText:SetText(L("Primary"))
+                frame.moveText:Show()
+            end
             return
         end
         -- Phase 1.2: explain the empty window instead of hiding it
@@ -757,8 +894,7 @@ function ns.UpdateSpellFrame(recs)
         end
         local showReason = (DH.GetSetting and DH:GetSetting("show_idle_reason")) ~= false
         local reason = showReason and DH.GetIdleReason and DH:GetIdleReason() or nil
-        if not reason and not UnitExists("target")
-            and not (DH.GetSetting and DH:GetSetting("hide_no_target")) then
+        if not reason and not UnitExists("target") and not (DH.GetSetting and DH:GetSetting("hide_no_target")) then
             reason = L("No target")
         end
         if reason then
@@ -775,14 +911,21 @@ function ns.UpdateSpellFrame(recs)
     end
 
     EnsureFrame()
-    if frame.SetAlpha then frame:SetAlpha(1) end
+    if frame.SetAlpha then
+        frame:SetAlpha(1)
+    end
     -- Theme/chrome/font are relatively expensive frame calls; only apply them
     -- when one of the driving settings actually changes (was every tick).
-    local chromeSig = (DH.GetSetting and DH:GetSetting("theme") or "") .. "|"
-        .. tostring(DH.GetSetting and DH:GetSetting("show_background") ~= false) .. "|"
-        .. tostring(DH.GetSetting and DH:GetSetting("show_border") ~= false) .. "|"
-        .. tostring(DH.GetSetting and DH:GetSetting("show_title") ~= false) .. "|"
-        .. tostring(DH.GetSetting and DH:GetSetting("spellframe_compact") == true) .. "|"
+    local chromeSig = (DH.GetSetting and DH:GetSetting("theme") or "")
+        .. "|"
+        .. tostring(DH.GetSetting and DH:GetSetting("show_background") ~= false)
+        .. "|"
+        .. tostring(DH.GetSetting and DH:GetSetting("show_border") ~= false)
+        .. "|"
+        .. tostring(DH.GetSetting and DH:GetSetting("show_title") ~= false)
+        .. "|"
+        .. tostring(DH.GetSetting and DH:GetSetting("spellframe_compact") == true)
+        .. "|"
         .. (DH.GetSetting and DH:GetSetting("spellframe_font") or "")
     if frame._chromeSig ~= chromeSig then
         frame._chromeSig = chromeSig
@@ -818,7 +961,11 @@ function ns.UpdateSpellFrame(recs)
                 end
             end
             if frame.title then
-                if showTitle then frame.title:Show() else frame.title:Hide() end
+                if showTitle then
+                    frame.title:Show()
+                else
+                    frame.title:Hide()
+                end
             end
         end
 
@@ -830,7 +977,9 @@ function ns.UpdateSpellFrame(recs)
             if path then
                 local _, h, flags = frame.title:GetFont()
                 local size = tonumber(DH.GetSetting and DH:GetSetting("spellframe_font_size"))
-                if not size or size < 6 then size = h end
+                if not size or size < 6 then
+                    size = h
+                end
                 frame.title:SetFont(path, size, flags)
                 for i = 1, MAX_SLOTS do
                     if slots[i] then
@@ -852,7 +1001,9 @@ function ns.UpdateSpellFrame(recs)
 
     -- v3.4.0-hotfix6: window width is fixed by the configured icon count so
     -- the frame does not jump when the number of recommendations changes.
-    local showCount = tonumber((db.display and db.display.spellframe_icons) or (DH.GetSetting and DH:GetSetting("spellframe_icons"))) or 3
+    local showCount = tonumber(
+        (db.display and db.display.spellframe_icons) or (DH.GetSetting and DH:GetSetting("spellframe_icons"))
+    ) or 3
     local maxShow = math.min(showCount, MAX_SLOTS, #recs)
     -- v3.3.0 exam mode: only REC1 is shown.
     if DH.GetSetting and DH:GetSetting("exam_mode") then
@@ -899,8 +1050,7 @@ function ns.UpdateSpellFrame(recs)
     if frame.dpsForecast then
         local txt = ns.GetDPSForecastText and ns.GetDPSForecastText(DH)
         if txt then
-            AuxPoint(frame.dpsForecast,
-                (DH.GetSetting and DH:GetSetting("dps_forecast_position")))
+            AuxPoint(frame.dpsForecast, (DH.GetSetting and DH:GetSetting("dps_forecast_position")))
             local c = ns.GetColorPreset and ns.GetColorPreset(DH.GetSetting and DH:GetSetting("dps_color"))
             if c then
                 frame.dpsForecast:SetTextColor(c[1], c[2], c[3])
@@ -916,8 +1066,7 @@ function ns.UpdateSpellFrame(recs)
     if frame.pulse then
         local ptxt, pr, pg, pb = ns.GetPulseInfo and ns.GetPulseInfo(DH)
         if ptxt then
-            AuxPoint(frame.pulse,
-                (DH.GetSetting and DH:GetSetting("class_pulse_position")))
+            AuxPoint(frame.pulse, (DH.GetSetting and DH:GetSetting("class_pulse_position")))
             frame.pulse:SetText(ptxt)
             frame.pulse:SetTextColor(pr, pg, pb)
             frame.pulse:Show()
@@ -967,14 +1116,14 @@ function ns.UpdateSpellFrame(recs)
 
     if not frame.isMoving then
         if fixed then
-            local fw, fh = ComputeFixedFrameSize()
+            local fw, fh = ComputeFixedFrameSize(drawCount)
             frame:SetSize(fw, fh)
         else
             -- Leave room for the title and the mode indicator on one line,
             -- but do not let a long title inflate the frame far past the
             -- icons (that used to leave a big empty gap around them).
             local w = math.max(maxRowW + 8, math.min(frame.title:GetStringWidth() + 40, maxRowW + 16))
-            frame:SetSize(w, TITLE_H + totalH + 8)
+            frame:SetSize(w, TITLE_H + totalH + FRAME_PAD_BOTTOM)
         end
         ApplyPosition()
     end
@@ -998,8 +1147,8 @@ function ns.UpdateSpellFrame(recs)
             local rowCols = math.min(columns, maxShow - (row - 1) * columns)
             local rowW = rowCols * iconSize + (rowCols - 1) * gap
             local x = -rowW / 2 + iconSize / 2 + (col - 1) * (iconSize + gap)
-            local y = totalH / 2 - iconSize / 2 - (row - 1) * (iconSize + gap) - TITLE_H / 2 + 2
-            slot:SetPoint("CENTER", frame, "CENTER", x, y)
+            local bottom = FRAME_PAD_BOTTOM + (rows - row) * (iconSize + gap)
+            slot:SetPoint("BOTTOM", frame, "BOTTOM", x, bottom)
 
             local key = tostring(rec.ability)
             local newTex = tex or "Interface\\Icons\\INV_Misc_QuestionMark"
@@ -1019,11 +1168,17 @@ function ns.UpdateSpellFrame(recs)
             slot.border:ClearAllPoints()
             slot.border:SetPoint("CENTER")
             slot.border:SetVertexColor(style.r, style.g, style.b)
-            if slot.bg then slot.bg:SetVertexColor(style.r, style.g, style.b) end
-            if slot.topline then slot.topline:SetVertexColor(style.r, style.g, style.b, 0.85) end
+            if slot.bg then
+                slot.bg:SetVertexColor(style.r, style.g, style.b)
+            end
+            if slot.topline then
+                slot.topline:SetVertexColor(style.r, style.g, style.b, 0.85)
+            end
 
-            if db.display.show_numbers ~= false
-               or (DH.GetSetting and DH:GetSetting("show_priority_numbers")) == true then
+            if
+                db.display.show_numbers ~= false
+                or (DH.GetSetting and DH:GetSetting("show_priority_numbers")) == true
+            then
                 slot.num:SetText(i)
                 slot.num:SetTextColor(style.r, style.g, style.b)
             else
@@ -1047,7 +1202,9 @@ function ns.UpdateSpellFrame(recs)
                     local start, duration = GetSpellCooldown(ability.id)
                     if start and duration and duration > 0 then
                         remains = (start + duration) - GetTime()
-                        if remains < 0 then remains = 0 end
+                        if remains < 0 then
+                            remains = 0
+                        end
                     end
                 end
                 local gcdRem = (DH.State and DH.State.gcd_remains) or 0
@@ -1062,7 +1219,9 @@ function ns.UpdateSpellFrame(recs)
                 else
                     slot.cd:SetText("")
                 end
-                if slot.cd:GetText() == nil then slot.cd:SetText("") end
+                if slot.cd:GetText() == nil then
+                    slot.cd:SetText("")
+                end
             end
 
             -- Prompt 3.2: animated appear / crossfade, or a plain snap when
@@ -1076,21 +1235,34 @@ function ns.UpdateSpellFrame(recs)
                 slot:Show()
                 slot.alpha = 0
                 slot:SetAlpha(0)
-                if slot.icon then slot.icon:SetAlpha(1) end
-                if slot.iconPrev then slot.iconPrev:SetAlpha(0) end
+                if slot.icon then
+                    slot.icon:SetAlpha(1)
+                end
+                if slot.iconPrev then
+                    slot.iconPrev:SetAlpha(0)
+                end
                 slot.lastAnimTime = nowT
                 StartSlotAnim(slot, 1, ANIM_IN / AnimSpeed(), false)
             elseif slot.lastChanged then
                 slot:Show()
-                if slot.icon then slot.icon:SetAlpha(0) end
+                if slot.icon then
+                    slot.icon:SetAlpha(0)
+                end
                 slot.lastAnimTime = nowT
                 StartSlotAnim(slot, 1, ANIM_CROSS / AnimSpeed(), true)
             elseif not slot.animActive then
                 SnapSlot(slot)
             end
             -- Localized client name first (RU spells on RU client)
-            local dispName = (ability and ability.id and GetSpellInfo and GetSpellInfo(ability.id))
-                or (ability and ability.name) or rec.name or tostring(rec.ability)
+            local dispName = (ability and ability.id and ns.CachedSpellInfo and ns.CachedSpellInfo(ability.id))
+                or (ability and ability.name)
+                or rec.name
+                or tostring(rec.ability)
+            -- Heal recommendations carry a target unit; show its name so the
+            -- player knows who to heal without opening the tooltip.
+            if rec.targetName and rec.unit and rec.unit ~= "player" then
+                dispName = dispName .. " -> " .. rec.targetName
+            end
             -- Training mode: append the reason to the icon tooltip line
             if rec.reason then
                 dispName = dispName .. " \226\128\148 " .. rec.reason
@@ -1106,8 +1278,12 @@ function ns.UpdateSpellFrame(recs)
                 -- already fading out: let it finish
             elseif slot:IsShown() and AnimEnabled() and not UIUnderLoad() then
                 slot.lastKey = nil
-                if slot.icon then slot.icon:SetAlpha(1) end
-                if slot.iconPrev then slot.iconPrev:SetAlpha(0) end
+                if slot.icon then
+                    slot.icon:SetAlpha(1)
+                end
+                if slot.iconPrev then
+                    slot.iconPrev:SetAlpha(0)
+                end
                 StartSlotAnim(slot, 0, ANIM_OUT / AnimSpeed(), false)
             else
                 StopSlotAnim(slot)
@@ -1122,8 +1298,12 @@ function ns.UpdateSpellFrame(recs)
     if not frame.isMoving then
         frame:Show()
     end
-    if ns.ApplyWinOpacity then ns.ApplyWinOpacity(frame, "primary") end
-    if ns.ApplyWindowTint and ns.GetWindowTint("primary") then ns.ApplyWindowTint(frame, "primary") end
+    if ns.ApplyWinOpacity then
+        ns.ApplyWinOpacity(frame, "primary")
+    end
+    if ns.ApplyWindowTint and ns.GetWindowTint("primary") then
+        ns.ApplyWindowTint(frame, "primary")
+    end
 end
 
 -- Reposition after a profile switch (called from DH:RefreshConfig)
@@ -1133,651 +1313,7 @@ function ns.RefreshSpellFrame()
     end
 end
 
--- ============================================================================
--- EXTRA DISPLAYS (phase 2.1 cooldowns, phase 2.3 interrupts)
--- Small optional windows next to the main icon window. They share the style,
--- are locked/unlocked together with the main window (/rc move) and each saves
--- its own position.
--- ============================================================================
-
-local function GetExtraPos(f)
-    if f.posKey and DH.GetSetting then
-        local pos = DH:GetSetting(f.posKey)
-        if type(pos) == "table" then return pos end
-    end
-    return nil
-end
-
-local function ApplyExtraPosition(f)
-    f:ClearAllPoints()
-    local pos = GetExtraPos(f)
-    if pos and pos.x and pos.y then
-        f:SetPoint("CENTER", UIParent, "CENTER", pos.x, pos.y)
-    else
-        f:SetPoint("CENTER", UIParent, "CENTER", f.defX or 0, f.defY or -250)
-    end
-end
-
-local function SaveExtraPosition(f)
-    local pos = GetExtraPos(f)
-    if not pos then return end
-    local cx, cy = f:GetCenter()
-    local ux, uy = UIParent:GetCenter()
-    pos.x = cx - ux
-    pos.y = cy - uy
-    if DH.SetSetting then DH:SetSetting("display_layout", "custom") end
-end
-
-local function CreateExtraFrame(id, titleText, posKey, defX, defY, scaleKey)
-    local f = CreateFrame("Frame", "RotationCore" .. id, UIParent)
-    f:SetFrameStrata("MEDIUM")
-    f:SetMovable(true)
-    f:EnableMouse(true)
-    f:SetClampedToScreen(true)
-    f:RegisterForDrag("LeftButton")
-    f.posKey, f.defX, f.defY, f.scaleKey = posKey, defX, defY, scaleKey
-    f.kind = (id == "InterruptsFrame") and "interrupt" or "cooldowns"
-    f:Hide()
-    f:SetFrameLevel((UIParent and UIParent.GetFrameLevel and UIParent:GetFrameLevel() or 0) + 5)
-
-    f:SetBackdrop({
-        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-        tile = true, tileSize = 16, edgeSize = 16,
-        insets = { left = 4, right = 4, top = 4, bottom = 4 },
-    })
-    f:SetBackdropColor(0, 0, 0, 0.85)
-
-    f.title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    f.title:SetPoint("TOP", f, "TOP", 0, -5)
-    f.title:SetText(titleText)
-    if ns.ApplyWindowChrome then ns.ApplyWindowChrome(f) end
-    if ns.ApplyFont then ns.ApplyFont(f.title) end
-    AttachMoveOverlay(f, false)
-
-    f.slots = {}
-    for i = 1, MAX_SLOTS do
-        local slot = CreateFrame("Frame", nil, f)
-        slot:SetFrameLevel(f:GetFrameLevel() + 2)
-        slot.topline = slot:CreateTexture(nil, "OVERLAY", nil, 1)
-        slot.topline:SetTexture("Interface\\Buttons\\WHITE8X8")
-        slot.topline:SetPoint("TOPLEFT", slot, "TOPLEFT", 0, 0)
-        slot.topline:SetPoint("TOPRIGHT", slot, "TOPRIGHT", 0, 0)
-        slot.topline:SetHeight(2)
-        slot.iconPrev = slot:CreateTexture(nil, "ARTWORK")
-        slot.iconPrev:SetAllPoints()
-        slot.iconPrev:SetAlpha(0)
-        slot.icon = slot:CreateTexture(nil, "ARTWORK")
-        slot.icon:SetAllPoints()
-        slot.border = slot:CreateTexture(nil, "OVERLAY")
-        slot.border:SetTexture(GLOW_TEXTURE)
-        slot.border:SetBlendMode("ADD")
-        slot.cd = slot:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        slot.cd:SetPoint("CENTER")
-        slot.cd:SetTextColor(1, 1, 1)
-        slot.cd:SetShadowOffset(1, -1)
-        slot:SetScript("OnEnter", function(self)
-            if not self.spellId then return end
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetHyperlink("spell:" .. self.spellId)
-            if self.kind == "interrupt" then
-                local maxR = select(9, GetSpellInfo(self.spellId))
-                if maxR and maxR > 0 then
-                    GameTooltip:AddLine(string.format(L("Range: %s"), tostring(maxR)), 0.3, 1, 0.3, false)
-                end
-            elseif type(GetSpellCooldown) == "function" then
-                local start, duration = GetSpellCooldown(self.spellId)
-                local remains = (start and duration and duration > 0)
-                    and math.max(0, start + duration - GetTime()) or 0
-                if remains <= 0 then
-                    GameTooltip:AddLine(L("Ready"), 0.3, 1, 0.3, false)
-                else
-                    GameTooltip:AddLine(string.format(L("CD: %s"), string.format("%.1f", remains)), 1, 0.82, 0, false)
-                end
-            end
-            GameTooltip:Show()
-        end)
-        slot:SetScript("OnLeave", function() GameTooltip:Hide() end)
-        slot:EnableMouse(true)
-        slot:Hide()
-        f.slots[i] = slot
-    end
-
-    f:SetScript("OnDragStart", function(self)
-        if DH.WindowsLocked and DH:WindowsLocked() then return end
-        self.isMoving = true
-        if self.moveText then
-            self.moveLabel = self.title and self.title:GetText() or ""
-            self.moveText:SetText(self.moveLabel)
-            self.moveText:Show()
-        end
-        self:StartMoving()
-        if self.moveUpdate then self:SetScript("OnUpdate", self.moveUpdate) end
-    end)
-    f:SetScript("OnDragStop", function(self)
-        self:StopMovingOrSizing()
-        self.isMoving = false
-        self:SetScript("OnUpdate", nil)
-        if self.moveText then self.moveText:Hide() end
-        if ns.configMode and ns.SnapToGrid then ns.SnapToGrid(self) end
-        SaveExtraPosition(self)
-        if SetCursor then SetCursor(nil) end
-    end)
-    -- No custom cursor: "UI_CURSOR_HAND" is not a valid 3.3.5a cursor path and
-    -- hides the cursor (see the primary window). Always use the default arrow.
-    f:SetScript("OnLeave", function()
-        if SetCursor then SetCursor(nil) end
-    end)
-    f:SetScript("OnHide", function()
-        if SetCursor then SetCursor(nil) end
-    end)
-
-    -- Custom resize grip (3.3.5a has no Frame:SetResizable). Dragging it
-    -- scales the window; the scale is persisted under f.scaleKey and applied
-    -- by RenderExtra. Only added when the frame opts into resizing.
-    if scaleKey then
-        local resize
-        local function GripUpdate()
-            if not resize then return end
-            local _, cy = GetCursorPosition()
-            local d = (resize.y - cy) / (resize.scale or 1)
-            local s = resize.s + d / 90
-            if s < 0.5 then s = 0.5 end
-            if s > 2.5 then s = 2.5 end
-            if DH.SetSetting then DH:SetSetting(scaleKey, s) end
-            if f.refresh then f.refresh() end
-        end
-        local grip = CreateFrame("Button", nil, f)
-        grip:SetSize(16, 16)
-        grip:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -2, 2)
-        grip:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
-        grip:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
-        grip:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
-        grip:SetFrameLevel(f:GetFrameLevel() + 5)
-        grip:SetScript("OnMouseDown", function()
-            local _, cy = GetCursorPosition()
-            resize = {
-                s = (DH.GetSetting and DH:GetSetting(scaleKey)) or 1,
-                y = cy,
-                scale = UIParent:GetScale(),
-            }
-            grip:SetScript("OnUpdate", GripUpdate)
-        end)
-        grip:SetScript("OnMouseUp", function()
-            resize = nil
-            grip:SetScript("OnUpdate", nil)
-        end)
-        f.grip = grip
-
-        -- Mouse wheel scales the window too (same feel as the primary window).
-        f:EnableMouseWheel(true)
-        f:SetScript("OnMouseWheel", function(_, delta)
-            local cur = (DH.GetSetting and DH:GetSetting(scaleKey)) or 1
-            local s = cur + (delta > 0 and 0.1 or -0.1)
-            if s < 0.5 then s = 0.5 elseif s > 2.5 then s = 2.5 end
-            s = math.floor(s * 10 + 0.5) / 10
-            if DH.SetSetting then DH:SetSetting(scaleKey, s) end
-            if f.refresh then f.refresh() end
-        end)
-    end
-
-    return f
-end
-
--- items = { { id =, texture =, remaining =, ready = }, ... }
-local function RenderExtra(f, items, showCount)
-    if not f then return end
-    local db = DH.db
-    -- Per-window scale (resize grip) wins over the global icon-window scale.
-    local scale
-    if f.scaleKey and DH.GetSetting then
-        scale = DH:GetSetting(f.scaleKey)
-    end
-    if not scale then
-        scale = (db and db.display and db.display.spellframe_scale) or 1
-    end
-    local baseIcon = (DH.GetSetting and DH:GetSetting("icon_size")) or BASE_ICON
-    local baseGap = (DH.GetSetting and DH:GetSetting("icon_gap")) or GAP
-    local iconSize = math.max(16, math.floor(baseIcon * scale + 0.5))
-    local gap = math.max(2, math.floor(baseGap * scale))
-
-    -- The window is sized for the CONFIGURED icon count, so it keeps the same
-    -- size whether or not abilities are ready / a target is selected.
-    local configured = tonumber(showCount) or 1
-    configured = math.max(1, math.min(configured, MAX_SLOTS))
-    local function fixedWidth()
-        local w = configured * iconSize + (configured - 1) * gap + 12
-        local tw = (f.title and f.title:GetStringWidth() or 0) + 16
-        return math.max(w, tw)
-    end
-
-    if not items or #items == 0 then
-        if moveMode or f.noItemsKeep then
-            f:SetSize(fixedWidth(), TITLE_H + iconSize + 10)
-            ApplyExtraPosition(f)
-            for i = 1, MAX_SLOTS do f.slots[i]:Hide() end
-            if not f:IsShown() then f:SetAlpha(0) end
-            f:Show()
-        else
-            f:Hide()
-        end
-        return
-    end
-
-    local count = math.min(configured, #items)
-    if count < 1 then count = 1 end
-    local spanW = count * iconSize + (count - 1) * gap
-
-    if not f.isMoving then
-        f:SetSize(fixedWidth(), TITLE_H + iconSize + 10)
-        ApplyExtraPosition(f)
-    end
-
-    for i = 1, MAX_SLOTS do
-        local slot = f.slots[i]
-        local it = items[i]
-        if i <= count and it then
-            slot:SetSize(iconSize, iconSize)
-            slot:ClearAllPoints()
-            local x = -spanW / 2 + iconSize / 2 + (i - 1) * (iconSize + gap)
-            slot:SetPoint("CENTER", f, "CENTER", x, -TITLE_H / 2 + 2)
-            slot.icon:SetTexture(it.texture or "Interface\\Icons\\INV_Misc_QuestionMark")
-            slot.border:SetSize(iconSize * 1.4, iconSize * 1.4)
-            slot.border:ClearAllPoints()
-            slot.border:SetPoint("CENTER")
-            if it.ready then
-                slot.border:SetVertexColor(0.15, 1, 0.15)
-                if slot.topline then slot.topline:SetVertexColor(0.15, 1, 0.15, 0.9) end
-            else
-                slot.border:SetVertexColor(1, 1, 1)
-                if slot.topline then slot.topline:SetVertexColor(1, 0.82, 0.2, 0.85) end
-            end
-            if it.remaining and it.remaining > 0.5 then
-                slot.cd:SetText(math.ceil(it.remaining))
-                if f.kind == "interrupt" then
-                    slot.cd:SetTextColor(1, 0.3, 0.3)
-                else
-                    slot.cd:SetTextColor(1, 1, 1)
-                end
-            else
-                slot.cd:SetText("")
-            end
-            slot.spellId = it.id
-            slot.kind = f.kind
-            slot:Show()
-        else
-            slot:Hide()
-        end
-    end
-
-    if not f.isMoving then
-        if not f:IsShown() then f:SetAlpha(0) end
-        f:Show()
-    end
-end
-
--- Remaining cooldown seconds for a spell id (0 when ready)
-local function GetSpellRemains(spellId)
-    if not spellId or type(GetSpellCooldown) ~= "function" then return 0 end
-    local start, duration = GetSpellCooldown(spellId)
-    if not start or not duration or duration <= 0 then return 0 end
-    local remains = (start + duration) - GetTime()
-    if remains < 0 then remains = 0 end
-    return remains
-end
-
-local cooldownsFrame
--- Candidate list for the cooldown display. It only depends on the active mode's
--- baseCDs, the class ability table, the min-CD filter and which spells are
--- known, so it is rebuilt only when one of those changes; the per-tick pass just
--- refreshes the remaining time on the reused entry tables (M15).
-local cdCache = { base = nil, class = nil, minCD = nil, showReady = nil, known = nil, entries = {} }
-local cdOut = {}
-local function GetCooldownItems()
-    local cfg = ns.lastCdConfig
-    local base = cfg and cfg.baseCDs
-    -- Fallback when no simulation has populated the CD map yet: scan the
-    -- registered ability table with GetSpellCooldown directly.
-    if not base then
-        base = {}
-        local ab = DH.Class and DH.Class.abilities or {}
-        for key, a in pairs(ab) do
-            if a and a.id then
-                local start, dur = GetSpellCooldown(a.id)
-                if dur and dur > 0 then
-                    base[key] = dur
-                end
-            end
-        end
-        cfg = cfg or {}
-        ns.lastCdConfig = cfg
-        cfg.baseCDs = base
-    end
-    local classes = DH.Class and DH.Class.abilities or {}
-    local minCD = (DH.GetSetting and DH:GetSetting("cooldowns_min_cd")) or 60
-    local showReady = (DH.GetSetting and DH:GetSetting("cooldowns_show_ready")) ~= false
-    local knownToken = ns.knownSpellsVersion
-
-    local entries = cdCache.entries
-    if cdCache.base ~= base or cdCache.class ~= classes
-        or cdCache.minCD ~= minCD or cdCache.showReady ~= showReady
-        or cdCache.known ~= knownToken then
-        cdCache.base, cdCache.class = base, classes
-        cdCache.minCD, cdCache.showReady, cdCache.known = minCD, showReady, knownToken
-        wipe(entries)
-        if base then
-            for key, baseCD in pairs(base) do
-                if type(baseCD) == "number" and baseCD >= minCD then
-                    local ability = classes[key]
-                    if ability and ability.id and DH:IsAbilityKnown(key) then
-                        entries[#entries + 1] = {
-                            id = ability.id,
-                            texture = ability.texture,
-                            remaining = 0,
-                            ready = false,
-                        }
-                    end
-                end
-            end
-        end
-        -- Racial cooldowns (Blood Fury, Berserking, ...) join the class ones.
-        if (not DH.GetSetting) or DH:GetSetting("use_racial_cooldowns") ~= false then
-            if ns.GetRacialCooldownIds then
-                for _, rid in ipairs(ns.GetRacialCooldownIds()) do
-                    local rn, _, rtex = GetSpellInfo(rid)
-                    if rn then
-                        entries[#entries + 1] = { id = rid, texture = rtex, remaining = 0, ready = false }
-                    end
-                end
-            end
-        end
-    end
-
-    for i = 1, #entries do
-        local it = entries[i]
-        local remaining = GetSpellRemains(it.id)
-        it.remaining = remaining
-        it.ready = remaining <= 0
-    end
-
-    wipe(cdOut)
-    for i = 1, #entries do
-        local it = entries[i]
-        if showReady or not it.ready then
-            cdOut[#cdOut + 1] = it
-        end
-    end
-    table.sort(cdOut, function(a, b)
-        if a.ready ~= b.ready then return a.ready end
-        return a.remaining < b.remaining
-    end)
-    return cdOut
-end
-
-function ns.UpdateCooldownsFrame()
-    if ns.playerDead then
-        if cooldownsFrame then cooldownsFrame:Hide() end
-        return
-    end
-    local show = (DH.GetSetting and DH:GetSetting("show_cooldowns_display")) == true
-    if not DH.db or not DH.db.enabled or (not show and not moveMode) then
-        if cooldownsFrame then cooldownsFrame:Hide() end
-        return
-    end
-    if not cooldownsFrame then
-        local title = (DH.L and DH.L["Cooldowns"]) or "Cooldowns"
-        cooldownsFrame = CreateExtraFrame("CooldownsFrame", title,
-            "cooldowns_position", -150, 0, "cooldowns_scale")
-        cooldownsFrame.refresh = ns.UpdateCooldownsFrame
-        cooldownsFrame.noItemsKeep = true
-    end
-    if #GetCooldownItems() == 0 and cooldownsFrame then
-        local cdTitle = (DH.L and DH.L["No cooldowns"]) or "No cooldowns"
-        if cooldownsFrame.title and cooldownsFrame.title.SetText then
-            cooldownsFrame.title:SetText(cdTitle)
-        end
-    end
-    cooldownsFrame.noItemsKeep = (DH.GetSetting and DH:GetSetting("cooldowns_hide_empty")) ~= true
-    local n = (DH.GetSetting and DH:GetSetting("cooldowns_num_icons")) or 3
-    RenderExtra(cooldownsFrame, GetCooldownItems(), n)
-    do
-        local op = tonumber(DH.GetSetting and DH:GetSetting("opacity_cooldowns")) or 1
-        if op < 0.15 then op = 0.15 elseif op > 1 then op = 1 end
-        if not cooldownsFrame.isMoving then
-            if ns.FadeShow then ns.FadeShow(cooldownsFrame, 0.16, op) else cooldownsFrame:SetAlpha(op) end
-        end
-    end
-    if ns.ApplyWindowTint and ns.GetWindowTint("cooldowns") then ns.ApplyWindowTint(cooldownsFrame, "cooldowns") end
-end
-
--- Interrupt spell per class (phase 2.3). Class modules may override with
--- ns.RegisterInterrupts(spellId); otherwise this fallback table is used.
--- 3.3.5a Paladin has no true interrupt (Rebuke is 4.0+).
-local INTERRUPT_FALLBACK = {
-    MAGE = 2139,          -- Counterspell
-    WARLOCK = 19647,      -- Spell Lock (Felhunter)
-    PRIEST = 15487,       -- Silence
-    ROGUE = 1766,         -- Kick
-    WARRIOR = 6552,       -- Pummel
-    DEATHKNIGHT = 47528,  -- Mind Freeze
-    SHAMAN = 57994,       -- Wind Shear
-    HUNTER = 34490,       -- Silencing Shot
-    DRUID = 8983,         -- Bash
-}
-
-ns.interruptSpell = ns.interruptSpell or {}
-function ns.RegisterInterrupts(spellId)
-    ns.interruptSpell[DH.playerClass] = spellId
-end
-
-local interruptFrame
-local function GetInterruptItem()
-    local casting = UnitCastingInfo and UnitCastingInfo("target")
-    local channeling = (not casting) and UnitChannelInfo and UnitChannelInfo("target")
-    if not casting and not channeling then return nil end
-    local spellId = ns.interruptSpell[DH.playerClass] or INTERRUPT_FALLBACK[DH.playerClass]
-    if not spellId then return nil end
-    local name, _, texture = GetSpellInfo(spellId)
-    local remaining = GetSpellRemains(spellId)
-    return {
-        {
-            id = spellId,
-            texture = texture,
-            name = name,
-            remaining = remaining,
-            ready = remaining <= 0,
-        },
-    }
-end
-
-function ns.UpdateInterruptsFrame()
-    if ns.playerDead then
-        if interruptFrame then interruptFrame:Hide() end
-        return
-    end
-    local show = (DH.GetSetting and DH:GetSetting("show_interrupts_display")) == true
-    if not DH.db or not DH.db.enabled or (not show and not moveMode) then
-        if interruptFrame then interruptFrame:Hide() end
-        return
-    end
-    if not interruptFrame then
-        local title = (DH.L and DH.L["Interrupt"]) or "Interrupt"
-        interruptFrame = CreateExtraFrame("InterruptsFrame", title,
-            "interrupts_position", 170, -250, "interrupts_scale")
-        interruptFrame.refresh = ns.UpdateInterruptsFrame
-    end
-    local items = GetInterruptItem()
-    -- Interrupt-ready sound: play once when the kick comes off cooldown.
-    do
-        local spellId = ns.interruptSpell[DH.playerClass] or INTERRUPT_FALLBACK[DH.playerClass]
-        if spellId then
-            local rem = GetSpellRemains(spellId)
-            if (DH.GetSetting and DH:GetSetting("interrupt_ready_sound")) == true
-               and ns._interruptCdPrev and ns._interruptCdPrev > 0.2 and rem <= 0 then
-                local file = ns.ResolveSound and ns.ResolveSound("default") or nil
-                if type(PlaySoundFile) == "function" then
-                    pcall(PlaySoundFile, file or "Sound\\Interface\\ReadyCheck.wav")
-                end
-            end
-            ns._interruptCdPrev = rem
-        end
-    end
-    -- Keep the window visible out of combat (and while configuring) so the
-    -- interrupt spell is always visible and the tickbox takes visible effect.
-    local always = (DH.GetSetting and DH:GetSetting("interrupts_always_show")) == true
-        or show or ns.configMode
-    if (not items or #items == 0) and always then
-        -- Keep the window visible off-combat: show the interrupt spell idle/ready.
-        local spellId = ns.interruptSpell[DH.playerClass] or INTERRUPT_FALLBACK[DH.playerClass]
-        if spellId then
-            local name, _, texture = GetSpellInfo(spellId)
-            local remaining = GetSpellRemains(spellId)
-            items = { { id = spellId, texture = texture, name = name, remaining = remaining, ready = remaining <= 0 } }
-        end
-    end
-    interruptFrame.noItemsKeep = always or nil
-    RenderExtra(interruptFrame, items, 1)
-    do
-        local op = tonumber(DH.GetSetting and DH:GetSetting("opacity_interrupts")) or 1
-        if op < 0.15 then op = 0.15 elseif op > 1 then op = 1 end
-        if not interruptFrame.isMoving then
-            if ns.FadeShow then ns.FadeShow(interruptFrame, 0.16, op) else interruptFrame:SetAlpha(op) end
-        end
-    end
-    if ns.ApplyWindowTint and ns.GetWindowTint("interrupts") then ns.ApplyWindowTint(interruptFrame, "interrupts") end
-end
-
--- Boss-timeline window (phase + upcoming DBM/BigWigs timers). Text rows, so it
--- is built on top of CreateExtraFrame (which handles drag/position/scale) but
--- renders font strings instead of icon slots.
-local timelineFrame
-local TL_ROWS = 8
-local function CollectTimelineRows()
-    local rows = {}
-    local tl = ns.GetBossTimeline and ns.GetBossTimeline()
-    if tl then
-        rows[#rows + 1] = { text = string.format(L("Phase %d"), tonumber(tl.phase) or 1), r = 1, g = 0.82, b = 0 }
-        local now = GetTime()
-        local timers = {}
-        for _, t in ipairs(tl.timers or {}) do
-            if t.expires and t.expires > now then timers[#timers + 1] = t end
-        end
-        table.sort(timers, function(a, b) return a.expires < b.expires end)
-        for _, t in ipairs(timers) do
-            local secs = math.max(0, math.floor(t.expires - now + 0.5))
-            rows[#rows + 1] = {
-                text = string.format("%s  %ds", tostring(t.text or ""), secs),
-                exp = t.expires, total = t.duration or 30,
-                r = t.burst and 1 or 0.85, g = t.burst and 0.2 or 0.85, b = t.burst and 0.2 or 0.85,
-            }
-        end
-    end
-    local latest = ns.GetLatestPhaseText and ns.GetLatestPhaseText(12)
-    if latest then rows[#rows + 1] = { text = latest, r = 0.6, g = 0.8, b = 1 } end
-    return rows
-end
-
-function ns.UpdateTimelineFrame()
-    if ns.playerDead then
-        if timelineFrame then timelineFrame:Hide() end
-        return
-    end
-    local show = (DH.GetSetting and DH:GetSetting("show_timeline_display")) == true
-    if not DH.db or not DH.db.enabled or (not show and not moveMode) then
-        if timelineFrame then timelineFrame:Hide() end
-        return
-    end
-    if not timelineFrame then
-        local title = (DH.L and DH.L["Boss timeline"]) or "Boss timeline"
-        local f = CreateExtraFrame("TimelineFrame", title, "timeline_position", 0, 200, "timeline_scale")
-        f.refresh = ns.UpdateTimelineFrame
-        f.rows = {}
-        f.bars = {}
-        for i = 1, TL_ROWS do
-            local bar = f:CreateTexture(nil, "BACKGROUND", nil, -1)
-            bar:SetTexture("Interface\\Buttons\\WHITE8X8")
-            bar:SetVertexColor(0.9, 0.65, 0.2, 0.35)
-            bar:Hide()
-            f.bars[i] = bar
-            local fs = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            fs:SetJustifyH("LEFT")
-            fs:SetShadowOffset(1, -1)
-            f.rows[i] = fs
-        end
-        f.baseFont = select(1, f.rows[1]:GetFont())
-        f.baseTitleFont = f.title and select(1, f.title:GetFont()) or nil
-        timelineFrame = f
-    end
-    local f = timelineFrame
-    local rows = CollectTimelineRows()
-    if #rows == 0 and not moveMode then
-        f:Hide()
-        return
-    end
-    if #rows == 0 then
-        rows = { { text = L("Waiting for boss timers..."), r = 0.7, g = 0.7, b = 0.7 } }
-    end
-
-    -- Size is applied to the contents (not the frame) exactly like the cooldown
-    -- and interrupt windows, so the timeline window stays a normal, freely
-    -- draggable frame instead of a scaled one that "sticks" to the centre.
-    local tscale = (DH.GetSetting and DH:GetSetting("timeline_scale")) or 1
-    if tscale < 0.5 then tscale = 0.5 elseif tscale > 2.5 then tscale = 2.5 end
-    local rowH = math.max(11, math.floor(14 * tscale + 0.5))
-    local rowW = math.max(120, math.floor(240 * tscale + 0.5))
-    local rowFont = math.max(8, math.floor(11 * tscale + 0.5))
-    local titleH = math.max(12, math.floor(TITLE_H * tscale + 0.5))
-    if f.baseTitleFont and f.title then f.title:SetFont(f.baseTitleFont, rowFont + 1, "") end
-
-    local maxW = (f.title and f.title:GetStringWidth() or 60)
-    local nrows = #rows
-    local useBars = (DH.GetSetting and DH:GetSetting("timeline_bars_enabled")) ~= false
-    local now = GetTime()
-    for i = 1, TL_ROWS do
-        local fs = f.rows[i]
-        local bar = f.bars and f.bars[i]
-        local row = rows[i]
-        fs:ClearAllPoints()
-        fs:SetPoint("TOPLEFT", f, "TOPLEFT", 10, -titleH - 6 - (i - 1) * rowH)
-        fs:SetWidth(rowW)
-        if f.baseFont then fs:SetFont(f.baseFont, rowFont, "") end
-        if row then
-            fs:SetText(row.text)
-            fs:SetTextColor(row.r or 1, row.g or 1, row.b or 1)
-            fs:Show()
-            local w = (fs:GetStringWidth() or 0)
-            if w > maxW then maxW = w end
-            if bar then
-                if useBars and row.exp then
-                    local frac = math.min(1, math.max(0, (row.exp - now) / (row.total or 30)))
-                    bar:ClearAllPoints()
-                    bar:SetPoint("TOPLEFT", fs, "TOPLEFT", 0, 2)
-                    bar:SetSize(math.max(2, (rowW or 200) * frac), math.max(6, rowH - 4))
-                    bar:Show()
-                else
-                    bar:Hide()
-                end
-            end
-        else
-            fs:SetText("")
-            fs:Hide()
-            if bar then bar:Hide() end
-        end
-    end
-    if not f.isMoving then
-        f:SetSize(math.max(maxW + 24, 150), titleH + nrows * rowH + 14)
-        ApplyExtraPosition(f)
-    end
-    do
-        local op = tonumber(DH.GetSetting and DH:GetSetting("opacity_timeline")) or 1
-        if op < 0.15 then op = 0.15 elseif op > 1 then op = 1 end
-        if not f.isMoving then
-            if ns.FadeShow then ns.FadeShow(f, 0.16, op) else f:SetAlpha(op) end
-        end
-    end
-    if ns.ApplyWindowTint and ns.GetWindowTint("timeline") then ns.ApplyWindowTint(f, "timeline") end
-    f:Show()
-end
+-- Extra displays (cooldowns, interrupts, timeline) live in SpellFrameExtras.lua.
 
 -- ============================================================================
 -- PANEL CONFIG MODE (Dominos-style). /rc config (or the Display button) shows a
@@ -1788,34 +1324,63 @@ ns.configMode = false
 local configBar, configPanels = nil, {}
 
 local function GetWinFrame(id)
-    if id == "primary" then return frame end
-    if id == "cooldowns" then return cooldownsFrame end
-    if id == "interrupts" then return interruptFrame end
-    if id == "timeline" then return timelineFrame end
+    if id == "primary" then
+        return frame
+    end
+    if id == "cooldowns" then
+        return ns.cooldownsFrame
+    end
+    if id == "interrupts" then
+        return ns.interruptFrame
+    end
+    if id == "timeline" then
+        return ns.timelineFrame
+    end
     return nil
 end
 
 ns.WINDOW_TINTS = {
-    auto = nil, white = { 1, 1, 1 }, gold = { 1, 0.82, 0 }, green = { 0.3, 1, 0.3 },
-    blue = { 0.4, 0.7, 1 }, purple = { 0.7, 0.4, 1 }, red = { 1, 0.3, 0.25 },
+    auto = nil,
+    white = { 1, 1, 1 },
+    gold = { 1, 0.82, 0 },
+    green = { 0.3, 1, 0.3 },
+    blue = { 0.4, 0.7, 1 },
+    purple = { 0.7, 0.4, 1 },
+    red = { 1, 0.3, 0.25 },
     cyan = { 0.3, 0.9, 0.9 },
 }
 function ns.GetWindowTint(id)
     local n = DH.GetSetting and DH:GetSetting("tint_" .. id)
-    if not n or n == "auto" then return nil end
+    if not n or n == "auto" then
+        return nil
+    end
     return ns.WINDOW_TINTS[n]
 end
 function ns.ApplyWindowTint(f, id)
-    if not f then return end
+    if not f then
+        return
+    end
     local c = ns.GetWindowTint(id)
-    if not c then return end
-    if f.SetBackdropBorderColor then f:SetBackdropBorderColor(c[1], c[2], c[3], 1) end
-    if f.title and f.title.SetTextColor then f.title:SetTextColor(c[1], c[2], c[3]) end
+    if not c then
+        return
+    end
+    if f.SetBackdropBorderColor then
+        f:SetBackdropBorderColor(c[1], c[2], c[3], 1)
+    end
+    if f.title and f.title.SetTextColor then
+        f.title:SetTextColor(c[1], c[2], c[3])
+    end
 end
 function ns.ApplyWinOpacity(f, id)
-    if not f then return end
+    if not f then
+        return
+    end
     local op = tonumber(DH.GetSetting and DH:GetSetting("opacity_" .. id)) or 1
-    if op < 0.15 then op = 0.15 elseif op > 1 then op = 1 end
+    if op < 0.15 then
+        op = 0.15
+    elseif op > 1 then
+        op = 1
+    end
     f:SetAlpha(op)
 end
 
@@ -1834,16 +1399,30 @@ local function GetWindowShown(id)
 end
 local function SetWindowShown(id, v)
     if id == "primary" then
-        if DH.db and DH.db.display then DH.db.display.show_spellframe = v end
-        if ns.RefreshSpellFrame then ns.RefreshSpellFrame() end
+        if DH.db and DH.db.display then
+            DH.db.display.show_spellframe = v
+        end
+        if ns.RefreshSpellFrame then
+            ns.RefreshSpellFrame()
+        end
     else
         DH:SetSetting("show_" .. id .. "_display", v)
-        if id == "cooldowns" and ns.UpdateCooldownsFrame then ns.UpdateCooldownsFrame() end
-        if id == "interrupts" and ns.UpdateInterruptsFrame then ns.UpdateInterruptsFrame() end
-        if id == "timeline" and ns.UpdateTimelineFrame then ns.UpdateTimelineFrame() end
+        if id == "cooldowns" and ns.UpdateCooldownsFrame then
+            ns.UpdateCooldownsFrame()
+        end
+        if id == "interrupts" and ns.UpdateInterruptsFrame then
+            ns.UpdateInterruptsFrame()
+        end
+        if id == "timeline" and ns.UpdateTimelineFrame then
+            ns.UpdateTimelineFrame()
+        end
     end
-    if DH.UpdateUI then DH:UpdateUI() end
-    if ns.UpdateConfigOverlay then ns.UpdateConfigOverlay() end
+    if DH.UpdateUI then
+        DH:UpdateUI()
+    end
+    if ns.UpdateConfigOverlay then
+        ns.UpdateConfigOverlay()
+    end
 end
 
 -- ============================================================================
@@ -1854,12 +1433,16 @@ end
 local configGrid, configHighlights, configSelected
 local HL_ORDER = { "primary", "cooldowns", "interrupts", "timeline" }
 local WIN_LABEL = {
-    primary = "Icon window", cooldowns = "Cooldowns window",
-    interrupts = "Interrupt window", timeline = "Boss timeline window",
+    primary = "Icon window",
+    cooldowns = "Cooldowns window",
+    interrupts = "Interrupt window",
+    timeline = "Boss timeline window",
 }
 
 local function EnsureConfigOverlay()
-    if configGrid then return end
+    if configGrid then
+        return
+    end
     local g = CreateFrame("Frame", "RotationCoreConfigGrid", UIParent)
     g:SetFrameStrata("BACKGROUND")
     g:SetAllPoints(UIParent)
@@ -1903,7 +1486,9 @@ local function EnsureConfigOverlay()
 end
 
 function ns.UpdateConfigOverlay()
-    if not ns.configMode or not configGrid then return end
+    if not ns.configMode or not configGrid then
+        return
+    end
     for _, id in ipairs(HL_ORDER) do
         local hl = configHighlights[id]
         local w = GetWinFrame(id)
@@ -1935,7 +1520,10 @@ function ns.UpdateConfigOverlay()
                 end
             end
             local txt = L(WIN_LABEL[id] or id) .. (enabled and "" or (" (" .. L("off") .. ")"))
-            if hl._txt ~= txt then hl._txt = txt; hl.label:SetText(txt) end
+            if hl._txt ~= txt then
+                hl._txt = txt
+                hl.label:SetText(txt)
+            end
             hl:Show()
         elseif hl then
             hl:Hide()
@@ -1948,7 +1536,9 @@ end
 -- still moves the window.
 local function EnsureWindowRightClick(id)
     local w = GetWinFrame(id)
-    if not w or w.rcConfigHooked then return end
+    if not w or w.rcConfigHooked then
+        return
+    end
     w.rcConfigHooked = true
     w:HookScript("OnMouseDown", function(self, button)
         if button == "LeftButton" or button == "RightButton" then
@@ -1958,8 +1548,12 @@ local function EnsureWindowRightClick(id)
         end
     end)
     w:HookScript("OnMouseUp", function(self, button)
-        if not ns.configMode then return end
-        if button ~= "LeftButton" and button ~= "RightButton" then return end
+        if not ns.configMode then
+            return
+        end
+        if button ~= "LeftButton" and button ~= "RightButton" then
+            return
+        end
         local x, y = GetCursorPosition()
         local moved = self.rcMoved
         if self.rcDownX and x and y then
@@ -1974,36 +1568,106 @@ end
 local function ConfigSliders(id)
     if id == "primary" then
         return {
-            { "Icon size", 16, 64, 1,
-              function() return (DH.GetSetting and DH:GetSetting("icon_size")) or 36 end,
-              function(v) DH:SetSetting("icon_size", v); DH:UpdateUI() end },
-            { "Spacing", 0, 16, 1,
-              function() return (DH.GetSetting and DH:GetSetting("icon_gap")) or 4 end,
-              function(v) DH:SetSetting("icon_gap", v); DH:UpdateUI() end },
-            { "Scale", 0.5, 2.5, 0.1,
-              function() return (DH.db and DH.db.display and DH.db.display.spellframe_scale) or 1 end,
-              function(v) DH.db.display.spellframe_scale = v; DH:UpdateUI() end },
+            {
+                "Icon size",
+                16,
+                64,
+                1,
+                function()
+                    return (DH.GetSetting and DH:GetSetting("icon_size")) or 36
+                end,
+                function(v)
+                    DH:SetSetting("icon_size", v)
+                    DH:UpdateUI()
+                end,
+            },
+            {
+                "Spacing",
+                0,
+                16,
+                1,
+                function()
+                    return (DH.GetSetting and DH:GetSetting("icon_gap")) or 4
+                end,
+                function(v)
+                    DH:SetSetting("icon_gap", v)
+                    DH:UpdateUI()
+                end,
+            },
+            {
+                "Scale",
+                0.5,
+                2.5,
+                0.1,
+                function()
+                    return (DH.db and DH.db.display and DH.db.display.spellframe_scale) or 1
+                end,
+                function(v)
+                    DH.db.display.spellframe_scale = v
+                    DH:UpdateUI()
+                end,
+            },
         }
     elseif id == "cooldowns" then
         return {
-            { "Icons", 1, 10, 1,
-              function() return (DH.GetSetting and DH:GetSetting("cooldowns_num_icons")) or 3 end,
-              function(v) DH:SetSetting("cooldowns_num_icons", v); DH:UpdateUI() end },
-            { "Scale", 0.5, 2.5, 0.1,
-              function() return (DH.GetSetting and DH:GetSetting("cooldowns_scale")) or 1 end,
-              function(v) DH:SetSetting("cooldowns_scale", v); DH:UpdateUI() end },
+            {
+                "Icons",
+                1,
+                10,
+                1,
+                function()
+                    return (DH.GetSetting and DH:GetSetting("cooldowns_num_icons")) or 3
+                end,
+                function(v)
+                    DH:SetSetting("cooldowns_num_icons", v)
+                    DH:UpdateUI()
+                end,
+            },
+            {
+                "Scale",
+                0.5,
+                2.5,
+                0.1,
+                function()
+                    return (DH.GetSetting and DH:GetSetting("cooldowns_scale")) or 1
+                end,
+                function(v)
+                    DH:SetSetting("cooldowns_scale", v)
+                    DH:UpdateUI()
+                end,
+            },
         }
     elseif id == "interrupts" then
         return {
-            { "Scale", 0.5, 2.5, 0.1,
-              function() return (DH.GetSetting and DH:GetSetting("interrupts_scale")) or 1 end,
-              function(v) DH:SetSetting("interrupts_scale", v); DH:UpdateUI() end },
+            {
+                "Scale",
+                0.5,
+                2.5,
+                0.1,
+                function()
+                    return (DH.GetSetting and DH:GetSetting("interrupts_scale")) or 1
+                end,
+                function(v)
+                    DH:SetSetting("interrupts_scale", v)
+                    DH:UpdateUI()
+                end,
+            },
         }
     elseif id == "timeline" then
         return {
-            { "Scale", 0.5, 2.5, 0.1,
-              function() return (DH.GetSetting and DH:GetSetting("timeline_scale")) or 1 end,
-              function(v) DH:SetSetting("timeline_scale", v); DH:UpdateUI() end },
+            {
+                "Scale",
+                0.5,
+                2.5,
+                0.1,
+                function()
+                    return (DH.GetSetting and DH:GetSetting("timeline_scale")) or 1
+                end,
+                function(v)
+                    DH:SetSetting("timeline_scale", v)
+                    DH:UpdateUI()
+                end,
+            },
         }
     end
     return {}
@@ -2031,7 +1695,9 @@ local function ConfigRow(panel, label, minv, maxv, stepv, get, set, y)
     val:SetPoint("LEFT", slider, "RIGHT", 8, 0)
     val:SetTextColor(1, 0.82, 0)
     local function fmt(v)
-        if stepv >= 1 then return tostring(math.floor(v + 0.5)) end
+        if stepv >= 1 then
+            return tostring(math.floor(v + 0.5))
+        end
         return string.format("%.1f", v)
     end
     slider:SetValue(tonumber(get()) or minv)
@@ -2051,7 +1717,9 @@ local function MakeConfigPanel(id, title, x, y)
     p:SetBackdrop({
         bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
         edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-        tile = true, tileSize = 16, edgeSize = 16,
+        tile = true,
+        tileSize = 16,
+        edgeSize = 16,
         insets = { left = 4, right = 4, top = 4, bottom = 4 },
     })
     p:SetBackdropColor(0.03, 0.03, 0.03, 0.94)
@@ -2061,18 +1729,26 @@ local function MakeConfigPanel(id, title, x, y)
     t:SetText(L(title))
     t:SetTextColor(1, 0.82, 0)
     p.title = t
-    if ns.ApplyWindowChrome then ns.ApplyWindowChrome(p) end
+    if ns.ApplyWindowChrome then
+        ns.ApplyWindowChrome(p)
+    end
     p:EnableMouse(true)
     p:SetScript("OnEnter", function()
         configSelected = id
-        if ns.UpdateConfigOverlay then ns.UpdateConfigOverlay() end
+        if ns.UpdateConfigOverlay then
+            ns.UpdateConfigOverlay()
+        end
     end)
     local close = CreateFrame("Button", nil, p, "UIPanelCloseButton")
     close:SetPoint("TOPRIGHT", p, "TOPRIGHT", -2, -2)
     close:SetScript("OnClick", function()
         p:Hide()
-        if configSelected == id then configSelected = nil end
-        if ns.UpdateConfigOverlay then ns.UpdateConfigOverlay() end
+        if configSelected == id then
+            configSelected = nil
+        end
+        if ns.UpdateConfigOverlay then
+            ns.UpdateConfigOverlay()
+        end
     end)
     local cb = CreateFrame("CheckButton", nil, p, "UICheckButtonTemplate")
     cb:SetSize(22, 22)
@@ -2090,14 +1766,18 @@ local function MakeConfigPanel(id, title, x, y)
     for _, spec in ipairs(ConfigSliders(id)) do
         cy = ConfigRow(p, L(spec[1]), spec[2], spec[3], spec[4], spec[5], spec[6], cy)
     end
-    cy = ConfigRow(p, L("Opacity"), 0.2, 1, 0.05,
-        function() return (DH.GetSetting and DH:GetSetting("opacity_" .. id)) or 1 end,
-        function(v)
-            DH:SetSetting("opacity_" .. id, v)
-            local w = GetWinFrame(id)
-            if w and not (id == "primary") then w:SetAlpha(v) end
-            if DH.UpdateUI then DH:UpdateUI() end
-        end, cy)
+    cy = ConfigRow(p, L("Opacity"), 0.2, 1, 0.05, function()
+        return (DH.GetSetting and DH:GetSetting("opacity_" .. id)) or 1
+    end, function(v)
+        DH:SetSetting("opacity_" .. id, v)
+        local w = GetWinFrame(id)
+        if w and not (id == "primary") then
+            w:SetAlpha(v)
+        end
+        if DH.UpdateUI then
+            DH:UpdateUI()
+        end
+    end, cy)
     -- Colour swatches (replaces the old cycle button).
     local swatchLabel = p:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     swatchLabel:SetPoint("TOPLEFT", p, "TOPLEFT", 10, cy + 4)
@@ -2111,14 +1791,22 @@ local function MakeConfigPanel(id, title, x, y)
         if w then
             if nxt == "auto" then
                 local th = DH.GetUITheme and DH:GetUITheme() or nil
-                if w.title and th and w.title.SetTextColor then w.title:SetTextColor(th.title[1], th.title[2], th.title[3]) end
-                if w.SetBackdropBorderColor and th then w:SetBackdropBorderColor(th.border[1], th.border[2], th.border[3]) end
+                if w.title and th and w.title.SetTextColor then
+                    w.title:SetTextColor(th.title[1], th.title[2], th.title[3])
+                end
+                if w.SetBackdropBorderColor and th then
+                    w:SetBackdropBorderColor(th.border[1], th.border[2], th.border[3])
+                end
             else
                 ns.ApplyWindowTint(w, id)
             end
         end
         for k, sw in pairs(swatches) do
-            if k == nxt then sw.sel:Show() else sw.sel:Hide() end
+            if k == nxt then
+                sw.sel:Show()
+            else
+                sw.sel:Hide()
+            end
         end
     end
     for i, key in ipairs(order) do
@@ -2140,7 +1828,9 @@ local function MakeConfigPanel(id, title, x, y)
             local b = (th and th.border) or { 0.6, 0.6, 0.6 }
             tex:SetTexture(b[1], b[2], b[3])
         end
-        sw:SetScript("OnClick", function() applyTint(key) end)
+        sw:SetScript("OnClick", function()
+            applyTint(key)
+        end)
         swatches[key] = sw
     end
     applyTint((DH.GetSetting and DH:GetSetting("tint_" .. id)) or "auto")
@@ -2152,9 +1842,13 @@ end
 
 -- Opens (or focuses) the settings panel for one window, next to that window.
 function ns.OpenWindowConfig(id)
-    if not ns.configMode or not WIN_LABEL[id] then return end
+    if not ns.configMode or not WIN_LABEL[id] then
+        return
+    end
     for k, other in pairs(configPanels) do
-        if k ~= id then other:Hide() end
+        if k ~= id then
+            other:Hide()
+        end
     end
     local p = configPanels[id]
     if not p then
@@ -2166,8 +1860,12 @@ function ns.OpenWindowConfig(id)
     if w and UIParent then
         local cx, cy2 = w:GetCenter()
         local ux, uy = UIParent:GetCenter()
-        if cx and ux then ox = cx - ux end
-        if cy2 and uy then oy = cy2 - uy end
+        if cx and ux then
+            ox = cx - ux
+        end
+        if cy2 and uy then
+            oy = cy2 - uy
+        end
     end
     p:SetFrameStrata("FULLSCREEN_DIALOG")
     p:SetFrameLevel((configGrid and configGrid:GetFrameLevel() or 0) + 10)
@@ -2175,18 +1873,26 @@ function ns.OpenWindowConfig(id)
     local half = (p:GetWidth() or 180) / 2
     local screenHalf = ((UIParent and UIParent:GetWidth()) or 1000) / 2
     local px = ox + 220
-    if px + half > screenHalf - 12 then px = ox - 220 end
-    if px - half < -screenHalf + 12 then px = -screenHalf + 12 + half end
+    if px + half > screenHalf - 12 then
+        px = ox - 220
+    end
+    if px - half < -screenHalf + 12 then
+        px = -screenHalf + 12 + half
+    end
     p:ClearAllPoints()
     p:SetPoint("CENTER", UIParent, "CENTER", px, oy)
     p:SetClampedToScreen(true)
     p:Show()
     configSelected = id
-    if ns.UpdateConfigOverlay then ns.UpdateConfigOverlay() end
+    if ns.UpdateConfigOverlay then
+        ns.UpdateConfigOverlay()
+    end
 end
 
 local function EnsureConfigBar()
-    if configBar then return configBar end
+    if configBar then
+        return configBar
+    end
     local b = CreateFrame("Frame", "RotationCoreConfigBar", UIParent)
     b:SetFrameStrata("FULLSCREEN_DIALOG")
     b:SetSize(520, 64)
@@ -2194,12 +1900,18 @@ local function EnsureConfigBar()
     b:EnableMouse(true)
     b:SetMovable(true)
     b:RegisterForDrag("LeftButton")
-    b:SetScript("OnDragStart", function(self) self:StartMoving() end)
-    b:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
+    b:SetScript("OnDragStart", function(self)
+        self:StartMoving()
+    end)
+    b:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+    end)
     b:SetBackdrop({
         bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
         edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-        tile = true, tileSize = 16, edgeSize = 16,
+        tile = true,
+        tileSize = 16,
+        edgeSize = 16,
         insets = { left = 4, right = 4, top = 4, bottom = 4 },
     })
     b:SetBackdropColor(0, 0, 0, 0.92)
@@ -2208,7 +1920,9 @@ local function EnsureConfigBar()
     t:SetText(L("Panel configuration"))
     t:SetTextColor(1, 0.82, 0)
     b.title = t
-    if ns.ApplyWindowChrome then ns.ApplyWindowChrome(b) end
+    if ns.ApplyWindowChrome then
+        ns.ApplyWindowChrome(b)
+    end
     local h = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     h:SetPoint("TOP", b, "TOP", 0, -28)
     h:SetJustifyH("CENTER")
@@ -2218,13 +1932,17 @@ local function EnsureConfigBar()
     exit:SetSize(100, 22)
     exit:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", -8, 6)
     exit:SetText(L("Exit"))
-    exit:SetScript("OnClick", function() ns.SetConfigMode(false) end)
+    exit:SetScript("OnClick", function()
+        ns.SetConfigMode(false)
+    end)
     local reset = CreateFrame("Button", nil, b, "UIPanelButtonTemplate")
     reset:SetSize(150, 22)
     reset:SetPoint("BOTTOMLEFT", b, "BOTTOMLEFT", 8, 6)
     reset:SetText(L("Reset positions"))
     reset:SetScript("OnClick", function()
-        if ns.ResetWindowPositions then ns.ResetWindowPositions() end
+        if ns.ResetWindowPositions then
+            ns.ResetWindowPositions()
+        end
     end)
     configBar = b
     return b
@@ -2232,7 +1950,9 @@ end
 
 function ns.SetConfigMode(on)
     ns.configMode = on and true or false
-    if ns.SetMoveMode then ns.SetMoveMode(ns.configMode) end
+    if ns.SetMoveMode then
+        ns.SetMoveMode(ns.configMode)
+    end
     if ns.configMode then
         EnsureConfigBar():Show()
         EnsureConfigOverlay()
@@ -2242,87 +1962,144 @@ function ns.SetConfigMode(on)
             -- Track the windows every frame so the highlight slides smoothly
             -- while a window is dragged (a throttled timer looked choppy).
             configGrid:SetScript("OnUpdate", function()
-                if ns.UpdateConfigOverlay then ns.UpdateConfigOverlay() end
+                if ns.UpdateConfigOverlay then
+                    ns.UpdateConfigOverlay()
+                end
             end)
         end
-        for _, p in pairs(configPanels) do p:Hide() end
+        for _, p in pairs(configPanels) do
+            p:Hide()
+        end
         -- Settings panels are opened per window with a right-click.
-        for _, id in ipairs(HL_ORDER) do EnsureWindowRightClick(id) end
-        if ns.UpdateConfigOverlay then ns.UpdateConfigOverlay() end
+        for _, id in ipairs(HL_ORDER) do
+            EnsureWindowRightClick(id)
+        end
+        if ns.UpdateConfigOverlay then
+            ns.UpdateConfigOverlay()
+        end
     else
-        if configBar then configBar:Hide() end
+        if configBar then
+            configBar:Hide()
+        end
         if configGrid then
             configGrid:SetScript("OnUpdate", nil)
             configGrid:Hide()
         end
-        if configHighlights then for _, hl in pairs(configHighlights) do hl:Hide() end end
+        if configHighlights then
+            for _, hl in pairs(configHighlights) do
+                hl:Hide()
+            end
+        end
         configSelected = nil
-        for _, p in pairs(configPanels) do p:Hide() end
+        for _, p in pairs(configPanels) do
+            p:Hide()
+        end
         configPanels = {}
     end
 end
 
-function ns.IsConfigMode() return ns.configMode end
+function ns.IsConfigMode()
+    return ns.configMode
+end
 
 -- Restore every window to its default position (config-mode "Reset positions").
 function ns.ResetWindowPositions()
     local pos = GetPosTable()
-    if pos then pos.x, pos.y = 0, -250 end
-    if DH.db and DH.db.spellFrame then DH.db.spellFrame.x, DH.db.spellFrame.y = 0, -250 end
+    if pos then
+        pos.x, pos.y = 0, -250
+    end
+    if DH.db and DH.db.spellFrame then
+        DH.db.spellFrame.x, DH.db.spellFrame.y = 0, -250
+    end
     if DH.db and DH.db.spellFrame_per_spec then
-        for _, p in pairs(DH.db.spellFrame_per_spec) do p.x, p.y = 0, -250 end
+        for _, p in pairs(DH.db.spellFrame_per_spec) do
+            p.x, p.y = 0, -250
+        end
     end
     local function resetExtra(f)
-        if not f or not f.posKey then return end
-        if DH.SetSetting then DH:SetSetting(f.posKey, { x = f.defX or 0, y = f.defY or -250 }) end
-        ApplyExtraPosition(f)
+        if not f or not f.posKey then
+            return
+        end
+        if DH.SetSetting then
+            DH:SetSetting(f.posKey, { x = f.defX or 0, y = f.defY or -250 })
+        end
+        ns.ApplyExtraPosition(f)
     end
-    resetExtra(cooldownsFrame)
-    resetExtra(interruptFrame)
-    resetExtra(timelineFrame)
-    if frame then ApplyPosition() end
-    if DH.SetSetting then DH:SetSetting("display_layout", "default") end
+    resetExtra(ns.cooldownsFrame)
+    resetExtra(ns.interruptFrame)
+    resetExtra(ns.timelineFrame)
+    if frame then
+        ApplyPosition()
+    end
+    if DH.SetSetting then
+        DH:SetSetting("display_layout", "default")
+    end
 end
 
 -- Reset the optional windows after a profile switch / position reset
 function ns.HideAllWindows()
-    if frame then frame:Hide() end
-    if cooldownsFrame then cooldownsFrame:Hide() end
-    if interruptFrame then interruptFrame:Hide() end
-    if timelineFrame then timelineFrame:Hide() end
-    if ns.DebugFrame then ns.DebugFrame:Hide() end
+    if frame then
+        frame:Hide()
+    end
+    if ns.cooldownsFrame then
+        ns.cooldownsFrame:Hide()
+    end
+    if ns.interruptFrame then
+        ns.interruptFrame:Hide()
+    end
+    if ns.timelineFrame then
+        ns.timelineFrame:Hide()
+    end
+    if ns.DebugFrame then
+        ns.DebugFrame:Hide()
+    end
 end
 
 function ns.CooldownState()
-    local count = #(GetCooldownItems())
-    local shown = cooldownsFrame and cooldownsFrame:IsShown() or false
-    local alpha = cooldownsFrame and cooldownsFrame:GetAlpha() or 0
+    local count = #(ns.GetCooldownItems())
+    local shown = ns.cooldownsFrame and ns.cooldownsFrame:IsShown() or false
+    local alpha = ns.cooldownsFrame and ns.cooldownsFrame:GetAlpha() or 0
     local pos = { x = nil, y = nil }
-    if cooldownsFrame and cooldownsFrame.GetCenter and UIParent and UIParent.GetCenter then
-        local cx, cy = cooldownsFrame:GetCenter()
+    if ns.cooldownsFrame and ns.cooldownsFrame.GetCenter and UIParent and UIParent.GetCenter then
+        local cx, cy = ns.cooldownsFrame:GetCenter()
         local ux, uy = UIParent:GetCenter()
-        if cx and ux then pos.x = math.floor(cx - ux + 0.5) end
-        if cy and uy then pos.y = math.floor(cy - uy + 0.5) end
+        if cx and ux then
+            pos.x = math.floor(cx - ux + 0.5)
+        end
+        if cy and uy then
+            pos.y = math.floor(cy - uy + 0.5)
+        end
     end
     return shown, count, alpha, pos
 end
 
 function ns.CleanupExtraFrames()
-    if cooldownsFrame then cooldownsFrame:Hide(); cooldownsFrame = nil end
-    if interruptFrame then interruptFrame:Hide(); interruptFrame = nil end
-    if timelineFrame then timelineFrame:Hide(); timelineFrame = nil end
-    if ns.RefreshExtraFrames then ns.RefreshExtraFrames() end
+    if ns.cooldownsFrame then
+        ns.cooldownsFrame:Hide()
+        ns.cooldownsFrame = nil
+    end
+    if ns.interruptFrame then
+        ns.interruptFrame:Hide()
+        ns.interruptFrame = nil
+    end
+    if ns.timelineFrame then
+        ns.timelineFrame:Hide()
+        ns.timelineFrame = nil
+    end
+    if ns.RefreshExtraFrames then
+        ns.RefreshExtraFrames()
+    end
 end
 
 function ns.RefreshExtraFrames()
-    if cooldownsFrame and cooldownsFrame:IsShown() and not cooldownsFrame.isMoving then
-        ApplyExtraPosition(cooldownsFrame)
+    if ns.cooldownsFrame and ns.cooldownsFrame:IsShown() and not ns.cooldownsFrame.isMoving then
+        ns.ApplyExtraPosition(ns.cooldownsFrame)
     end
-    if interruptFrame and interruptFrame:IsShown() and not interruptFrame.isMoving then
-        ApplyExtraPosition(interruptFrame)
+    if ns.interruptFrame and ns.interruptFrame:IsShown() and not ns.interruptFrame.isMoving then
+        ns.ApplyExtraPosition(ns.interruptFrame)
     end
-    if timelineFrame and timelineFrame:IsShown() and not timelineFrame.isMoving then
-        ApplyExtraPosition(timelineFrame)
+    if ns.timelineFrame and ns.timelineFrame:IsShown() and not ns.timelineFrame.isMoving then
+        ns.ApplyExtraPosition(ns.timelineFrame)
     end
 end
 
@@ -2337,36 +2114,49 @@ local LAYOUTS = {
         primary = { x = 0, y = -250 },
         cooldowns = { x = -170, y = -250 },
         interrupts = { x = -170, y = -330 },
-        scale = 1, show_cd = true, show_int = true,
+        scale = 1,
+        show_cd = true,
+        show_int = true,
     },
     side = {
         primary = { x = 230, y = -160 },
         cooldowns = { x = 230, y = -270 },
         interrupts = { x = 230, y = -350 },
-        scale = 1, show_cd = true, show_int = true,
+        scale = 1,
+        show_cd = true,
+        show_int = true,
     },
     minimal = {
         primary = { x = 0, y = -250 },
-        scale = 0.7, show_cd = false, show_int = false,
+        scale = 0.7,
+        show_cd = false,
+        show_int = false,
     },
     raid = {
         primary = { x = 0, y = -250 },
         cooldowns = { x = -230, y = -250 },
         interrupts = { x = 230, y = -250 },
-        scale = 1, show_cd = true, show_int = true,
+        scale = 1,
+        show_cd = true,
+        show_int = true,
     },
 }
 ns.LAYOUT_PRESETS = LAYOUTS
 
 function ns.ApplyLayout(name)
-    if not DH.db then return end
+    if not DH.db then
+        return
+    end
     local preset = LAYOUTS[name]
-    if not preset then return end   -- "custom": keep the user's positions
+    if not preset then
+        return
+    end -- "custom": keep the user's positions
     local common = DH.db.common
-    if not common then return end
+    if not common then
+        return
+    end
 
-    if preset.primary
-       and not (DH.GetSetting and DH:GetSetting("spellFrame_pos_per_spec")) then
+    if preset.primary and not (DH.GetSetting and DH:GetSetting("spellFrame_pos_per_spec")) then
         DH.db.spellFrame = { x = preset.primary.x, y = preset.primary.y }
     end
     if preset.cooldowns then
@@ -2376,22 +2166,34 @@ function ns.ApplyLayout(name)
         common.interrupts_position = { x = preset.interrupts.x, y = preset.interrupts.y }
     end
     if preset.scale then
-        if DH.db.display then DH.db.display.spellframe_scale = preset.scale end
+        if DH.db.display then
+            DH.db.display.spellframe_scale = preset.scale
+        end
         common.cooldowns_scale = preset.scale
         common.interrupts_scale = preset.scale
     end
-    if preset.show_cd ~= nil then DH:SetSetting("show_cooldowns_display", preset.show_cd) end
-    if preset.show_int ~= nil then DH:SetSetting("show_interrupts_display", preset.show_int) end
+    if preset.show_cd ~= nil then
+        DH:SetSetting("show_cooldowns_display", preset.show_cd)
+    end
+    if preset.show_int ~= nil then
+        DH:SetSetting("show_interrupts_display", preset.show_int)
+    end
     DH:SetSetting("display_layout", name)
 
-    if ns.RefreshSpellFrame then ns.RefreshSpellFrame() end
-    if ns.RefreshExtraFrames then ns.RefreshExtraFrames() end
+    if ns.RefreshSpellFrame then
+        ns.RefreshSpellFrame()
+    end
+    if ns.RefreshExtraFrames then
+        ns.RefreshExtraFrames()
+    end
     DH:UpdateUI()
 end
 
 -- Text form of the current positions (kept separate from the profile export).
 function ns.ExportLayout()
-    if not DH.db then return "" end
+    if not DH.db then
+        return ""
+    end
     local common = DH.db.common or {}
     local parts = {}
     local sf = DH.db.spellFrame
@@ -2411,9 +2213,13 @@ end
 
 -- Safe, hand-parsed import ("primary=x,y;cooldowns=x,y;interrupts=x,y").
 function ns.ImportLayout(text)
-    if not DH.db or type(text) ~= "string" then return 0 end
+    if not DH.db or type(text) ~= "string" then
+        return 0
+    end
     local common = DH.db.common
-    if not common then return 0 end
+    if not common then
+        return 0
+    end
     local n = 0
     for key, x, y in text:gmatch("(%a+)=(%-?%d+)%s*,%s*(%-?%d+)") do
         x, y = tonumber(x), tonumber(y)
@@ -2429,8 +2235,12 @@ function ns.ImportLayout(text)
         end
     end
     DH:SetSetting("display_layout", "custom")
-    if ns.RefreshSpellFrame then ns.RefreshSpellFrame() end
-    if ns.RefreshExtraFrames then ns.RefreshExtraFrames() end
+    if ns.RefreshSpellFrame then
+        ns.RefreshSpellFrame()
+    end
+    if ns.RefreshExtraFrames then
+        ns.RefreshExtraFrames()
+    end
     DH:UpdateUI()
     return n
 end
@@ -2438,57 +2248,76 @@ end
 -- /rc move: show every display as a labelled box so it can be dragged.
 -- /rc lock: hide the labels and restore the normal empty/queue behaviour.
 function ns.SetMoveMode(on)
-    moveMode = on and true or false
+    ns.moveMode = on and true or false
     EnsureFrame()
 
-    if moveMode then
+    if ns.moveMode then
         frame.moveLabel = L("Primary")
         frame.reason:SetText(L("Primary"))
         frame.reason:SetWidth(140)
         frame.reason:Show()
         for i = 1, MAX_SLOTS do
-            if slots[i] then slots[i]:Hide() end
+            if slots[i] then
+                slots[i]:Hide()
+            end
         end
         frame.lines = {}
-        if frame.moveText then frame.moveText:SetText(L("Primary")); frame.moveText:Show() end
+        if frame.moveText then
+            frame.moveText:SetText(L("Primary"))
+            frame.moveText:Show()
+        end
         frame:SetSize(math.max((frame.title:GetStringWidth() or 60) + 66, 150), TITLE_H + 30)
         ApplyPosition()
         UpdateModeIndicator()
         frame:Show()
     else
-        if frame.moveText then frame.moveText:Hide() end
+        if frame.moveText then
+            frame.moveText:Hide()
+        end
         if not frame.lines or #frame.lines == 0 then
             frame.reason:Hide()
             frame:Hide()
         end
         -- Explicitly tear down the optional move boxes when their display is
         -- disabled, so no black square is left behind after /rc lock.
-        if cooldownsFrame then
-            if cooldownsFrame.moveText then cooldownsFrame.moveText:Hide() end
+        if ns.cooldownsFrame then
+            if ns.cooldownsFrame.moveText then
+                ns.cooldownsFrame.moveText:Hide()
+            end
             if (DH.GetSetting and DH:GetSetting("show_cooldowns_display")) ~= true then
-                cooldownsFrame:Hide()
+                ns.cooldownsFrame:Hide()
             end
         end
-        if interruptFrame then
-            if interruptFrame.moveText then interruptFrame.moveText:Hide() end
+        if ns.interruptFrame then
+            if ns.interruptFrame.moveText then
+                ns.interruptFrame.moveText:Hide()
+            end
             if (DH.GetSetting and DH:GetSetting("show_interrupts_display")) ~= true then
-                interruptFrame:Hide()
+                ns.interruptFrame:Hide()
             end
         end
-        if timelineFrame then
-            if timelineFrame.moveText then timelineFrame.moveText:Hide() end
+        if ns.timelineFrame then
+            if ns.timelineFrame.moveText then
+                ns.timelineFrame.moveText:Hide()
+            end
             if (DH.GetSetting and DH:GetSetting("show_timeline_display")) ~= true then
-                timelineFrame:Hide()
+                ns.timelineFrame:Hide()
             end
         end
     end
 
     -- Cooldowns / Interrupts boxes (created lazily, kept visible in move mode)
-    if ns.UpdateCooldownsFrame then ns.UpdateCooldownsFrame() end
-    if ns.UpdateInterruptsFrame then ns.UpdateInterruptsFrame() end
-    if ns.UpdateTimelineFrame then ns.UpdateTimelineFrame() end
+    if ns.UpdateCooldownsFrame then
+        ns.UpdateCooldownsFrame()
+    end
+    if ns.UpdateInterruptsFrame then
+        ns.UpdateInterruptsFrame()
+    end
+    if ns.UpdateTimelineFrame then
+        ns.UpdateTimelineFrame()
+    end
 end
 
 function ns.IsMoveMode()
-    return moveMode
+    return ns.moveMode
 end

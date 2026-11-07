@@ -59,6 +59,22 @@ local SPELLS = {
     HURRICANE = 48467,
     FAERIE_FIRE = 770,
 
+    -- Restoration
+    HEALING_TOUCH = 48378,
+    NOURISH = 50464,
+    REGROWTH = 48443,
+    REJUVENATION = 48441,
+    LIFEBLOOM = 48451,
+    WILD_GROWTH = 53251,
+    SWIFTMEND = 18562,
+    NATURES_SWIFTNESS = 16188,
+    TRANQUILITY = 48447,
+    INNERVATE = 29166,
+    REBIRTH = 48477,
+    REMOVE_CURSE = 2782,
+    ABOLISH_POISON = 2893,
+    TREE_OF_LIFE = 33891,
+
     -- PvP
     CYCLONE = 33786,
     ENTANGLING_ROOTS = 53308,
@@ -245,6 +261,86 @@ class.abilities = {
         id = SPELLS.FAERIE_FIRE,
         name = "Faerie Fire",
         texture = 136033,
+    },
+
+    -- Restoration
+    healing_touch = {
+        id = SPELLS.HEALING_TOUCH,
+        name = "Healing Touch",
+        texture = 136041,
+        heal = true,
+    },
+    nourish = {
+        id = SPELLS.NOURISH,
+        name = "Nourish",
+        texture = 136085,
+        heal = true,
+    },
+    regrowth = {
+        id = SPELLS.REGROWTH,
+        name = "Regrowth",
+        texture = 136085,
+        heal = true,
+    },
+    rejuvenation = {
+        id = SPELLS.REJUVENATION,
+        name = "Rejuvenation",
+        texture = 136081,
+        heal = true,
+    },
+    lifebloom = {
+        id = SPELLS.LIFEBLOOM,
+        name = "Lifebloom",
+        texture = 134206,
+        heal = true,
+    },
+    wild_growth = {
+        id = SPELLS.WILD_GROWTH,
+        name = "Wild Growth",
+        texture = 236153,
+        heal = true,
+    },
+    swiftmend = {
+        id = SPELLS.SWIFTMEND,
+        name = "Swiftmend",
+        texture = 134914,
+        heal = true,
+    },
+    natures_swiftness = {
+        id = SPELLS.NATURES_SWIFTNESS,
+        name = "Nature's Swiftness",
+        texture = 136076,
+    },
+    tranquility = {
+        id = SPELLS.TRANQUILITY,
+        name = "Tranquility",
+        texture = 136107,
+        heal = true,
+    },
+    innervate = {
+        id = SPELLS.INNERVATE,
+        name = "Innervate",
+        texture = 136048,
+    },
+    rebirth = {
+        id = SPELLS.REBIRTH,
+        name = "Rebirth",
+        texture = 136080,
+    },
+    remove_curse = {
+        id = SPELLS.REMOVE_CURSE,
+        name = "Remove Curse",
+        texture = 135952,
+    },
+    abolish_poison = {
+        id = SPELLS.ABOLISH_POISON,
+        name = "Abolish Poison",
+        texture = 136067,
+    },
+    tree_of_life_form = {
+        id = SPELLS.TREE_OF_LIFE,
+        name = "Tree of Life Form",
+        texture = 132145,
     },
 
     -- PvP
@@ -759,8 +855,14 @@ DH:RegisterSlashCommand("debuffs", function(cmd)
 end, "debuffs - Show target debuffs")
 
 DH:RegisterSlashCommand("aoe", function(cmd)
-    DH:Print(L("AoE rotation not implemented - use single target rotation"))
-end, nil)
+    local nextMode = (DH:GetSetting("target_mode") == "aoe") and "single" or "aoe"
+    DH:SetSetting("target_mode", nextMode)
+    if nextMode == "aoe" then
+        DH:Print(L("AoE mode enabled (4+ enemies)."))
+    else
+        DH:Print(L("Single-target mode enabled."))
+    end
+end, "aoe - Toggle AoE target mode")
 
 -- ============================================================================
 -- DEBUG FRAME (Druid-specific)

@@ -3,7 +3,9 @@
 -- Uses core RunSimulation for CD-aware predictions
 
 local DH = RotationCore
-if not DH then return end
+if not DH then
+    return
+end
 
 if select(2, UnitClass("player")) ~= "WARRIOR" then
     return
@@ -23,9 +25,9 @@ local state = DH.State
 local function EstimateRageRegen()
     local mhSpeed, ohSpeed = UnitAttackSpeed("player")
     mhSpeed = mhSpeed or 3.0
-    local rps = 15 / mhSpeed  -- ~15 rage per mainhand swing
+    local rps = 15 / mhSpeed -- ~15 rage per mainhand swing
     if ohSpeed and ohSpeed > 0 then
-        rps = rps + 7.5 / ohSpeed  -- offhand generates ~half
+        rps = rps + 7.5 / ohSpeed -- offhand generates ~half
     end
     return rps
 end
@@ -42,9 +44,13 @@ local armsConfig = {
         {
             field = "rage",
             max = "rage_max",
-            regen = 0,  -- set dynamically in initState
-            initFrom = function(s) return s.rage.current end,
-            initMaxFrom = function(s) return s.rage.max end,
+            regen = 0, -- set dynamically in initState
+            initFrom = function(s)
+                return s.rage.current
+            end,
+            initMaxFrom = function(s)
+                return s.rage.max
+            end,
         },
     },
     cds = {
@@ -98,25 +104,25 @@ local armsConfig = {
         -- Part 4: target mode (single / aoe / auto)
         local mode = DH:ResolveTargetMode(sim)
         if mode == "cleave" then
-            if sim:ready("whirlwind") and sim.rage >= 25 then
+            if DH:Ready(sim, "whirlwind") and sim.rage >= 25 then
                 return "whirlwind"
             end
-            if sim:ready("cleave") and sim.rage >= 25 then
+            if DH:Ready(sim, "cleave") and sim.rage >= 25 then
                 return "cleave"
             end
-            if sim:ready("thunder_clap") and sim.rage >= 20 then
+            if DH:Ready(sim, "thunder_clap") and sim.rage >= 20 then
                 return "thunder_clap"
             end
         end
 
         if mode == "aoe" or mode == "cleave" then
-            if sim:ready("whirlwind") and sim.rage >= 25 then
+            if DH:Ready(sim, "whirlwind") and sim.rage >= 25 then
                 return "whirlwind"
             end
-            if sim:ready("cleave") and sim.rage >= 25 then
+            if DH:Ready(sim, "cleave") and sim.rage >= 25 then
                 return "cleave"
             end
-            if sim:ready("thunder_clap") and sim.rage >= 20 then
+            if DH:Ready(sim, "thunder_clap") and sim.rage >= 20 then
                 return "thunder_clap"
             end
             -- Nothing AOE-specific ready: fall through to single rotation
@@ -128,14 +134,16 @@ local armsConfig = {
         end
 
         -- Execute phase (target < 20%, or boss phase 3 via the timeline)
-        if (sim.in_execute or (DH.IsExecutePhase and DH:IsExecutePhase()))
-           and sim.rage >= 15 and DH:GetSetting("use_execute") then
+        if
+            (sim.in_execute or (DH.IsExecutePhase and DH:IsExecutePhase()))
+            and sim.rage >= 15
+            and DH:GetSetting("use_execute")
+        then
             return "execute"
         end
 
         -- Sudden Death proc: Execute outside execute phase
-        if sim.has_sudden_death and sim.sudden_death and sim.rage >= 15
-           and DH:GetSetting("use_execute") then
+        if sim.has_sudden_death and sim.sudden_death and sim.rage >= 15 and DH:GetSetting("use_execute") then
             return "execute"
         end
 
@@ -146,12 +154,12 @@ local armsConfig = {
         end
 
         -- Overpower: only when Taste for Blood / dodge proc is active
-        if sim.taste_for_blood and sim:ready("overpower") and sim.rage >= 5 then
+        if sim.taste_for_blood and DH:Ready(sim, "overpower") and sim.rage >= 5 then
             return "overpower"
         end
 
         -- Mortal Strike on CD
-        if sim.has_ms and sim:ready("mortal_strike") and sim.rage >= 30 then
+        if sim.has_ms and DH:Ready(sim, "mortal_strike") and sim.rage >= 30 then
             return "mortal_strike"
         end
 
@@ -213,7 +221,9 @@ local armsConfig = {
                 nearest = cd
             end
         end
-        if nearest < 999 then return nearest end
+        if nearest < 999 then
+            return nearest
+        end
         return sim.gcd
     end,
 }
@@ -235,8 +245,12 @@ local furyConfig = {
             field = "rage",
             max = "rage_max",
             regen = 0,
-            initFrom = function(s) return s.rage.current end,
-            initMaxFrom = function(s) return s.rage.max end,
+            initFrom = function(s)
+                return s.rage.current
+            end,
+            initMaxFrom = function(s)
+                return s.rage.max
+            end,
         },
     },
     cds = {
@@ -287,25 +301,25 @@ local furyConfig = {
         -- Part 4: target mode (single / aoe / auto)
         local mode = DH:ResolveTargetMode(sim)
         if mode == "cleave" then
-            if sim:ready("bloodthirst") and sim.rage >= 20 then
+            if DH:Ready(sim, "bloodthirst") and sim.rage >= 20 then
                 return "bloodthirst"
             end
-            if sim:ready("whirlwind") and sim.rage >= 25 then
+            if DH:Ready(sim, "whirlwind") and sim.rage >= 25 then
                 return "whirlwind"
             end
-            if sim:ready("cleave") and sim.rage >= 25 then
+            if DH:Ready(sim, "cleave") and sim.rage >= 25 then
                 return "cleave"
             end
         end
 
         if mode == "aoe" or mode == "cleave" then
-            if sim:ready("whirlwind") and sim.rage >= 25 then
+            if DH:Ready(sim, "whirlwind") and sim.rage >= 25 then
                 return "whirlwind"
             end
-            if sim:ready("cleave") and sim.rage >= 25 then
+            if DH:Ready(sim, "cleave") and sim.rage >= 25 then
                 return "cleave"
             end
-            if sim:ready("thunder_clap") and sim.rage >= 20 then
+            if DH:Ready(sim, "thunder_clap") and sim.rage >= 20 then
                 return "thunder_clap"
             end
             -- Nothing AOE-specific ready: fall through to single rotation
@@ -327,18 +341,17 @@ local furyConfig = {
         end
 
         -- Bloodthirst on CD (primary ability)
-        if sim.has_bt and sim:ready("bloodthirst") and sim.rage >= 20 then
+        if sim.has_bt and DH:Ready(sim, "bloodthirst") and sim.rage >= 20 then
             return "bloodthirst"
         end
 
         -- Whirlwind
-        if sim:ready("whirlwind") and sim.rage >= 25 then
+        if DH:Ready(sim, "whirlwind") and sim.rage >= 25 then
             return "whirlwind"
         end
 
         -- Death Wish (when rage is healthy)
-        if sim.has_death_wish and sim.rage >= 10
-           and DH:CanUseCooldown(sim, "death_wish", "use_death_wish") then
+        if sim.has_death_wish and sim.rage >= 10 and DH:CanUseCooldown(sim, "death_wish", "use_death_wish") then
             return "death_wish"
         end
 
@@ -402,7 +415,9 @@ local furyConfig = {
                 nearest = cd
             end
         end
-        if nearest < 999 then return nearest end
+        if nearest < 999 then
+            return nearest
+        end
         return sim.gcd
     end,
 }
@@ -424,8 +439,12 @@ local protConfig = {
             field = "rage",
             max = "rage_max",
             regen = 0,
-            initFrom = function(s) return s.rage.current end,
-            initMaxFrom = function(s) return s.rage.max end,
+            initFrom = function(s)
+                return s.rage.current
+            end,
+            initMaxFrom = function(s)
+                return s.rage.max
+            end,
         },
     },
     cds = {
@@ -453,7 +472,7 @@ local protConfig = {
     initState = function(sim, s)
         -- Tanks get hit so rage income is higher; estimate ~8 rage/sec
         local mhSpeed = UnitAttackSpeed("player") or 2.0
-        sim.rage_regen = 15 / mhSpeed + 8  -- auto-attacks + damage taken
+        sim.rage_regen = 15 / mhSpeed + 8 -- auto-attacks + damage taken
 
         -- Stance
         sim.in_defensive = s.buff.defensive_stance.up
@@ -481,28 +500,28 @@ local protConfig = {
         -- Part 4: target mode (single / aoe / auto)
         local mode = DH:ResolveTargetMode(sim)
         if mode == "cleave" then
-            if sim:ready("shockwave") and sim.rage >= 15 then
+            if DH:Ready(sim, "shockwave") and sim.rage >= 15 then
                 return "shockwave"
             end
-            if sim:ready("thunder_clap") and sim.rage >= 20 then
+            if DH:Ready(sim, "thunder_clap") and sim.rage >= 20 then
                 return "thunder_clap"
             end
-            if sim:ready("cleave") and sim.rage >= 25 then
+            if DH:Ready(sim, "cleave") and sim.rage >= 25 then
                 return "cleave"
             end
         end
 
         if mode == "aoe" or mode == "cleave" then
-            if sim:ready("shockwave") and sim.rage >= 15 then
+            if DH:Ready(sim, "shockwave") and sim.rage >= 15 then
                 return "shockwave"
             end
-            if sim:ready("thunder_clap") and sim.rage >= 20 then
+            if DH:Ready(sim, "thunder_clap") and sim.rage >= 20 then
                 return "thunder_clap"
             end
-            if sim:ready("cleave") and sim.rage >= 25 then
+            if DH:Ready(sim, "cleave") and sim.rage >= 25 then
                 return "cleave"
             end
-            if sim:ready("concussion_blow") and sim.rage >= 15 then
+            if DH:Ready(sim, "concussion_blow") and sim.rage >= 15 then
                 return "concussion_blow"
             end
             -- Nothing AOE-specific ready: fall through to single rotation
@@ -514,24 +533,28 @@ local protConfig = {
         end
 
         -- Shield Slam (highest threat, Sword and Board = free)
-        if sim:ready("shield_slam") and (sim.rage >= 20 or sim.sword_and_board) then
+        if DH:Ready(sim, "shield_slam") and (sim.rage >= 20 or sim.sword_and_board) then
             return "shield_slam"
         end
 
         -- Revenge (high threat, low cost)
-        if sim:ready("revenge") and sim.rage >= 5 then
+        if DH:Ready(sim, "revenge") and sim.rage >= 5 then
             return "revenge"
         end
 
         -- Shockwave
-        if sim.has_shockwave and sim:ready("shockwave") and sim.rage >= 15
-           and DH:CanUseCooldown(sim, "shockwave", "use_shockwave") then
+        if
+            sim.has_shockwave
+            and DH:Ready(sim, "shockwave")
+            and sim.rage >= 15
+            and DH:CanUseCooldown(sim, "shockwave", "use_shockwave")
+        then
             return "shockwave"
         end
 
         -- Thunder Clap: maintain debuff (part 5.1: refresh buffer)
         local buffer = DH:GetSetting("dot_refresh_buffer") or 2.0
-        if (not sim.tc_up or sim.tc_remains < 3) and sim:ready("thunder_clap") and sim.rage >= 20 then
+        if (not sim.tc_up or sim.tc_remains < 3) and DH:Ready(sim, "thunder_clap") and sim.rage >= 20 then
             return "thunder_clap"
         end
 
@@ -546,8 +569,11 @@ local protConfig = {
         end
 
         -- Concussion Blow
-        if sim.has_concussion_blow and sim.rage >= 15
-           and DH:CanUseCooldown(sim, "concussion_blow", "use_concussion_blow") then
+        if
+            sim.has_concussion_blow
+            and sim.rage >= 15
+            and DH:CanUseCooldown(sim, "concussion_blow", "use_concussion_blow")
+        then
             return "concussion_blow"
         end
 
@@ -600,7 +626,9 @@ local protConfig = {
                 nearest = cd
             end
         end
-        if nearest < 999 then return nearest end
+        if nearest < 999 then
+            return nearest
+        end
         return sim.gcd
     end,
 }

@@ -582,7 +582,7 @@ local function BuildSnapshot()
         end
 
         local name
-        if id and GetSpellInfo then name = GetSpellInfo(id) end
+        if id and ns.CachedSpellInfo then name = ns.CachedSpellInfo(id) end
 
         snapshot[#snapshot + 1] = {
             btn = btn,
@@ -958,7 +958,7 @@ function ns.UpdateUI(addon)
             local id = ability and ability.id
             -- Prefer the localized spell name from the client (GetSpellInfo)
             -- over the module's English name so RU clients match RU buttons
-            local dispName = (id and GetSpellInfo and GetSpellInfo(id))
+            local dispName = (id and ns.CachedSpellInfo and ns.CachedSpellInfo(id))
                 or (ability and ability.name) or rec.name or ""
             local lowerName = dispName ~= "" and dispName:lower() or nil
 

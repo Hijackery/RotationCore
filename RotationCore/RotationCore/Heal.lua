@@ -204,3 +204,289 @@ end
 function ns.IsHealerClass()
     return HEALS[DH.playerClass] ~= nil
 end
+
+-- ============================================================================
+-- SHARED HEAL ROTATION HELPERS
+-- Used by the per-class heal modes. Deliberately independent from the DPS
+-- simulation: these helpers only inspect group health, auras and cooldowns.
+-- ============================================================================
+
+local function abilityId(key)
+    local a = DH.Class and DH.Class.abilities and DH.Class.abilities[key]
+    return a and a.id or nil
+end
+
+function ns.GetManaPct()
+    local maxp = UnitPowerMax and UnitPowerMax("player", 0) or nil
+    if maxp and maxp > 0 then
+        return (UnitPower("player", 0) / maxp) * 100
+    end
+    return 100
+end
+
+function ns.GetUnitHealthPct(unit)
+    if not unit or type(UnitExists) ~= "function" or not UnitExists(unit) then
+        return 0
+    end
+    if UnitIsDeadOrGhost and UnitIsDeadOrGhost(unit) then return 0 end
+    local maxh = UnitHealthMax(unit)
+    if not maxh or maxh <= 0 then return 0 end
+    return (UnitHealth(unit) / maxh) * 100
+end
+
+function ns.IsHealableUnit(unit)
+    if not unit or type(UnitExists) ~= "function" or not UnitExists(unit) then
+        return false
+    end
+    if UnitIsDeadOrGhost and UnitIsDeadOrGhost(unit) then return false end
+    if UnitIsConnected and UnitIsConnected(unit) == false then return false end
+    if UnitCanAssist and UnitCanAssist("player", unit) == false then return false end
+    return true
+end
+
+function ns.GetHealUnits()
+    local units = {}
+    local function add(unit)
+        if ns.IsHealableUnit(unit) then units[#units + 1] = unit end
+    end
+
+    add("player")
+    if type(IsInRaid) == "function" and IsInRaid() and type(GetNumRaidMembers) == "function" then
+        for i = 1, GetNumRaidMembers() do add("raid" .. i) end
+    elseif type(IsInGroup) == "function" and IsInGroup() and type(GetNumPartyMembers) == "function" then
+        for i = 1, GetNumPartyMembers() do add("party" .. i) end
+    end
+    return units
+end
+
+function ns.IsTank(unit)
+    if type(UnitGroupRolesAssigned) == "function" then
+        local role = UnitGroupRolesAssigned(unit)
+        if role == "TANK" then return true end
+    end
+    if unit and type(UnitIsUnit) == "function" then
+        if UnitExists("target") and UnitIsUnit(unit, "target")
+            and not (UnitCanAttack and UnitCanAttack("player", unit)) then
+            return true
+        end
+        if UnitExists("focus") and UnitIsUnit(unit, "focus")
+            and not (UnitCanAttack and UnitCanAttack("player", unit)) then
+            return true
+        end
+    end
+    return false
+end
+
+function ns.GetHealContext()
+    local units = ns.GetHealUnits()
+    local list, injured = {}, {}
+    for _, unit in ipairs(units) do
+        local maxh = UnitHealthMax(unit) or 0
+        if maxh > 0 then
+            local pct = ns.GetUnitHealthPct(unit)
+            local entry = {
+                unit = unit,
+                name = UnitName(unit) or "?",
+                pct = pct,
+                deficit = 100 - pct,
+                maxh = maxh,
+                tank = ns.IsTank(unit),
+            }
+            list[#list + 1] = entry
+            if pct < 100 then injured[#injured + 1] = entry end
+        end
+    end
+    local function sortByHealth(a, b)
+        if a.pct == b.pct then return a.maxh > b.maxh end
+        return a.pct < b.pct
+    end
+    table.sort(list, sortByHealth)
+    table.sort(injured, sortByHealth)
+
+    local lowCount = 0
+    for _, e in ipairs(list) do
+        if e.pct < 70 then lowCount = lowCount + 1 end
+    end
+
+    return {
+        units = units,
+        list = list,
+        injured = injured,
+        lowCount = lowCount,
+        injuredCount = #injured,
+        manaPct = ns.GetManaPct(),
+        grouped = (type(IsInGroup) == "function" and IsInGroup()) and true or false,
+        raid = (type(IsInRaid) == "function" and IsInRaid()) and true or false,
+    }
+end
+
+function ns.GetInjuredCount(ctx, pct)
+    ctx = ctx or ns.GetHealContext()
+    pct = pct or 80
+    local n = 0
+    for _, e in ipairs(ctx.list) do
+        if e.pct < pct then n = n + 1 end
+    end
+    return n
+end
+
+function ns.GetHealTarget(ctx, opts)
+    ctx = ctx or ns.GetHealContext()
+    opts = opts or {}
+    local below = opts.below or 100
+    local minDeficit = opts.minDeficit or 0
+    local exclude = opts.exclude
+
+    local function usable(e)
+        if e.pct >= below or e.deficit < minDeficit then return false end
+        if exclude and exclude[e.unit] then return false end
+        return true
+    end
+
+    if opts.preferTank then
+        for _, e in ipairs(ctx.list) do
+            if e.tank and usable(e) then return e end
+        end
+    end
+    for _, e in ipairs(ctx.list) do
+        if usable(e) then return e end
+    end
+    return nil
+end
+
+function ns.GetTankTarget(ctx)
+    ctx = ctx or ns.GetHealContext()
+    for _, e in ipairs(ctx.list) do
+        if e.tank then return e end
+    end
+    -- Fall back to a friendly target/focus, then the highest-health group
+    -- member (usually the tank when role information is unavailable).
+    for _, e in ipairs(ctx.list) do
+        if (UnitExists("target") and UnitIsUnit(e.unit, "target"))
+            or (UnitExists("focus") and UnitIsUnit(e.unit, "focus")) then
+            return e
+        end
+    end
+    local best
+    for _, e in ipairs(ctx.list) do
+        if not best or e.maxh > best.maxh then best = e end
+    end
+    return best
+end
+
+function ns.GetUnitAuraInfo(unit, spellId, filter)
+    if not unit or not spellId or type(UnitAura) ~= "function" then return nil end
+    local wanted = GetSpellInfo and GetSpellInfo(spellId) or nil
+    if not wanted then return nil end
+    for i = 1, 40 do
+        local name, _, _, count, debuffType, duration, expirationTime, source = UnitAura(unit, i, filter or "HELPFUL")
+        if not name then break end
+        if name == wanted then
+            local remains = 0
+            if expirationTime and expirationTime > 0 then
+                remains = expirationTime - GetTime()
+            end
+            return {
+                name = name,
+                count = count or 0,
+                duration = duration or 0,
+                remains = math.max(0, remains),
+                debuffType = debuffType,
+                source = source,
+            }
+        end
+    end
+    return nil
+end
+
+function ns.GetAbilityAura(unit, key, filter)
+    local id = abilityId(key)
+    if not id then return nil end
+    return ns.GetUnitAuraInfo(unit, id, filter)
+end
+
+function ns.HasAura(unit, spellId, filter)
+    return ns.GetUnitAuraInfo(unit, spellId, filter) ~= nil
+end
+
+function ns.IsUnitInHealRange(unit, spellId)
+    if not unit then return false end
+    if type(IsSpellInRange) == "function" and spellId then
+        local name = GetSpellInfo and GetSpellInfo(spellId) or nil
+        local ok, result = pcall(IsSpellInRange, name or spellId, unit)
+        if ok then
+            if result == 1 then return true end
+            if result == 0 then return false end
+        end
+    end
+    if type(UnitInRange) == "function" then
+        local ok, inRange = pcall(UnitInRange, unit)
+        if ok and inRange ~= nil then return inRange end
+    end
+    return true
+end
+
+function ns.CanHeal(key, target)
+    local ability = DH.Class and DH.Class.abilities and DH.Class.abilities[key]
+    if not ability or not ability.id then return false end
+    if not (DH.IsAbilityKnown and DH:IsAbilityKnown(key)) then return false end
+    if not (DH.SpellReady and DH:SpellReady(ability.id)) then return false end
+    local unit = type(target) == "table" and target.unit or target
+    if unit and not ns.IsUnitInHealRange(unit, ability.id) then return false end
+    return true
+end
+
+function ns.PushHeal(recs, key, target, reason)
+    local ability = DH.Class and DH.Class.abilities and DH.Class.abilities[key]
+    local unit = type(target) == "table" and target.unit or target
+    if not ability or not unit then return false end
+    for _, rec in ipairs(recs) do
+        if rec.ability == key and rec.unit == unit then return false end
+    end
+    recs[#recs + 1] = {
+        ability = key,
+        unit = unit,
+        targetName = UnitName(unit) or unit,
+        priority = #recs + 1,
+        reason = reason,
+    }
+    return true
+end
+
+function ns.FindDispelTarget(ctx, types)
+    ctx = ctx or ns.GetHealContext()
+    if type(UnitAura) ~= "function" then return nil end
+    for _, e in ipairs(ctx.list) do
+        for i = 1, 40 do
+            local name, _, _, _, debuffType = UnitAura(e.unit, i, "HARMFUL")
+            if not name then break end
+            if debuffType and types[debuffType] then
+                return e, name, debuffType
+            end
+        end
+    end
+    return nil
+end
+
+function ns.GetSubgroupInjuredCount(unit, ctx, pct)
+    ctx = ctx or ns.GetHealContext()
+    pct = pct or 80
+    if not (type(IsInRaid) == "function" and IsInRaid() and type(GetNumRaidMembers) == "function") then
+        return ns.GetInjuredCount(ctx, pct)
+    end
+    local wanted = UnitName(unit)
+    local subgroup
+    for i = 1, GetNumRaidMembers() do
+        local name, _, sub = GetRaidRosterInfo(i)
+        if name == wanted then subgroup = sub; break end
+    end
+    if not subgroup then return ns.GetInjuredCount(ctx, pct) end
+    local n = 0
+    for i = 1, GetNumRaidMembers() do
+        local _, _, sub = GetRaidRosterInfo(i)
+        if sub == subgroup and ns.GetUnitHealthPct("raid" .. i) < pct then
+            n = n + 1
+        end
+    end
+    return n
+end

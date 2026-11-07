@@ -3,7 +3,9 @@
 -- Uses core RunSimulation for CD-aware predictions
 
 local DH = RotationCore
-if not DH then return end
+if not DH then
+    return
+end
 
 if select(2, UnitClass("player")) ~= "MAGE" then
     return
@@ -58,18 +60,22 @@ local arcaneConfig = {
         end
 
         if mode == "aoe" or mode == "cleave" then
-            if sim.mana_pct < (DH:GetSetting("mana_threshold_evocation") or 15)
-               and DH:CanUseCooldown(sim, "evocation", "use_evocation")
-               and sim.ttd > 8 then
+            if
+                sim.mana_pct < (DH:GetSetting("mana_threshold_evocation") or 15)
+                and DH:CanUseCooldown(sim, "evocation", "use_evocation")
+                and sim.ttd > 8
+            then
                 return "evocation"
             end
             return "arcane_explosion"
         end
 
         -- Evocation when mana low (part 5.2: configurable threshold)
-        if sim.mana_pct < (DH:GetSetting("mana_threshold_evocation") or 15)
-           and DH:CanUseCooldown(sim, "evocation", "use_evocation")
-           and sim.ttd > 8 then
+        if
+            sim.mana_pct < (DH:GetSetting("mana_threshold_evocation") or 15)
+            and DH:CanUseCooldown(sim, "evocation", "use_evocation")
+            and sim.ttd > 8
+        then
             return "evocation"
         end
 
@@ -102,8 +108,11 @@ local arcaneConfig = {
         end
 
         -- Presence of Mind (instant next AB at high stacks for burst)
-        if sim.has_pom and sim.ab_stacks >= 2
-           and DH:CanUseCooldown(sim, "presence_of_mind", "use_presence_of_mind") then
+        if
+            sim.has_pom
+            and sim.ab_stacks >= 2
+            and DH:CanUseCooldown(sim, "presence_of_mind", "use_presence_of_mind")
+        then
             return "presence_of_mind"
         end
 
@@ -122,14 +131,20 @@ local arcaneConfig = {
     end,
     getAdvanceTime = function(sim, action)
         local h = sim.haste or 1
-        if action == "arcane_blast" then return math.max(sim.gcd, 2.5 / h) end
+        if action == "arcane_blast" then
+            return math.max(sim.gcd, 2.5 / h)
+        end
         if action == "arcane_missiles" then
             -- Channeled: 5 ticks, but with Missile Barrage = faster
-            if sim.missile_barrage then return math.max(sim.gcd, 2.5 / h) end
+            if sim.missile_barrage then
+                return math.max(sim.gcd, 2.5 / h)
+            end
             return math.max(sim.gcd, 5.0 / h)
         end
-        if action == "evocation" then return math.max(sim.gcd, 8.0 / h) end
-        return sim.gcd  -- instants: arcane barrage, arcane power, POM
+        if action == "evocation" then
+            return math.max(sim.gcd, 8.0 / h)
+        end
+        return sim.gcd -- instants: arcane barrage, arcane power, POM
     end,
 }
 
@@ -169,9 +184,9 @@ local fireConfig = {
         sim.scorch_remains = s.debuff.improved_scorch.remains
 
         -- Procs
-        sim.hot_streak = s.buff.hot_streak.up  -- instant Pyroblast
-        sim.brain_freeze = s.buff.brain_freeze.up  -- instant Fireball/FFB
-        sim.combustion_up = s.buff.combustion.up  -- Combustion buff active
+        sim.hot_streak = s.buff.hot_streak.up -- instant Pyroblast
+        sim.brain_freeze = s.buff.brain_freeze.up -- instant Fireball/FFB
+        sim.combustion_up = s.buff.combustion.up -- Combustion buff active
 
         -- Talents
         sim.has_living_bomb = s.talent.living_bomb.rank > 0
@@ -186,34 +201,38 @@ local fireConfig = {
             if sim.has_living_bomb and not sim.living_bomb_up and sim.ttd > 8 then
                 return "living_bomb"
             end
-            if sim:ready("flamestrike") then
+            if DH:Ready(sim, "flamestrike") then
                 return "flamestrike"
             end
         end
 
         if mode == "aoe" or mode == "cleave" then
-            if sim.mana_pct < (DH:GetSetting("mana_threshold_evocation") or 15)
-               and DH:CanUseCooldown(sim, "evocation", "use_evocation")
-               and sim.ttd > 8 then
+            if
+                sim.mana_pct < (DH:GetSetting("mana_threshold_evocation") or 15)
+                and DH:CanUseCooldown(sim, "evocation", "use_evocation")
+                and sim.ttd > 8
+            then
                 return "evocation"
             end
             -- Living Bomb > Blast Wave (cooldown) > Flamestrike filler
             if sim.has_living_bomb and not sim.living_bomb_up and sim.ttd > 8 then
                 return "living_bomb"
             end
-            if sim:ready("blast_wave") then
+            if DH:Ready(sim, "blast_wave") then
                 return "blast_wave"
             end
-            if sim:ready("flamestrike") then
+            if DH:Ready(sim, "flamestrike") then
                 return "flamestrike"
             end
             -- Nothing AOE-specific ready: fall through to single rotation
         end
 
         -- Evocation when mana critically low (part 5.2)
-        if sim.mana_pct < (DH:GetSetting("mana_threshold_evocation") or 15)
-           and DH:CanUseCooldown(sim, "evocation", "use_evocation")
-           and sim.ttd > 8 then
+        if
+            sim.mana_pct < (DH:GetSetting("mana_threshold_evocation") or 15)
+            and DH:CanUseCooldown(sim, "evocation", "use_evocation")
+            and sim.ttd > 8
+        then
             return "evocation"
         end
 
@@ -234,8 +253,7 @@ local fireConfig = {
         end
 
         -- Combustion (major CD, only when buff not already active)
-        if sim.has_combustion and not sim.combustion_up
-           and DH:CanUseCooldown(sim, "combustion", "use_combustion") then
+        if sim.has_combustion and not sim.combustion_up and DH:CanUseCooldown(sim, "combustion", "use_combustion") then
             return "combustion"
         end
 
@@ -247,7 +265,8 @@ local fireConfig = {
         -- Frostfire build: Frostfire Bolt replaces Fireball as the filler/proc
         -- dump. Guarded by IsSpellKnownId so non-FFB builds are unaffected.
         local is_ffb = (sim.build == "ffb" or sim.build == "ttw")
-            and DH.IsSpellKnownId and DH:IsSpellKnownId(SPELLS.FROSTFIRE_BOLT)
+            and DH.IsSpellKnownId
+            and DH:IsSpellKnownId(SPELLS.FROSTFIRE_BOLT)
 
         -- Brain Freeze proc: instant Fireball (Frostfire Bolt for FFB builds)
         if sim.brain_freeze then
@@ -276,20 +295,30 @@ local fireConfig = {
     getAdvanceTime = function(sim, action)
         local h = sim.haste or 1
         if action == "fireball" then
-            if sim.brain_freeze then return sim.gcd end  -- instant with BF
+            if sim.brain_freeze then
+                return sim.gcd
+            end -- instant with BF
             return math.max(sim.gcd, 3.0 / h)
         end
         if action == "pyroblast" then
-            if sim.hot_streak then return sim.gcd end  -- instant with HS
+            if sim.hot_streak then
+                return sim.gcd
+            end -- instant with HS
             return math.max(sim.gcd, 5.0 / h)
         end
-        if action == "scorch" then return math.max(sim.gcd, 1.5 / h) end
+        if action == "scorch" then
+            return math.max(sim.gcd, 1.5 / h)
+        end
         if action == "frostfire_bolt" then
-            if sim.brain_freeze then return sim.gcd end
+            if sim.brain_freeze then
+                return sim.gcd
+            end
             return math.max(sim.gcd, 3.0 / h)
         end
-        if action == "evocation" then return math.max(sim.gcd, 8.0 / h) end
-        return sim.gcd  -- instants: living bomb, combustion
+        if action == "evocation" then
+            return math.max(sim.gcd, 8.0 / h)
+        end
+        return sim.gcd -- instants: living bomb, combustion
     end,
 }
 
@@ -337,34 +366,38 @@ local frostConfig = {
         -- Part 4: target mode (single / aoe / auto)
         local mode = DH:ResolveTargetMode(sim)
         if mode == "cleave" then
-            if sim:ready("cone_of_cold") then
+            if DH:Ready(sim, "cone_of_cold") then
                 return "cone_of_cold"
             end
-            if sim:ready("blizzard") then
+            if DH:Ready(sim, "blizzard") then
                 return "blizzard"
             end
         end
 
         if mode == "aoe" or mode == "cleave" then
-            if sim.mana_pct < (DH:GetSetting("mana_threshold_evocation") or 15)
-               and DH:CanUseCooldown(sim, "evocation", "use_evocation")
-               and sim.ttd > 8 then
+            if
+                sim.mana_pct < (DH:GetSetting("mana_threshold_evocation") or 15)
+                and DH:CanUseCooldown(sim, "evocation", "use_evocation")
+                and sim.ttd > 8
+            then
                 return "evocation"
             end
             -- Cone of Cold (cooldown) > Blizzard filler > Arcane Explosion
-            if sim:ready("cone_of_cold") then
+            if DH:Ready(sim, "cone_of_cold") then
                 return "cone_of_cold"
             end
-            if sim:ready("blizzard") then
+            if DH:Ready(sim, "blizzard") then
                 return "blizzard"
             end
             return "arcane_explosion"
         end
 
         -- Evocation when mana critically low (part 5.2)
-        if sim.mana_pct < (DH:GetSetting("mana_threshold_evocation") or 15)
-           and DH:CanUseCooldown(sim, "evocation", "use_evocation")
-           and sim.ttd > 8 then
+        if
+            sim.mana_pct < (DH:GetSetting("mana_threshold_evocation") or 15)
+            and DH:CanUseCooldown(sim, "evocation", "use_evocation")
+            and sim.ttd > 8
+        then
             return "evocation"
         end
 
@@ -374,8 +407,7 @@ local frostConfig = {
         end
 
         -- Cold Snap: resets Icy Veins - use once IV has been pressed
-        if DH:CanUseCooldown(sim, "cold_snap", "use_cold_snap")
-           and sim:remains("icy_veins") > 0 then
+        if DH:CanUseCooldown(sim, "cold_snap", "use_cold_snap") and sim:remains("icy_veins") > 0 then
             return "cold_snap"
         end
 
@@ -385,7 +417,7 @@ local frostConfig = {
         end
 
         -- Deep Freeze (instant, high damage, requires frozen/FoF)
-        if sim.has_deep_freeze and sim:ready("deep_freeze") and sim.fingers_of_frost then
+        if sim.has_deep_freeze and DH:Ready(sim, "deep_freeze") and sim.fingers_of_frost then
             return "deep_freeze"
         end
 
@@ -425,13 +457,19 @@ local frostConfig = {
     end,
     getAdvanceTime = function(sim, action)
         local h = sim.haste or 1
-        if action == "frostbolt" then return math.max(sim.gcd, 2.5 / h) end
+        if action == "frostbolt" then
+            return math.max(sim.gcd, 2.5 / h)
+        end
         if action == "frostfire_bolt" then
-            if sim.brain_freeze then return sim.gcd end
+            if sim.brain_freeze then
+                return sim.gcd
+            end
             return math.max(sim.gcd, 3.0 / h)
         end
-        if action == "evocation" then return math.max(sim.gcd, 8.0 / h) end
-        return sim.gcd  -- instants: ice lance, deep freeze, icy veins
+        if action == "evocation" then
+            return math.max(sim.gcd, 8.0 / h)
+        end
+        return sim.gcd -- instants: ice lance, deep freeze, icy veins
     end,
 }
 

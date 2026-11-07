@@ -1,5 +1,5 @@
 ## Interface: 30300
-## Version: 1.0.5
+## Version: 1.1.0
 ## Title: RotationCore
 ## Author: Hijackery
 ## Notes: Rotation helper for WotLK 3.3.5a - core (glow, settings, icon window)
@@ -12,6 +12,17 @@ Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
 Libs\LibClassicSpecs.lua
 RotationCore.lua
+Schema.lua
+Simulation.lua
+Registration.lua
+KnownSpells.lua
+SharedSettings.lua
+Profiles.lua
+Events.lua
+BossProfiles.lua
+BossTimeline.lua
+CustomAPL.lua
+Analytics.lua
 Locale.lua
 Locale_deDE.lua
 Locale_frFR.lua
@@ -25,10 +36,14 @@ SpellNames.lua
 State.lua
 UI.lua
 SpellFrame.lua
+SpellFrameExtras.lua
 Extras.lua
 Hub.lua
 Heal.lua
+Diagnostics.lua
+Feedback.lua
 Config.lua
 Bindings.xml
 Options.lua
+OptionsIO.lua
 Wizard.lua

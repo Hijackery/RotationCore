@@ -3,7 +3,9 @@
 -- Uses core RunSimulation for CD-aware predictions
 
 local DH = RotationCore
-if not DH then return end
+if not DH then
+    return
+end
 
 if select(2, UnitClass("player")) ~= "WARLOCK" then
     return
@@ -19,7 +21,9 @@ local state = DH.State
 
 -- Life Tap check: shared across all specs (part 5.2: configurable threshold)
 local function NeedsLifeTap(sim)
-    if not DH:GetSetting("use_life_tap") then return false end
+    if not DH:GetSetting("use_life_tap") then
+        return false
+    end
     return sim.mana_pct < (DH:GetSetting("life_tap_pct") or 30)
 end
 
@@ -68,7 +72,7 @@ local afflictionConfig = {
         sim.shadow_embrace_remains = s.debuff.shadow_embrace.remains
 
         -- Buffs
-        sim.shadow_trance = s.buff.shadow_trance.up  -- Nightfall proc
+        sim.shadow_trance = s.buff.shadow_trance.up -- Nightfall proc
         sim.life_tap_glyph_up = s.buff.life_tap_glyph.up
         sim.life_tap_glyph_remains = s.buff.life_tap_glyph.remains
         sim.eradication_up = s.buff.eradication.up
@@ -84,22 +88,22 @@ local afflictionConfig = {
         -- Part 4: target mode (single / aoe / auto)
         local mode = DH:ResolveTargetMode(sim)
         if mode == "cleave" then
-            if sim:ready("seed_of_corruption") then
+            if DH:Ready(sim, "seed_of_corruption") then
                 return "seed_of_corruption"
             end
-            if sim:ready("rain_of_fire") then
+            if DH:Ready(sim, "rain_of_fire") then
                 return "rain_of_fire"
             end
         end
 
         if mode == "aoe" or mode == "cleave" then
-            if sim:ready("seed_of_corruption") then
+            if DH:Ready(sim, "seed_of_corruption") then
                 return "seed_of_corruption"
             end
-            if sim:ready("rain_of_fire") then
+            if DH:Ready(sim, "rain_of_fire") then
                 return "rain_of_fire"
             end
-            if sim:ready("hellfire") then
+            if DH:Ready(sim, "hellfire") then
                 return "hellfire"
             end
             -- Nothing AOE-specific ready: fall through to single rotation
@@ -137,8 +141,7 @@ local afflictionConfig = {
         end
 
         -- Execute phase: Drain Soul below 25% HP (or boss phase 3 via the timeline)
-        if sim.has_drain_soul_execute
-           and (sim.in_execute or (DH.IsExecutePhase and DH:IsExecutePhase())) then
+        if sim.has_drain_soul_execute and (sim.in_execute or (DH.IsExecutePhase and DH:IsExecutePhase())) then
             return "drain_soul"
         end
 
@@ -153,13 +156,13 @@ local afflictionConfig = {
     onCast = function(sim, key)
         if key == "corruption" then
             sim.corruption_up = true
-            sim.corruption_remains = 18  -- 6 ticks x 3s
+            sim.corruption_remains = 18 -- 6 ticks x 3s
         elseif key == "unstable_affliction" then
             sim.ua_up = true
-            sim.ua_remains = 15  -- 5 ticks x 3s
+            sim.ua_remains = 15 -- 5 ticks x 3s
         elseif key == "curse_of_agony" then
             sim.coa_up = true
-            sim.coa_remains = 24  -- 12 ticks x 2s
+            sim.coa_remains = 24 -- 12 ticks x 2s
         elseif key == "haunt" then
             sim.haunt_up = true
             sim.haunt_remains = 12
@@ -170,7 +173,7 @@ local afflictionConfig = {
                 sim.life_tap_glyph_remains = 40
             end
         elseif key == "shadow_bolt" then
-            sim.shadow_trance = false  -- consume Nightfall proc
+            sim.shadow_trance = false -- consume Nightfall proc
             sim.shadow_embrace_up = true
             sim.shadow_embrace_remains = 12
         elseif key == "drain_soul" then
@@ -179,15 +182,25 @@ local afflictionConfig = {
     end,
     getAdvanceTime = function(sim, action)
         local h = sim.haste or 1
-        if action == "unstable_affliction" then return math.max(sim.gcd, 1.5 / h) end
+        if action == "unstable_affliction" then
+            return math.max(sim.gcd, 1.5 / h)
+        end
         if action == "shadow_bolt" then
-            if sim.shadow_trance then return sim.gcd end  -- instant with Nightfall
+            if sim.shadow_trance then
+                return sim.gcd
+            end -- instant with Nightfall
             return math.max(sim.gcd, 2.5 / h)
         end
-        if action == "haunt" then return math.max(sim.gcd, 1.5 / h) end
-        if action == "soul_fire" then return math.max(sim.gcd, 4.0 / h) end
-        if action == "drain_soul" then return math.max(sim.gcd, 3.0 / h) end  -- 1 tick
-        return sim.gcd  -- instants: corruption, CoA, life tap
+        if action == "haunt" then
+            return math.max(sim.gcd, 1.5 / h)
+        end
+        if action == "soul_fire" then
+            return math.max(sim.gcd, 4.0 / h)
+        end
+        if action == "drain_soul" then
+            return math.max(sim.gcd, 3.0 / h)
+        end -- 1 tick
+        return sim.gcd -- instants: corruption, CoA, life tap
     end,
 }
 
@@ -257,22 +270,22 @@ local demonologyConfig = {
         -- Part 4: target mode (single / aoe / auto)
         local mode = DH:ResolveTargetMode(sim)
         if mode == "cleave" then
-            if sim:ready("seed_of_corruption") then
+            if DH:Ready(sim, "seed_of_corruption") then
                 return "seed_of_corruption"
             end
-            if sim:ready("rain_of_fire") then
+            if DH:Ready(sim, "rain_of_fire") then
                 return "rain_of_fire"
             end
         end
 
         if mode == "aoe" or mode == "cleave" then
-            if sim:ready("seed_of_corruption") then
+            if DH:Ready(sim, "seed_of_corruption") then
                 return "seed_of_corruption"
             end
-            if sim:ready("rain_of_fire") then
+            if DH:Ready(sim, "rain_of_fire") then
                 return "rain_of_fire"
             end
-            if sim:ready("hellfire") then
+            if DH:Ready(sim, "hellfire") then
                 return "hellfire"
             end
             -- Nothing AOE-specific ready: fall through to single rotation
@@ -316,7 +329,7 @@ local demonologyConfig = {
         end
 
         -- Curse of Agony or Curse of Doom based on TTD
-        if sim.ttd >= 60 and sim:ready("curse_of_doom") and not sim.coa_up then
+        if sim.ttd >= 60 and DH:Ready(sim, "curse_of_doom") and not sim.coa_up then
             return "curse_of_doom"
         end
         if (not sim.coa_up or sim.coa_remains < buffer) and sim.ttd > 8 then
@@ -369,14 +382,22 @@ local demonologyConfig = {
     end,
     getAdvanceTime = function(sim, action)
         local h = sim.haste or 1
-        if action == "shadow_bolt" then return math.max(sim.gcd, 2.5 / h) end
+        if action == "shadow_bolt" then
+            return math.max(sim.gcd, 2.5 / h)
+        end
         if action == "soul_fire" then
-            if sim.decimation_up then return math.max(sim.gcd, 2.0 / h) end
+            if sim.decimation_up then
+                return math.max(sim.gcd, 2.0 / h)
+            end
             return math.max(sim.gcd, 4.0 / h)
         end
-        if action == "immolate" then return math.max(sim.gcd, 2.0 / h) end
-        if action == "incinerate" then return math.max(sim.gcd, 2.0 / h) end
-        return sim.gcd  -- instants: corruption, CoA, life tap, meta, DE, immo aura
+        if action == "immolate" then
+            return math.max(sim.gcd, 2.0 / h)
+        end
+        if action == "incinerate" then
+            return math.max(sim.gcd, 2.0 / h)
+        end
+        return sim.gcd -- instants: corruption, CoA, life tap, meta, DE, immo aura
     end,
 }
 
@@ -437,22 +458,22 @@ local destructionConfig = {
         -- Part 4: target mode (single / aoe / auto)
         local mode = DH:ResolveTargetMode(sim)
         if mode == "cleave" then
-            if sim:ready("seed_of_corruption") then
+            if DH:Ready(sim, "seed_of_corruption") then
                 return "seed_of_corruption"
             end
-            if sim:ready("rain_of_fire") then
+            if DH:Ready(sim, "rain_of_fire") then
                 return "rain_of_fire"
             end
         end
 
         if mode == "aoe" or mode == "cleave" then
-            if sim:ready("seed_of_corruption") then
+            if DH:Ready(sim, "seed_of_corruption") then
                 return "seed_of_corruption"
             end
-            if sim:ready("rain_of_fire") then
+            if DH:Ready(sim, "rain_of_fire") then
                 return "rain_of_fire"
             end
-            if sim:ready("hellfire") then
+            if DH:Ready(sim, "hellfire") then
                 return "hellfire"
             end
             -- Nothing AOE-specific ready: fall through to single rotation
@@ -475,8 +496,7 @@ local destructionConfig = {
         end
 
         -- Conflagrate (highest priority when Immolate is up)
-        if sim.has_conflag and sim.immolate_up
-           and DH:CanUseCooldown(sim, "conflagrate", "use_conflagrate") then
+        if sim.has_conflag and sim.immolate_up and DH:CanUseCooldown(sim, "conflagrate", "use_conflagrate") then
             return "conflagrate"
         end
 
@@ -554,7 +574,7 @@ local destructionConfig = {
             local base = 2.0
             return math.max(sim.gcd, base / h)
         end
-        return sim.gcd  -- instants: corruption, life tap, conflagrate
+        return sim.gcd -- instants: corruption, life tap, conflagrate
     end,
 }
 

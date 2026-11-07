@@ -3,7 +3,9 @@
 -- Uses core RunSimulation with rune-aware priority
 
 local DH = RotationCore
-if not DH then return end
+if not DH then
+    return
+end
 
 if select(2, UnitClass("player")) ~= "DEATHKNIGHT" then
     return
@@ -23,13 +25,17 @@ local state = DH.State
 ---Returns true when rune and RP requirements can be paid with typed+death runes.
 local function canAfford(sim, bCost, fCost, uCost, rpCost)
     rpCost = rpCost or 0
-    if sim.rp < rpCost then return false end
+    if sim.rp < rpCost then
+        return false
+    end
 
     local bNeed = math.max(0, bCost - sim.blood)
     local fNeed = math.max(0, fCost - sim.frost)
     local uNeed = math.max(0, uCost - sim.unholy)
     local deathNeed = bNeed + fNeed + uNeed
-    if deathNeed > sim.death then return false end
+    if deathNeed > sim.death then
+        return false
+    end
     return true
 end
 
@@ -103,7 +109,7 @@ end
 ---Reads rune cooldowns and returns per-type recovery timers and observed duration.
 local function GetRuneRecoveryTimes()
     local recovery = { blood = {}, frost = {}, unholy = {}, death = {} }
-    local observedDuration = 10  -- fallback
+    local observedDuration = 10 -- fallback
     local now = GetTime()
     for i = 1, 6 do
         local start, duration, ready = GetRuneCooldown(i)
@@ -115,10 +121,14 @@ local function GetRuneRecoveryTimes()
             if not ready then
                 local remains = math.max(0, start + duration - now)
                 local runeType = GetRuneType(i)
-                if runeType == 1 then table.insert(recovery.blood, remains)
-                elseif runeType == 2 then table.insert(recovery.unholy, remains)
-                elseif runeType == 3 then table.insert(recovery.frost, remains)
-                elseif runeType == 4 then table.insert(recovery.death, remains)
+                if runeType == 1 then
+                    table.insert(recovery.blood, remains)
+                elseif runeType == 2 then
+                    table.insert(recovery.unholy, remains)
+                elseif runeType == 3 then
+                    table.insert(recovery.frost, remains)
+                elseif runeType == 4 then
+                    table.insert(recovery.death, remains)
                 end
             end
         end
@@ -133,8 +143,10 @@ end
 -- Tick rune recovery: as sim time advances, runes come off CD
 ---Advances rune recovery timers and restores runes that have completed cooldown.
 local function tickRuneRecovery(sim, seconds)
-    if not sim.rune_recovery then return end
-    for _, runeType in ipairs({"blood", "frost", "unholy", "death"}) do
+    if not sim.rune_recovery then
+        return
+    end
+    for _, runeType in ipairs({ "blood", "frost", "unholy", "death" }) do
         local timers = sim.rune_recovery[runeType]
         if timers then
             local i = 1
@@ -155,8 +167,12 @@ end
 -- When spending a rune in the sim, queue its recovery using observed duration
 ---Queues cooldown recovery for a spent rune of the given type.
 local function queueRuneRecovery(sim, runeType)
-    if not sim.rune_recovery then return end
-    if not sim.rune_recovery[runeType] then sim.rune_recovery[runeType] = {} end
+    if not sim.rune_recovery then
+        return
+    end
+    if not sim.rune_recovery[runeType] then
+        sim.rune_recovery[runeType] = {}
+    end
     -- Use the observed rune CD from the game (already haste-adjusted)
     table.insert(sim.rune_recovery[runeType], sim.rune_cd_duration or 10)
 end
@@ -167,22 +183,30 @@ local function spendRunesTracked(sim, bCost, fCost, uCost, rpGain)
     -- Spend typed runes first, overflow to death
     local bSpend = math.min(bCost, sim.blood)
     sim.blood = sim.blood - bSpend
-    for i = 1, bSpend do queueRuneRecovery(sim, "blood") end
+    for i = 1, bSpend do
+        queueRuneRecovery(sim, "blood")
+    end
     local bOver = bCost - bSpend
 
     local fSpend = math.min(fCost, sim.frost)
     sim.frost = sim.frost - fSpend
-    for i = 1, fSpend do queueRuneRecovery(sim, "frost") end
+    for i = 1, fSpend do
+        queueRuneRecovery(sim, "frost")
+    end
     local fOver = fCost - fSpend
 
     local uSpend = math.min(uCost, sim.unholy)
     sim.unholy = sim.unholy - uSpend
-    for i = 1, uSpend do queueRuneRecovery(sim, "unholy") end
+    for i = 1, uSpend do
+        queueRuneRecovery(sim, "unholy")
+    end
     local uOver = uCost - uSpend
 
     local deathSpend = bOver + fOver + uOver
     sim.death = sim.death - deathSpend
-    for i = 1, deathSpend do queueRuneRecovery(sim, "death") end
+    for i = 1, deathSpend do
+        queueRuneRecovery(sim, "death")
+    end
 
     -- Gain RP
     sim.rp = math.min(sim.rp_max, sim.rp + (rpGain or 10))
@@ -256,7 +280,7 @@ local bloodConfig = {
 
         -- target_mode: AOE rotation (Death and Decay / Blood Boil)
         if DH:IsCleave(sim) then
-            if sim:ready("death_and_decay") and canAfford(sim, 1, 1, 1) and diseasesUp(sim) then
+            if DH:Ready(sim, "death_and_decay") and canAfford(sim, 1, 1, 1) and diseasesUp(sim) then
                 return "death_and_decay"
             end
             if canAfford(sim, 1, 0, 0) and diseasesUp(sim) then
@@ -265,7 +289,7 @@ local bloodConfig = {
         end
 
         if DH:IsMultiTarget(sim) then
-            if sim:ready("death_and_decay") and canAfford(sim, 1, 1, 1) and diseasesUp(sim) then
+            if DH:Ready(sim, "death_and_decay") and canAfford(sim, 1, 1, 1) and diseasesUp(sim) then
                 return "death_and_decay"
             end
             if canAfford(sim, 1, 0, 0) and diseasesUp(sim) then
@@ -275,9 +299,14 @@ local bloodConfig = {
 
         -- Glyph of Disease: Pestilence refreshes both diseases (1 Blood rune)
         -- Blood uses <=4s threshold per sim APL
-        if sim.has_glyph_disease and sim.ff_up and sim.bp_up
+        if
+            sim.has_glyph_disease
+            and sim.ff_up
+            and sim.bp_up
             and (sim.ff_remains < 4 or sim.bp_remains < 4)
-            and canAfford(sim, 1, 0, 0) and sim.ttd > 9 then
+            and canAfford(sim, 1, 0, 0)
+            and sim.ttd > 9
+        then
             return "pestilence"
         end
 
@@ -297,7 +326,11 @@ local bloodConfig = {
         end
 
         -- Dancing Rune Weapon (major tank CD)
-        if sim.has_drw and DH:CanUseCooldown(sim, "dancing_rune_weapon", "use_dancing_rune_weapon") and sim.rp >= 60 then
+        if
+            sim.has_drw
+            and DH:CanUseCooldown(sim, "dancing_rune_weapon", "use_dancing_rune_weapon")
+            and sim.rp >= 60
+        then
             return "dancing_rune_weapon"
         end
 
@@ -307,8 +340,14 @@ local bloodConfig = {
         end
 
         -- Blood Tap: convert Blood to Death when F/U depleted and ERW not ready
-        if sim.blood > 0 and sim.frost == 0 and sim.unholy == 0 and sim.death == 0
-            and not sim:ready("empower_rune_weapon") and DH:CanUseCooldown(sim, "blood_tap", "use_blood_tap") then
+        if
+            sim.blood > 0
+            and sim.frost == 0
+            and sim.unholy == 0
+            and sim.death == 0
+            and not DH:Ready(sim, "empower_rune_weapon")
+            and DH:CanUseCooldown(sim, "blood_tap", "use_blood_tap")
+        then
             return "blood_tap"
         end
 
@@ -323,8 +362,12 @@ local bloodConfig = {
         end
 
         -- Empower Rune Weapon (no F/U/Death runes available)
-        if sim.frost == 0 and sim.unholy == 0 and sim.death == 0
-            and DH:CanUseCooldown(sim, "empower_rune_weapon", "use_empower_rune_weapon") then
+        if
+            sim.frost == 0
+            and sim.unholy == 0
+            and sim.death == 0
+            and DH:CanUseCooldown(sim, "empower_rune_weapon", "use_empower_rune_weapon")
+        then
             return "empower_rune_weapon"
         end
 
@@ -392,7 +435,9 @@ local bloodConfig = {
                 end
             end
         end
-        if nearest < 999 then return nearest end
+        if nearest < 999 then
+            return nearest
+        end
         return sim.gcd
     end,
 }
@@ -469,8 +514,7 @@ local frostConfig = {
     end,
     getPriority = function(sim, recs)
         -- Keep AP/STR raid buff up: Horn if neither Horn nor Strength of Earth is active
-        if not sim.horn_of_winter_up and not sim.strength_of_earth_totem_up
-            and sim:ready("horn_of_winter") then
+        if not sim.horn_of_winter_up and not sim.strength_of_earth_totem_up and DH:Ready(sim, "horn_of_winter") then
             return "horn_of_winter"
         end
 
@@ -485,7 +529,7 @@ local frostConfig = {
             if sim.has_howling_blast and (sim.rime or canAfford(sim, 0, 1, 1)) then
                 return "howling_blast"
             end
-            if sim:ready("death_and_decay") and canAfford(sim, 1, 1, 1) then
+            if DH:Ready(sim, "death_and_decay") and canAfford(sim, 1, 1, 1) then
                 return "death_and_decay"
             end
             if canAfford(sim, 1, 0, 0) then
@@ -497,7 +541,7 @@ local frostConfig = {
             if sim.has_howling_blast and (sim.rime or canAfford(sim, 0, 1, 1)) then
                 return "howling_blast"
             end
-            if sim:ready("death_and_decay") and canAfford(sim, 1, 1, 1) then
+            if DH:Ready(sim, "death_and_decay") and canAfford(sim, 1, 1, 1) then
                 return "death_and_decay"
             end
             if canAfford(sim, 1, 0, 0) then
@@ -507,18 +551,27 @@ local frostConfig = {
 
         -- Glyph of Disease: Pestilence refreshes both diseases (1 Blood rune)
         -- Frost uses <=3s threshold per sim APL
-        if sim.has_glyph_disease and sim.ff_up and sim.bp_up
+        if
+            sim.has_glyph_disease
+            and sim.ff_up
+            and sim.bp_up
             and (sim.ff_remains < 3 or sim.bp_remains < 3)
-            and canAfford(sim, 1, 0, 0) then
+            and canAfford(sim, 1, 0, 0)
+        then
             return "pestilence"
         end
 
         -- Blood Tap emergency: disease refresh fallback.
         -- No Blood/Death rune for Pestilence when diseases are about to expire.
-        if sim.has_glyph_disease and sim.ff_up and sim.bp_up
+        if
+            sim.has_glyph_disease
+            and sim.ff_up
+            and sim.bp_up
             and (sim.ff_remains < 3 or sim.bp_remains < 3)
-            and sim.blood == 0 and sim.death == 0
-            and DH:CanUseCooldown(sim, "blood_tap", "use_blood_tap") then
+            and sim.blood == 0
+            and sim.death == 0
+            and DH:CanUseCooldown(sim, "blood_tap", "use_blood_tap")
+        then
             return "blood_tap"
         end
 
@@ -537,16 +590,24 @@ local frostConfig = {
         -- NOTE: wowsim sub-Unholy (Epidemic) does Pest before BT+UA to start
         -- Blood CD earlier; with 21s diseases the window is generous enough
         -- that the current BT→UA→OB order still works safely for both specs.
-        if sim.has_unbreakable_armor and not sim.unbreakable_armor_up
+        if
+            sim.has_unbreakable_armor
+            and not sim.unbreakable_armor_up
             and DH:CanUseCooldown(sim, "unbreakable_armor", "use_unbreakable_armor")
-            and sim.death == 0 and sim.blood > 0
-            and diseasesUp(sim) and DH:CanUseCooldown(sim, "blood_tap", "use_blood_tap") then
+            and sim.death == 0
+            and sim.blood > 0
+            and diseasesUp(sim)
+            and DH:CanUseCooldown(sim, "blood_tap", "use_blood_tap")
+        then
             return "blood_tap"
         end
 
         -- Unbreakable Armor after BT has created a Death rune (or if Death rune already exists)
-        if sim.has_unbreakable_armor and not sim.unbreakable_armor_up
-            and DH:CanUseCooldown(sim, "unbreakable_armor", "use_unbreakable_armor") then
+        if
+            sim.has_unbreakable_armor
+            and not sim.unbreakable_armor_up
+            and DH:CanUseCooldown(sim, "unbreakable_armor", "use_unbreakable_armor")
+        then
             return "unbreakable_armor"
         end
 
@@ -564,8 +625,11 @@ local frostConfig = {
 
         -- Obliterate (main damage, Frost+Unholy) - only with diseases.
         -- OB does not consume KM, so it's safe to cast while KM is up.
-        if diseasesUp(sim) and canAfford(sim, 0, 1, 1)
-            and not shouldReserveDiseaseRefreshRune(sim, obliterateDeathRuneCost(sim)) then
+        if
+            diseasesUp(sim)
+            and canAfford(sim, 0, 1, 1)
+            and not shouldReserveDiseaseRefreshRune(sim, obliterateDeathRuneCost(sim))
+        then
             return "obliterate"
         end
 
@@ -573,9 +637,13 @@ local frostConfig = {
         -- and we cannot reach an Obliterate (e.g. post-Pestilence opener: F:0,U:0,B:0,D:1 left).
         -- Note: live updates can still show ERW briefly in slot 2/3 if an earlier projection
         -- is consumed by a higher-priority GCD spender before ERW reaches the top slot.
-        if sim.frost == 0 and sim.unholy == 0 and sim.blood == 0
+        if
+            sim.frost == 0
+            and sim.unholy == 0
+            and sim.blood == 0
             and not canAfford(sim, 0, 1, 1)
-            and DH:CanUseCooldown(sim, "empower_rune_weapon", "use_empower_rune_weapon") then
+            and DH:CanUseCooldown(sim, "empower_rune_weapon", "use_empower_rune_weapon")
+        then
             return "empower_rune_weapon"
         end
 
@@ -592,10 +660,14 @@ local frostConfig = {
         -- Opener Pestilence sync: F+U spent after first OB, Blood rune still available,
         -- ERW is ready (haven't used it yet). Dump the Blood rune on Pestilence to align
         -- all rune timers before ERW resets everything. Requires Glyph of Disease.
-        if sim.has_glyph_disease and diseasesUp(sim)
-            and sim.frost == 0 and sim.unholy == 0
+        if
+            sim.has_glyph_disease
+            and diseasesUp(sim)
+            and sim.frost == 0
+            and sim.unholy == 0
             and sim.blood > 0
-            and DH:CanUseCooldown(sim, "empower_rune_weapon", "use_empower_rune_weapon") then
+            and DH:CanUseCooldown(sim, "empower_rune_weapon", "use_empower_rune_weapon")
+        then
             return "pestilence"
         end
 
@@ -607,9 +679,12 @@ local frostConfig = {
 
         -- Horn of Winter (filler: only when no rune is about to recover)
         local minRune = math.min(
-            nextRuneReady(sim, "blood"), nextRuneReady(sim, "frost"),
-            nextRuneReady(sim, "unholy"), nextRuneReady(sim, "death"))
-        if sim:ready("horn_of_winter") and minRune > 0.5 then
+            nextRuneReady(sim, "blood"),
+            nextRuneReady(sim, "frost"),
+            nextRuneReady(sim, "unholy"),
+            nextRuneReady(sim, "death")
+        )
+        if DH:Ready(sim, "horn_of_winter") and minRune > 0.5 then
             return "horn_of_winter"
         end
 
@@ -653,8 +728,7 @@ local frostConfig = {
         elseif key == "frost_strike" then
             spendRP(sim, sim.fs_cost)
         elseif key == "blood_tap" then
-            local hasDepletedBlood = sim.rune_recovery and sim.rune_recovery.blood
-                and #sim.rune_recovery.blood > 0
+            local hasDepletedBlood = sim.rune_recovery and sim.rune_recovery.blood and #sim.rune_recovery.blood > 0
             if hasDepletedBlood then
                 -- Activate depleted Blood rune as Death (preserves ready Blood for Pestilence)
                 table.remove(sim.rune_recovery.blood, 1)
@@ -699,7 +773,9 @@ local frostConfig = {
                 end
             end
         end
-        if nearest < 999 then return nearest end
+        if nearest < 999 then
+            return nearest
+        end
         return sim.gcd
     end,
 }
@@ -787,7 +863,7 @@ local unholyConfig = {
             if sim.has_howling_blast and canAfford(sim, 0, 1, 1) then
                 return "howling_blast"
             end
-            if sim:ready("death_and_decay") and diseasesUp(sim) and canAfford(sim, 1, 1, 1) then
+            if DH:Ready(sim, "death_and_decay") and diseasesUp(sim) and canAfford(sim, 1, 1, 1) then
                 return "death_and_decay"
             end
             if canAfford(sim, 1, 0, 0) then
@@ -796,7 +872,7 @@ local unholyConfig = {
         end
 
         if DH:IsMultiTarget(sim) then
-            if sim:ready("death_and_decay") and diseasesUp(sim) and canAfford(sim, 1, 1, 1) then
+            if DH:Ready(sim, "death_and_decay") and diseasesUp(sim) and canAfford(sim, 1, 1, 1) then
                 return "death_and_decay"
             end
             if canAfford(sim, 1, 0, 0) then
@@ -828,7 +904,7 @@ local unholyConfig = {
 
         -- Death and Decay on cooldown — core Unholy ability (1 Blood + 1 Frost +
         -- 1 Unholy). Cast as soon as it is ready and both diseases are up.
-        if sim:ready("death_and_decay") and diseasesUp(sim) and canAfford(sim, 1, 1, 1) then
+        if DH:Ready(sim, "death_and_decay") and diseasesUp(sim) and canAfford(sim, 1, 1, 1) then
             return "death_and_decay"
         end
 
@@ -838,8 +914,7 @@ local unholyConfig = {
         local dndSoon = sim:remains("death_and_decay") <= 6
 
         -- Scourge Strike (main damage, Frost+Unholy) - only with diseases
-        if sim.has_scourge_strike and diseasesUp(sim) and canAfford(sim, 0, 1, 1)
-            and not dndSoon then
+        if sim.has_scourge_strike and diseasesUp(sim) and canAfford(sim, 0, 1, 1) and not dndSoon then
             return "scourge_strike"
         end
 
@@ -849,8 +924,14 @@ local unholyConfig = {
         end
 
         -- Blood Tap: convert Blood rune to Death when F/U depleted
-        if sim.blood > 0 and sim.frost == 0 and sim.unholy == 0 and sim.death == 0
-            and not sim:ready("empower_rune_weapon") and DH:CanUseCooldown(sim, "blood_tap", "use_blood_tap") then
+        if
+            sim.blood > 0
+            and sim.frost == 0
+            and sim.unholy == 0
+            and sim.death == 0
+            and not DH:Ready(sim, "empower_rune_weapon")
+            and DH:CanUseCooldown(sim, "blood_tap", "use_blood_tap")
+        then
             return "blood_tap"
         end
 
@@ -937,7 +1018,9 @@ local unholyConfig = {
                 end
             end
         end
-        if nearest < 999 then return nearest end
+        if nearest < 999 then
+            return nearest
+        end
         return sim.gcd
     end,
 }

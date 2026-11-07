@@ -2,6 +2,21 @@
 
 All notable changes to RotationCore.
 
+## [1.1.0] - 2026-11-07
+
+- Added healer rotations for Resto Druid, Holy Paladin, Resto Shaman,
+  Discipline and Holy Priest, isolated from DPS rotations.
+- Added heal target names in the icon window and a working `/rc aoe` toggle
+  for Druids.
+- Added diagnostics: rate-limited error reporting, `/rc report`,
+  `/rc errors export` and a one-time feedback prompt.
+- Added SavedVariables schema versioning and migrations.
+- Added a Lua behavior-test suite, static verification and CI lint/format
+  checks.
+- Split the core into focused modules and added a shared `DH:Ready` helper for
+  class rotations.
+- Improved primary and extra window layout, padding and drag smoothness.
+
 ## [1.0.5] - 2026-10-28
 
 - Fixed a Lua error in the icon window settings on WotLK 3.3.5a clients:

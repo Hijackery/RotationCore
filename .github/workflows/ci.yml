@@ -24,6 +24,9 @@ jobs:
       - name: Static verification
         run: python3 RotationCore/verify.py
 
+      - name: Lua behavior tests
+        run: python3 tests/run_tests.py
+
       - name: Lua syntax check (compile only)
         run: |
           python3 - <<'PY'
@@ -49,3 +52,29 @@ jobs:
 
       - name: Release build (dry run)
         run: python3 scripts/build_release.py
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Lua
+        uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: "5.1"
+
+      - name: Set up LuaRocks
+        uses: leafo/gh-actions-luarocks@v4
+
+      - name: Install luacheck
+        run: luarocks install luacheck
+
+      - name: Luacheck (tests + new core modules)
+        run: luacheck tests RotationCore/RotationCore/Diagnostics.lua RotationCore/RotationCore/Feedback.lua RotationCore/RotationCore/Schema.lua RotationCore/RotationCore/Simulation.lua RotationCore/RotationCore/Registration.lua RotationCore/RotationCore/KnownSpells.lua RotationCore/RotationCore/SharedSettings.lua RotationCore/RotationCore/Profiles.lua RotationCore/RotationCore/Events.lua RotationCore/RotationCore/BossProfiles.lua RotationCore/RotationCore/BossTimeline.lua RotationCore/RotationCore/CustomAPL.lua RotationCore/RotationCore/Analytics.lua RotationCore/RotationCore/OptionsIO.lua RotationCore/RotationCore/SpellFrameExtras.lua
+
+      - name: StyLua (tests + new core modules)
+        uses: JohnnyMorganz/stylua-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: latest
+          args: --check tests RotationCore/RotationCore/Diagnostics.lua RotationCore/RotationCore/Feedback.lua RotationCore/RotationCore/Schema.lua RotationCore/RotationCore/Simulation.lua RotationCore/RotationCore/Registration.lua RotationCore/RotationCore/KnownSpells.lua RotationCore/RotationCore/SharedSettings.lua RotationCore/RotationCore/Profiles.lua RotationCore/RotationCore/Events.lua RotationCore/RotationCore/BossProfiles.lua RotationCore/RotationCore/BossTimeline.lua RotationCore/RotationCore/CustomAPL.lua RotationCore/RotationCore/Analytics.lua RotationCore/RotationCore/OptionsIO.lua RotationCore/RotationCore/SpellFrameExtras.lua
