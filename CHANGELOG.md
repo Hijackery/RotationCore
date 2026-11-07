@@ -5,17 +5,15 @@ All notable changes to RotationCore.
 ## [1.1.0] - 2026-11-07
 
 - Added healer rotations for Resto Druid, Holy Paladin, Resto Shaman,
-  Discipline and Holy Priest, isolated from DPS rotations.
-- Added heal target names in the icon window and a working `/rc aoe` toggle
-  for Druids.
-- Added diagnostics: rate-limited error reporting, `/rc report`,
-  `/rc errors export` and a one-time feedback prompt.
-- Added SavedVariables schema versioning and migrations.
-- Added a Lua behavior-test suite, static verification and CI lint/format
-  checks.
-- Split the core into focused modules and added a shared `DH:Ready` helper for
-  class rotations.
-- Improved primary and extra window layout, padding and drag smoothness.
+  Discipline and Holy Priest.
+- Healer rotations show the heal target in the icon window.
+- Druid `/rc aoe` now switches the target mode instead of showing a stub.
+- Added `/rc report` and `/rc errors export` for easier bug reports, plus a
+  one-time feedback prompt.
+- Primary, cooldown, interrupt and timeline windows now share the same layout
+  and spacing.
+- Window dragging is smoother, and the primary window no longer reserves empty
+  space for hidden icons.
 
 ## [1.0.5] - 2026-10-28
 
