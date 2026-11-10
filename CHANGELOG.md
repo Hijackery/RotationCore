@@ -4,22 +4,17 @@ All notable changes to RotationCore.
 
 ## [1.2.0] - 2026-11-10
 
-- The recommendation queue now really shows the full row. Horizontal mode is
-  a single row again, and the action-bar highlight count no longer limits the
-  icon window.
-- Added an adaptive queue: it shortens the forecast when the estimated damage
-  already covers the target's HP, and AoE uses the pack's total HP. Can be
-  disabled under Display > Spell queue.
+- The recommendation queue now shows the full row instead of a single icon.
+- Added an adaptive queue: it shortens the forecast when the target is about
+  to die, and AoE uses the whole pack's HP. Can be disabled under
+  Display > Spell queue.
 - Execute and finisher abilities are now queued and highlighted for every
   class that has one, including Fire Blast, Kill Shot, Hammer of Wrath,
   Execute, Shadow Word: Death, Shadowburn, Drain Soul, Envenom, Eviscerate and
   Ferocious Bite.
-- Added smooth queue animation: icon crossfades and sliding when the row
-  shifts, plus a faster cooldown countdown refresh.
-- Cleaned up duplicate queue settings: one icon-count source, one adaptive
-  option, corrected Theme/Colour placement and clearer tab sections.
-- Legacy profiles stuck with a one-icon queue are repaired automatically.
-- Added regression tests for the icon window, row layout and adaptive queue.
+- Smoother queue animations and faster cooldown countdown updates.
+- Queue and appearance settings are grouped more clearly.
+- Older profiles stuck with one queue icon are repaired automatically.
 
 ## [1.1.0] - 2026-11-07
 
