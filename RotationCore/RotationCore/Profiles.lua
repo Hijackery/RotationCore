@@ -29,14 +29,8 @@ local coreDefaults = {
     -- Pick the build (arcane/fire/frost/...) from the player's talents
     auto_mode = true,
     display = {
-        -- How many upcoming abilities are highlighted on the action bars.
-        -- 1 = one at a time: the next ability lights up, after you press it
-        -- the following one lights up.
-        num_icons = 1,
         -- Glow border size relative to the action button
         glow_size = 1.5,
-        -- Show the priority number (1/2/3) above each highlighted button
-        show_numbers = false,
         -- Pulsing glow animation
         pulse = true,
         -- Only highlight abilities while in combat
@@ -44,8 +38,7 @@ local coreDefaults = {
         -- MaxDps-style window showing the next ability icons
         show_spellframe = true,
         spellframe_scale = 1,
-        -- How many icons the MaxDps-style window shows (independent of
-        -- num_icons, which only controls the action-bar glow count)
+        -- How many icons the recommendation window shows.
         spellframe_icons = 3,
     },
     -- Position of the spell icon window (screen center offsets)
@@ -102,6 +95,7 @@ local coreDefaults = {
         icon_gap = 4,
         orientation = "horizontal", -- "horizontal" (row) / "vertical" (column)
         adaptive_queue = true, -- shorten the queue by estimated target HP
+        minimal_hud = false, -- hide secondary labels and combat overlays
         glow_frequency = 1.0,
         glow_lines = 1,
         glow_thickness = 1.5,
@@ -120,7 +114,6 @@ local coreDefaults = {
         theme = "class", -- "class" / "custom" / "dark" / "light" / "contrast"
         theme_custom_color = { 1, 0.82, 0 }, -- accent tint for the "custom" theme
         show_resource_bar = false, -- reserved: options resource bar removed (kept for compatibility)
-        paused_text = true, -- show a "paused" label when disabled
         glow_style = "pulse", -- pulse / static / flash / rainbow
         colorblind_mode = false, -- orange/blue/grey priority palette
         spellFrame_pos_per_spec = false,
@@ -143,7 +136,7 @@ local coreDefaults = {
         interrupt_ready_sound = false, -- play a sound when the interrupt is ready again
         interrupts_position = { x = 170, y = -250 },
         interrupts_scale = 1, -- size of the interrupt window (resize grip)
-        show_timeline_display = true, -- optional boss-timeline window (phase + timers)
+        show_timeline_display = true, -- enabled, but only shown in dungeons/raids
         timeline_position = { x = 0, y = 200 },
         timeline_scale = 1, -- size of the timeline window
         -- Per-window opacity (config mode) and tint (auto = follow theme).
@@ -218,7 +211,6 @@ local coreDefaults = {
         timeline_phase_announce = false, -- print phase changes to chat
         wizard_window_size = { w = 780, h = 560 }, -- wizard window size
         wizard_require_all_answers = false, -- Next always enabled; every step is optional
-        frames_movable_default = true, -- drag windows without /rc move
         frames_locked = false, -- /rc lock / option "Lock windows"
         spellframe_fixed_size = true, -- don't resize with the rec count
         spellframe_compact = false, -- icon-only window (no title/backdrop)

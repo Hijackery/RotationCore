@@ -320,6 +320,11 @@ function ns.UpdateCombatLabels()
         p.rcResourceLabel:Hide()
         return
     end
+    if Get("minimal_hud") == true then
+        p.rcEnemyLabel:Hide()
+        p.rcResourceLabel:Hide()
+        return
+    end
     local inCombat = type(UnitAffectingCombat) == "function" and UnitAffectingCombat("player")
     if Get("enemy_count_enabled") ~= false and inCombat then
         local n = (DH.State and DH.State.active_enemies) or 1

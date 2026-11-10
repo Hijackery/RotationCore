@@ -32,6 +32,7 @@ local CONTENT_WIDTH = 400
 local CATEGORIES = {
     { key = "general", label = "General", icon = "Interface\\Icons\\INV_Misc_Gear_01" },
     { key = "display", label = "Display", icon = "Interface\\Icons\\Spell_Holy_MagicalSentry" },
+    { key = "window", label = "Window", icon = "Interface\\Icons\\INV_Misc_Note_01" },
     { key = "training", label = "Training", icon = "Interface\\Icons\\INV_Misc_Book_09" },
     { key = "healer", label = "Healer", healerOnly = true, icon = "Interface\\Icons\\Spell_Holy_HolyBolt" },
     { key = "class", label = "Class", advanced = true, sepBefore = true, icon = "Interface\\Icons\\Ability_Warrior_BattleShout" },
@@ -51,6 +52,9 @@ local function MenuMode()
     local v = DH.GetSetting and DH:GetSetting("menu_mode")
     if v == "advanced" then return "advanced" end
     return "simple"
+end
+local function IsAdvanced()
+    return MenuMode() == "advanced"
 end
 
 -- Returns the list of categories that are visible for the current menu mode.
@@ -873,6 +877,7 @@ local function AddButton(label, onClick, width, enabled, cond, tooltipKey)
         end
     end
     b:SetSize(w, 26)
+    if ns.StyleButton then ns.StyleButton(b) end
     if enabled == false then
         b:Disable()
     end
@@ -980,7 +985,7 @@ local function BuildGeneral()
     end, function(v)
         DH:SetSetting("build_detect_mode", v)
         DH:NotifyOptions()
-    end)
+    end, IsAdvanced)
     AddHeader("Targets")
     AddDropdown("Target mode", STRING_CHOICES.target_mode, function()
         return (DH.GetSetting and DH:GetSetting("target_mode")) or "auto"
@@ -1038,7 +1043,7 @@ local function BuildGeneral()
         DH:SetSetting("cooldown_order", v)
         DH:NotifyOptions()
     end, function()
-        return (DH.GetSetting and DH:GetSetting("auto_cooldowns")) ~= false
+        return IsAdvanced() and (DH.GetSetting and DH:GetSetting("auto_cooldowns")) ~= false
     end)
 
 
@@ -1062,7 +1067,7 @@ local function BuildGeneral()
         return (DH.GetSetting and DH:GetSetting("sound_procs_file")) or "default"
     end, function(v)
         DH:SetSetting("sound_procs_file", v)
-    end)
+    end, IsAdvanced)
     AddInfo("The sound plays when a proc is detected while the option above is on.")
 
     AddHeader("Status")
@@ -1106,17 +1111,11 @@ local function BuildGeneral()
         end
     end)
     AddInfo("Left-click toggles the rotation, right-click opens options.")
-    AddDropdown("Menu mode", STRING_CHOICES.menu_mode, function()
-        return DH.GetSetting and DH:GetSetting("menu_mode") or "simple"
-    end, function(v)
-        DH:SetSetting("menu_mode", v)
-        DH:NotifyOptions()
-    end)
     AddCheckbox("Show option tooltips", function()
         return DH.GetSetting and DH:GetSetting("show_tooltips") ~= false
     end, function(v)
         DH:SetSetting("show_tooltips", v)
-    end)
+    end, IsAdvanced)
 end
 
 local function BuildSpellQueue()
@@ -1150,7 +1149,7 @@ local function BuildSpellQueue()
         return (DH.GetSetting and DH:GetSetting("icon_gap")) or 4
     end, function(v)
         DH:SetSetting("icon_gap", v)
-    end)
+    end, IsAdvanced)
 
     AddCheckbox("Adapt queue to target HP", function()
         return (DH.GetSetting and DH:GetSetting("adaptive_queue")) ~= false
@@ -1164,28 +1163,28 @@ local function BuildSpellQueue()
         return (DH.GetSetting and DH:GetSetting("show_keybind")) ~= false
     end, function(v)
         DH:SetSetting("show_keybind", v)
-    end)
+    end, IsAdvanced)
 
     AddCheckbox("Show GCD timer", function()
         return (DH.GetSetting and DH:GetSetting("show_gcd_timer")) ~= false
     end, function(v)
         DH:SetSetting("show_gcd_timer", v)
     end, function()
-        return (DH.GetSetting and DH:GetSetting("num_icons")) ~= 0
+        return IsAdvanced()
     end)
 
     AddCheckbox("Show remaining time", function()
         return (DH.GetSetting and DH:GetSetting("show_time")) ~= false
     end, function(v)
         DH:SetSetting("show_time", v)
-    end)
+    end, IsAdvanced)
 
     AddCheckbox("Show priority numbers", function()
         return (DH.GetSetting and DH:GetSetting("show_priority_numbers")) == true
     end, function(v)
         DH:SetSetting("show_priority_numbers", v)
         if DH.UpdateUI then DH:UpdateUI() end
-    end)
+    end, IsAdvanced)
 end
 
 -- Window appearance and visibility behaviour. Kept separate from the core
@@ -1197,22 +1196,17 @@ local function BuildDisplayWindow()
         return (DH.GetSetting and DH:GetSetting("show_background")) ~= false
     end, function(v)
         DH:SetSetting("show_background", v)
-    end)
+    end, IsAdvanced)
     AddCheckbox("Show border", function()
         return (DH.GetSetting and DH:GetSetting("show_border")) ~= false
     end, function(v)
         DH:SetSetting("show_border", v)
-    end)
+    end, IsAdvanced)
     AddCheckbox("Show title", function()
         return (DH.GetSetting and DH:GetSetting("show_title")) ~= false
     end, function(v)
         DH:SetSetting("show_title", v)
-    end)
-    AddCheckbox("Paused label", function()
-        return (DH.GetSetting and DH:GetSetting("paused_text")) ~= false
-    end, function(v)
-        DH:SetSetting("paused_text", v)
-    end)
+    end, IsAdvanced)
 
     AddCheckbox("Hide out of combat", function()
         return (DH.GetSetting and DH:GetSetting("hide_out_of_combat")) == true
@@ -1230,25 +1224,20 @@ local function BuildDisplayWindow()
         return (DH.GetSetting and DH:GetSetting("hide_when_idle")) == true
     end, function(v)
         DH:SetSetting("hide_when_idle", v)
-    end)
+    end, IsAdvanced)
 
     AddCheckbox("Fade when idle", function()
         return (DH.GetSetting and DH:GetSetting("fade_when_idle")) == true
     end, function(v)
         DH:SetSetting("fade_when_idle", v)
-    end)
+    end, IsAdvanced)
 
-    AddCheckbox("Drag windows by default (no /rc move)", function()
-        return (DH.GetSetting and DH:GetSetting("frames_movable_default")) ~= false
-    end, function(v)
-        DH:SetSetting("frames_movable_default", v)
-    end)
     AddCheckbox("Lock windows", function()
         return (DH.GetSetting and DH:GetSetting("frames_locked")) == true
     end, function(v)
         DH:SetSetting("frames_locked", v)
         if DH.UpdateUI then DH:UpdateUI() end
-    end)
+    end, IsAdvanced)
     AddInfo("Hold the left button over any empty part of a window to drag it; click an icon to cast.")
 end
 
@@ -1295,7 +1284,7 @@ local function BuildAnimations()
     end, function(v)
         DH:SetSetting("animation_speed", v)
         DH:UpdateUI()
-    end)
+    end, IsAdvanced)
     AddInfo("Icons fade in (0.2s), crossfade on change (0.15s), fade out (0.15s).")
     AddInfo("Skipped automatically under load or when icons change very fast.")
 end
@@ -1324,13 +1313,13 @@ local function BuildLayout()
     end, 220)
     AddButton("Export layout", function()
         if ns.ShowLayoutExportWindow then ns.ShowLayoutExportWindow() end
-    end, 150)
+    end, 150, nil, IsAdvanced)
     AddButton("Import layout", function()
         if ns.ShowLayoutImportWindow then ns.ShowLayoutImportWindow() end
-    end, 150)
+    end, 150, nil, IsAdvanced)
     AddButton("Configure panels", function()
         if ns.SetConfigMode then ns.SetConfigMode(true) end
-    end, 220)
+    end, 220, nil, IsAdvanced)
     AddInfo("Opens the panel settings (size, scale, opacity, colour) over the game.")
 end
 
@@ -1534,11 +1523,12 @@ local function BuildTimeline()
     end)
     AddInfo("Reads timers from DBM / BigWigs; works from the combat log alone.")
     AddCheckbox("Show boss timeline window", function()
-        return DH.GetSetting and DH:GetSetting("show_timeline_display") == true
+        return (DH.GetSetting and DH:GetSetting("show_timeline_display")) ~= false
     end, function(v)
         DH:SetSetting("show_timeline_display", v)
         DH:UpdateUI()
     end)
+    AddInfo("Appears only in dungeons and raids; hidden while leveling and in the open world.")
     AddCheckbox("Show burst countdown", function()
         return (DH.GetSetting and DH:GetSetting("timeline_show_burst")) ~= false
     end, function(v)
@@ -2129,9 +2119,10 @@ local function BuildHelp()
     AddNote("It works out of the box: spec, build and boss presets are detected automatically.")
 
     AddHeader("B. Tabs overview")
-    AddInfo("Menu mode (General) picks Simple (main tabs) or Advanced (all tabs).")
+    AddInfo("Advanced settings (top bar) shows all tabs and fine-tuning options.")
     AddInfo("General - enable, build, targets, activity, cooldowns, alerts, interface.")
-    AddInfo("Display - queue, icon window, highlight, colours, animations and layout.")
+    AddInfo("Display - queue, highlight, colours and animations.")
+    AddInfo("Window - layout, window behaviour and extra indicators.")
     AddInfo("Adaptive queue shortens the forecast when the target is about to die (Display > Spell queue).")
     AddInfo("Training - training mode, exam and mentor, learning stats.")
     AddInfo("Healer - heal assist, group health and heal-DPS (visible to all; editable by healer classes).")
@@ -2186,6 +2177,7 @@ local function BuildHelp()
     AddInfo("Theme presets: Class color, Dark, Light, High contrast (Display > Colors).")
     AddInfo("Custom palette: choose any accent colour applied to all windows (Display > Colors).")
     AddInfo("Compact icon window and a unified window font (Advanced / System).")
+    AddInfo("Minimal HUD hides extra indicators and combat labels (Window).")
     AddInfo("Colourblind-friendly priority palette (Display > Highlight).")
     AddInfo("Background style presets (default / matte) in System > Interface style.")
     AddInfo("Per-window colour: use the Tint button in panel configuration.")
@@ -2262,7 +2254,7 @@ local function BuildDisplayGlow()
     end, function(v)
         DH:SetSetting("guide_marker", v)
         DH:UpdateUI()
-    end)
+    end, IsAdvanced)
     AddCheckbox("Highlight only while in combat", function()
         return DH.db.display.combat_only
     end, function(v)
@@ -2275,25 +2267,25 @@ local function BuildDisplayGlow()
         DH:SetSetting("colorblind_mode", v)
         if ns.ApplyPalette then ns.ApplyPalette() end
         DH:UpdateUI()
-    end)
+    end, IsAdvanced)
     AddSlider("Glow border thickness", 0.8, 2.5, 0.1, function()
         return (DH.GetSetting and DH:GetSetting("glow_thickness")) or 1.5
     end, function(v)
         DH:SetSetting("glow_thickness", v)
         DH:UpdateUI()
-    end)
+    end, IsAdvanced)
     AddSlider("Glow lines", 1, 6, 1, function()
         return (DH.GetSetting and DH:GetSetting("glow_lines")) or 1
     end, function(v)
         DH:SetSetting("glow_lines", v)
         DH:UpdateUI()
-    end)
+    end, IsAdvanced)
     AddSlider("Glow frequency", 0.25, 3, 0.25, function()
         return (DH.GetSetting and DH:GetSetting("glow_frequency")) or 1.0
     end, function(v)
         DH:SetSetting("glow_frequency", v)
         DH:UpdateUI()
-    end)
+    end, IsAdvanced)
     AddButton("Test glow on action bars", function()
         if ns.ShowTestGlow then
             ns.ShowTestGlow()
@@ -2428,14 +2420,29 @@ local function BuildDisplayExtras()
 end
 
 local function BuildDisplay()
-    AddNote(L("How the recommendations look: queue, highlight, colours, animations, layout and windows."))
+    AddNote(L("How the recommendations look: queue, highlight, colours and animations."))
     BuildSpellQueue()
     BuildDisplayGlow()
-    BuildLayout()
-    BuildDisplayWindow()
     BuildColors()
     BuildAnimations()
-    BuildDisplayExtras()
+end
+
+local function BuildWindowTab()
+    AddNote(L("Window layout, behaviour and extra indicators."))
+    AddHeader("Minimal HUD")
+    AddCheckbox("Minimal HUD", function()
+        return (DH.GetSetting and DH:GetSetting("minimal_hud")) == true
+    end, function(v)
+        DH:SetSetting("minimal_hud", v)
+        if DH.UpdateUI then DH:UpdateUI() end
+    end)
+    AddInfo("Hides DPS forecast, class pulse, phase, combat forecast and extra combat labels.")
+
+    BuildLayout()
+    BuildDisplayWindow()
+    if IsAdvanced() then
+        BuildDisplayExtras()
+    end
 end
 
 local function BuildStatus()
@@ -2605,6 +2612,7 @@ end
 local BUILDERS = {
     general = BuildGeneral,
     display = BuildDisplay,
+    window = BuildWindowTab,
     class = BuildClass,
     profiles = BuildProfiles,
     advanced = BuildAdvanced,
@@ -2855,6 +2863,9 @@ BuildContent = function()
         return
     end
     ApplyTheme()
+    if frame and frame.advancedToggle then
+        frame.advancedToggle:SetChecked(MenuMode() == "advanced")
+    end
     -- Keep the scroll position across rebuilds (the widgets change, the
     -- category usually does not)
     local keepScroll = (scroll and scroll:GetVerticalScroll()) or 0
@@ -3001,6 +3012,7 @@ local function EnsureFrameRaw()
     title:SetText(L("RotationCore Settings"))
     title:SetTextColor(th.title[1], th.title[2], th.title[3])
     frame.title = title
+    if ns.ApplyWindowChrome then ns.ApplyWindowChrome(frame) end
 
     local logo = frame:CreateTexture(nil, "ARTWORK")
     logo:SetTexture("Interface\\AddOns\\RotationCore\\icon")
@@ -3013,6 +3025,28 @@ local function EnsureFrameRaw()
     close:SetScript("OnClick", function()
         frame:Hide()
     end)
+
+    local adv = CreateFrame("CheckButton", "RotationCoreOptionsAdvanced", frame, "UICheckButtonTemplate")
+    adv:SetSize(24, 24)
+    adv:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -176, -10)
+    local advText = _G[adv:GetName() .. "Text"]
+    if advText then
+        advText:SetText(L("Advanced settings"))
+        advText:SetFontObject("GameFontNormalSmall")
+        advText:SetTextColor(0.85, 0.85, 0.85)
+    end
+    adv:SetChecked(MenuMode() == "advanced")
+    adv:SetScript("OnClick", function(self)
+        DH:SetSetting("menu_mode", self:GetChecked() and "advanced" or "simple")
+        if not IsCategoryVisible(currentCat) then
+            currentCat = "general"
+        end
+        LayoutCatButtons()
+        BuildContent()
+        if DH.NotifyOptions then DH:NotifyOptions() end
+    end)
+    if AttachTooltip then AttachTooltip(adv, "advanced_settings") end
+    frame.advancedToggle = adv
 
     -- Sidebar: fixed 160px-wide buttons plus group separators (dynamic).
     for _, cat in ipairs(CATEGORIES) do

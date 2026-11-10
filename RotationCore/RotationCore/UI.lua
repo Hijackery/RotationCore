@@ -250,6 +250,44 @@ function ns.ApplyWindowChrome(f)
     return th
 end
 
+-- One button look for the options window, wizard, coach hub and dialogs.
+-- Keeps the stock UIPanelButtonTemplate geometry but tints it dark and uses
+-- the class accent for the highlight and primary actions.
+function ns.StyleButton(btn, primary)
+    if not btn then return end
+    btn.rcStyled = true
+    local cr, cg, cb = 1, 0.82, 0
+    if DH.GetClassColor then cr, cg, cb = DH:GetClassColor() end
+    local function tint(tex, r, g, b, a)
+        if tex and tex.SetVertexColor then tex:SetVertexColor(r, g, b, a or 1) end
+    end
+    tint(btn.GetNormalTexture and btn:GetNormalTexture(), 0.12, 0.12, 0.12, 1)
+    tint(btn.GetPushedTexture and btn:GetPushedTexture(), 0.06, 0.06, 0.06, 1)
+    local h = btn.GetHighlightTexture and btn:GetHighlightTexture()
+    if h then h:SetVertexColor(cr, cg, cb, 0.18) end
+    local fs = btn.GetFontString and btn:GetFontString()
+    if not fs and btn.GetName then
+        local n = btn:GetName()
+        if n then fs = _G[n .. "Text"] end
+    end
+    if fs then
+        if ns.ApplyFont then ns.ApplyFont(fs) end
+        if primary then fs:SetTextColor(cr, cg, cb) else fs:SetTextColor(0.9, 0.9, 0.9) end
+    end
+    if primary and btn.CreateTexture then
+        if not btn.rcAccent then
+            btn.rcAccent = btn:CreateTexture(nil, "OVERLAY")
+            btn.rcAccent:SetTexture("Interface\\Buttons\\WHITE8X8")
+            btn.rcAccent:SetPoint("BOTTOMLEFT", btn, "BOTTOMLEFT", 6, 1)
+            btn.rcAccent:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -6, 1)
+            btn.rcAccent:SetHeight(2)
+        end
+        btn.rcAccent:SetVertexColor(cr, cg, cb, 0.9)
+    elseif btn.rcAccent then
+        btn.rcAccent:Hide()
+    end
+end
+
 -- Fade in / out with a tiny scale pop. Uses one shared driver so it never
 -- clobbers a frame's own OnUpdate script.
 ns._fades = ns._fades or {}
@@ -797,7 +835,11 @@ local function ShowGlow(btn, prio, flash, execute)
     end
     glow.flash:SetSize(size, size)
 
-    if display.show_numbers ~= false then
+    local showNumbers = DH.GetSetting and DH:GetSetting("show_priority_numbers")
+    if showNumbers == nil then
+        showNumbers = display.show_numbers
+    end
+    if showNumbers then
         glow.label:SetText(prio)
         glow.label:SetTextColor(style.r, style.g, style.b)
     else

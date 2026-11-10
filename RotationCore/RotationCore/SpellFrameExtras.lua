@@ -742,8 +742,12 @@ function ns.UpdateTimelineFrame()
         end
         return
     end
-    local show = (DH.GetSetting and DH:GetSetting("show_timeline_display")) == true
-    if not DH.db or not DH.db.enabled or (not show and not ns.moveMode) then
+    local show = (DH.GetSetting and DH:GetSetting("show_timeline_display")) ~= false
+    if show and not ns.moveMode and not ns.configMode then
+        local _, instanceType = IsInInstance()
+        show = instanceType == "party" or instanceType == "raid"
+    end
+    if not DH.db or not DH.db.enabled or (not show and not ns.moveMode and not ns.configMode) then
         if ns.timelineFrame then
             ns.timelineFrame:Hide()
         end

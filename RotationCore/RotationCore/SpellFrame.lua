@@ -934,6 +934,7 @@ function ns.UpdateSpellFrame(recs)
     end
 
     local db = DH.db
+    local minimal = (DH.GetSetting and DH:GetSetting("minimal_hud")) == true
     if not db or not db.enabled or not db.display or not db.display.show_spellframe then
         HideWindow()
         return
@@ -1115,10 +1116,17 @@ function ns.UpdateSpellFrame(recs)
     local maxRowW = maxRowCols * iconSize + (maxRowCols - 1) * gap
 
     frame.reason:Hide()
+    if minimal then
+        if frame.timeline then frame.timeline:Hide() end
+        if frame.dpsForecast then frame.dpsForecast:Hide() end
+        if frame.pulse then frame.pulse:Hide() end
+        if frame.phase then frame.phase:Hide() end
+        if frame.forecast then frame.forecast:Hide() end
+    end
     UpdateModeIndicator()
 
     -- Boss timeline hint (prompt 3.3) / deep phase message: only when enabled.
-    if frame.timeline then
+    if frame.timeline and not minimal then
         local hint, detail
         if (DH.GetSetting and DH:GetSetting("timeline_enabled")) and ns.GetTimelineHint then
             hint, detail = ns.GetTimelineHint()
@@ -1135,7 +1143,7 @@ function ns.UpdateSpellFrame(recs)
     end
 
     -- v3.3.0 phase 2: live DPS forecast (above) + class pulse (left).
-    if frame.dpsForecast then
+    if frame.dpsForecast and not minimal then
         local txt = ns.GetDPSForecastText and ns.GetDPSForecastText(DH)
         if txt then
             AuxPoint(frame.dpsForecast, (DH.GetSetting and DH:GetSetting("dps_forecast_position")))
@@ -1151,7 +1159,7 @@ function ns.UpdateSpellFrame(recs)
             frame.dpsForecast:Hide()
         end
     end
-    if frame.pulse then
+    if frame.pulse and not minimal then
         local ptxt, pr, pg, pb = ns.GetPulseInfo and ns.GetPulseInfo(DH)
         if ptxt then
             AuxPoint(frame.pulse, (DH.GetSetting and DH:GetSetting("class_pulse_position")))
@@ -1164,7 +1172,7 @@ function ns.UpdateSpellFrame(recs)
     end
 
     -- v3.4.0: battle-phase indicator (below the window).
-    if frame.phase then
+    if frame.phase and not minimal then
         local show = (DH.GetSetting and DH:GetSetting("phase_indicators")) ~= false
             and (DH.GetSetting and DH:GetSetting("battle_context_enabled")) ~= false
         if show and DH.GetBattlePhase then
@@ -1181,7 +1189,7 @@ function ns.UpdateSpellFrame(recs)
     end
 
     -- v3.4.0: combat-forecast lines (procs / cooldowns coming up).
-    if frame.forecast then
+    if frame.forecast and not minimal then
         local show = (DH.GetSetting and DH:GetSetting("combat_forecast_enabled")) == true
         if show and DH.ForecastNext then
             local window = tonumber(DH.GetSetting and DH:GetSetting("forecast_window")) or 5
@@ -1286,7 +1294,7 @@ function ns.UpdateSpellFrame(recs)
             if showNumbers == nil then
                 showNumbers = db.display.show_numbers
             end
-            if showNumbers then
+            if showNumbers and not minimal then
                 slot.num:SetText(i)
                 slot.num:SetTextColor(style.r, style.g, style.b)
             else
@@ -1294,7 +1302,7 @@ function ns.UpdateSpellFrame(recs)
             end
 
             -- Phase 1.1: binding overlay (bottom-right)
-            if (DH.GetSetting and DH:GetSetting("show_keybind")) ~= false then
+            if (DH.GetSetting and DH:GetSetting("show_keybind")) ~= false and iconSize >= 30 and not minimal then
                 local kb = ability and ability.id and ns.GetSpellKeybind(ability.id)
                 slot.keybind:SetText(kb or "")
             else
@@ -2012,6 +2020,7 @@ local function EnsureConfigBar()
     h:SetTextColor(0.75, 0.75, 0.75)
     local exit = CreateFrame("Button", nil, b, "UIPanelButtonTemplate")
     exit:SetSize(100, 22)
+    if ns.StyleButton then ns.StyleButton(exit, true) end
     exit:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", -8, 6)
     exit:SetText(L("Exit"))
     exit:SetScript("OnClick", function()
@@ -2019,6 +2028,7 @@ local function EnsureConfigBar()
     end)
     local reset = CreateFrame("Button", nil, b, "UIPanelButtonTemplate")
     reset:SetSize(150, 22)
+    if ns.StyleButton then ns.StyleButton(reset) end
     reset:SetPoint("BOTTOMLEFT", b, "BOTTOMLEFT", 8, 6)
     reset:SetText(L("Reset positions"))
     reset:SetScript("OnClick", function()

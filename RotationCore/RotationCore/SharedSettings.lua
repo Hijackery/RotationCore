@@ -381,10 +381,6 @@ function DH:GetIdleReason()
         return T("Addon disabled")
     end
     if self.db.paused then
-        -- paused_text=false suppresses the "Paused" label (window just hides).
-        if self:GetSetting("paused_text") == false then
-            return nil
-        end
         return T("Paused")
     end
 

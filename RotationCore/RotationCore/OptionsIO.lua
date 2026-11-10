@@ -191,11 +191,17 @@ local function CreateProfileTextWindow()
     okBtn:SetSize(160, 24)
     okBtn:SetPoint("BOTTOMRIGHT", w, "BOTTOM", -8, 16)
     w.okBtn = okBtn
+    if ns.StyleButton and okBtn.SetText then
+        ns.StyleButton(okBtn, true)
+    end
 
     local closeBtn = CreateFrame("Button", nil, w, "UIPanelButtonTemplate")
     closeBtn:SetSize(160, 24)
     closeBtn:SetPoint("BOTTOMLEFT", w, "BOTTOM", 8, 16)
     closeBtn:SetText(_G.CLOSE or "Close")
+    if ns.StyleButton then
+        ns.StyleButton(closeBtn)
+    end
     closeBtn:SetScript("OnClick", function()
         w:Hide()
     end)

@@ -2,6 +2,24 @@
 
 All notable changes to RotationCore.
 
+## [1.3.0] - 2026-11-10
+
+- Added an `Advanced settings` toggle at the top of the settings window.
+  Simple mode now keeps only the everyday options; fine-tuning is one click away.
+- Split the Display tab: queue, colours and animations stay under Display, while
+  layout and window behaviour moved to a separate Window tab.
+- Added `Minimal HUD` for a quieter screen: it hides the DPS forecast, class
+  pulse, phase, combat forecast and extra combat labels.
+- Simplified the Setup Wizard from 13 to 7 steps and gave it a cleaner layout
+  and consistent buttons.
+- Removed or merged several overlapping settings, including duplicate icon-count
+  and priority-number options.
+- The boss timeline window is now shown only in dungeons and raids, and stays
+  hidden while leveling and in the open world.
+- Unified buttons and window styling across the options window, wizard, coach
+  hub, dialogs and window configuration.
+- Completed Russian and mirror translations for the new options and tooltips.
+
 ## [1.2.0] - 2026-11-10
 
 - The recommendation queue now shows the full row instead of a single icon.

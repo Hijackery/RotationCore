@@ -6,7 +6,7 @@
 RotationCore = {}
 local DH = RotationCore
 
-DH.Version = "1.2.0"
+DH.Version = "1.3.0"
 
 -- Namespace for internal data
 local ns = {}
@@ -723,8 +723,10 @@ function DH:SlashCommand(input)
             end
         end
     elseif cmd == "numbers" then
-        self.db.display.show_numbers = not self.db.display.show_numbers
-        self:Print(L("Priority numbers: ") .. (self.db.display.show_numbers and L("ON") or L("OFF")))
+        local v = not (self:GetSetting("show_priority_numbers") == true)
+        self:SetSetting("show_priority_numbers", v)
+        self.db.display.show_numbers = nil
+        self:Print(L("Priority numbers: ") .. (v and L("ON") or L("OFF")))
         self:UpdateUI()
         self:NotifyOptions()
     elseif cmd == "pulse" then

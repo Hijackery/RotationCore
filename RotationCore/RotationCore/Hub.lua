@@ -170,6 +170,7 @@ function ns.ShowAPLImport()
         f.edit = eb
         local apply = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
         apply:SetSize(140, 26)
+        if ns.StyleButton then ns.StyleButton(apply, true) end
         apply:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -12, 10)
         apply:SetText(L("Import"))
         apply:SetScript("OnClick", function()
@@ -246,6 +247,7 @@ local function EnsureHub()
     local function mkBtn(text, x, w, onClick)
         local b = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
         b:SetSize(w, 26)
+        if ns.StyleButton then ns.StyleButton(b) end
         b:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", x, 10)
         b:SetText(text)
         b:SetScript("OnClick", onClick)
@@ -476,6 +478,7 @@ function ns.ShowSimulator()
         local function winBtn(text, x, delta)
             local b = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
             b:SetSize(48, 20)
+            if ns.StyleButton then ns.StyleButton(b) end
             b:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", x, 8)
             b:SetText(text)
             b:SetScript("OnClick", function()
@@ -529,6 +532,7 @@ function ns.RefreshAPLEditor()
             local function btn(txt, x, onClick)
                 local b = CreateFrame("Button", nil, r, "UIPanelButtonTemplate")
                 b:SetSize(30, 16); b:SetPoint("LEFT", r, "LEFT", x, 0); b:SetText(txt)
+                if ns.StyleButton then ns.StyleButton(b) end
                 b:SetScript("OnClick", onClick); return b
             end
             r.up = btn("^", 216, function() ns._aplMove(i, -1) end)
@@ -588,6 +592,7 @@ function ns.ShowAPLEditor()
         f.add = eb
         local addBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
         addBtn:SetSize(60, 20); addBtn:SetPoint("LEFT", eb, "RIGHT", 6, 0); addBtn:SetText(L("Add"))
+        if ns.StyleButton then ns.StyleButton(addBtn) end
         addBtn:SetScript("OnClick", function()
             local t = eb:GetText() or ""
             t = t:gsub("^%s+", ""):gsub("%s+$", "")

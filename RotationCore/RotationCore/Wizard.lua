@@ -71,6 +71,8 @@ local ICON_OPTS = {
     { value = 3, text = "3", desc = "Show the three next actions." },
     { value = 4, text = "4", desc = "Show the four next actions." },
     { value = 5, text = "5", desc = "Show the five next actions." },
+    { value = 6, text = "6", desc = "Show the six next actions." },
+    { value = 7, text = "7", desc = "Show the seven next actions." },
 }
 local ICONSIZE_OPTS = {
     { value = 28, text = "Small", desc = "Compact icons." },
@@ -84,54 +86,32 @@ local COMPLEXITY_OPTS = {
     { value = "complex", text = "Complex", desc = "Every situational ability in the priority." },
 }
 
-local MENU_OPTS = {
-    { value = "simple", text = "Simple", desc = "Only the main tabs; fewer settings." },
-    { value = "advanced", text = "Advanced", desc = "All tabs and fine-tuning options." },
-}
 local HEAL_DPS_OPTS = {
     { value = "auto", text = "Auto (solo only)", desc = "Use the DPS rotation only when playing solo." },
     { value = "on", text = "Always", desc = "Always borrow the DPS rotation while healing." },
     { value = "off", text = "Off", desc = "Never use the DPS rotation." },
 }
-local function IsAdvancedCtx()
-    local m = W.answers["menu@1"] or (DH.GetSetting and DH:GetSetting("menu_mode")) or "simple"
-    return m == "advanced"
-end
 local function IsHealerCtx()
     return (ns.IsHealerClass and ns.IsHealerClass()) and true or false
 end
 
 local STEPS = {
     [1] = { id = "welcome", title = "Welcome to RotationCore!",
-        text = "Set up the rotation, targets, displays and cooldowns in a few "
-            .. "short questions. Everything is saved to the current profile - you "
-            .. "will not need to open the settings after this.",
-        checkbox = { id = "welcome", label = "Show the wizard on the next launch" } },
-    [2] = { id = "menu", title = "Menu style",
-        text = "How much of the addon do you want to see?",
-        groups = { { question = "Menu mode", options = MENU_OPTS } } },
-    [3] = { id = "spec", title = "Class and specialization",
-        text = "Everything correct?",
-        info = true,
-        groups = { { question = "Choose a specialization", options = {} } } },
-    [4] = { id = "role", title = "Your role",
+        text = "Set up the rotation, targets, displays and cooldowns in a few short questions. Everything is saved to the current profile - you will not need to open the settings after this." },
+    [2] = { id = "setup", title = "Choose a specialization",
         text = "What do you play on this character?",
-        groups = { { question = "Role", options = ROLE_OPTS } } },
-    [5] = { id = "healer", title = "Healing",
-        text = "Healer helpers for your spec.",
-        ctx = IsHealerCtx,
+        info = true,
         groups = {
-            { question = "Suggest a heal for the lowest-health member?", options = YES_NO },
-            { question = "Show the group health monitor?", options = YES_NO },
-            { question = "Heal-spec DPS rotation?", options = HEAL_DPS_OPTS },
+            { question = "Spec", options = {} },
+            { question = "Role", options = ROLE_OPTS },
         } },
-    [6] = { id = "activity", title = "Main activity",
+    [3] = { id = "content", title = "Targets",
         text = "Where do you spend most of your time?",
-        groups = { { question = "Activity", options = ACTIVITY_OPTS } } },
-    [7] = { id = "target", title = "Target mode",
-        text = "How should the rotation pick its targets?",
-        groups = { { question = "Target mode", options = TARGET_OPTS } } },
-    [8] = { id = "display", title = "Recommendation display",
+        groups = {
+            { question = "Activity", options = ACTIVITY_OPTS },
+            { question = "Target mode", options = TARGET_OPTS },
+        } },
+    [4] = { id = "display", title = "Recommendation display",
         text = "How should the queue look?",
         groups = {
             { question = "How many icons?", options = ICON_OPTS },
@@ -139,53 +119,30 @@ local STEPS = {
             { question = "Orientation?", options = {
                 { value = "horizontal", text = "Row" }, { value = "vertical", text = "Column" } } },
             { question = "Compact window (icons only, no frame)?", options = YES_NO },
+            { question = "Adapt queue to target HP", options = YES_NO },
         } },
-    [9] = { id = "display2", title = "Queue details",
-        text = "A few extras for the recommendation queue.",
-        ctx = IsAdvancedCtx,
-        info2 = "GCD (global cooldown) is the shared ~1.5 s wait after pressing most instant abilities before the next one can be used. Casts with a cast bar are not limited by it, and haste shortens it (down to about 1.0 s). The GCD timer on the queue shows how long is left, so you know the exact moment the next ability is ready.",
-        groups = {
-            { question = "Show the key binding?", options = YES_NO },
-            { question = "Show the GCD timer?", options = YES_NO },
-            { question = "Show priority numbers (1/2/3)?", options = YES_NO },
-        } },
-    [10] = { id = "cd", title = "Cooldowns and procs",
+    [5] = { id = "cd", title = "Cooldowns",
         text = "A few behaviour choices for cooldowns and alerts.",
         groups = {
             { question = "Should the rotation recommend cooldowns?", options = CD_OPTS },
             { question = "Play a sound when a proc lands?", options = YES_NO },
-            { question = "Flash the buttons on a proc?", options = YES_NO },
-            { question = "Enable training mode?", options = YES_NO },
         } },
-    [11] = { id = "extra", title = "Advanced behaviour",
-        text = "A few extras that usually work best on their defaults.",
-        ctx = IsAdvancedCtx,
+    [6] = { id = "healer", title = "Healing",
+        text = "Healer helpers for your spec.",
+        ctx = IsHealerCtx,
         groups = {
-            { question = "Rotation complexity", options = COMPLEXITY_OPTS },
-            { question = "Battle phase indicator?", options = YES_NO },
-            { question = "Raid-buff awareness?", options = YES_NO },
-            { question = "Combat forecast?", options = YES_NO },
+            { question = "Suggest a heal for the lowest-health member?", options = YES_NO },
+            { question = "Show the group health monitor?", options = YES_NO },
+            { question = "Heal-spec DPS rotation?", options = HEAL_DPS_OPTS },
         } },
-    [12] = { id = "extras", title = "Extras",
-        text = "Optional helpers - you can change all of these later.",
-        ctx = IsAdvancedCtx,
-        groups = {
-            { question = "Enemy counter near the queue?", options = YES_NO },
-            { question = "Resource-cap warnings?", options = YES_NO },
-            { question = "DoT / debuff panel?", options = YES_NO },
-            { question = "Melee swing timer?", options = YES_NO },
-            { question = "Timeline progress bars?", options = YES_NO },
-            { question = "Colourblind-friendly palette?", options = YES_NO },
-        } },
-    [13] = { id = "done", title = "Done",
+    [7] = { id = "done", title = "Done",
         text = "Everything looks good. Here is what will be applied.",
         summary = true,
         checkbox = { id = "test", label = "Run a highlight test now" } },
 }
 W.totalSteps = #STEPS
 
-local required = { role = true, activity = true, target = true, display = true,
-                   display2 = true, cd = true, extra = true, spec = true }
+local required = { setup = true, content = true, display = true, cd = true }
 
 -- One answer per question: key "<stepId>@<groupIndex>".
 local function GKey(stepId, gi)
@@ -197,39 +154,23 @@ local function PrefillAnswers()
     local function def(k, v)
         if a[k] == nil and v ~= nil then a[k] = v end
     end
-    def("spec@1", ActiveMode())
-    def("role@1", (DH.GetSetting and DH:GetSetting("role")))
-    def("activity@1", (DH.GetSetting and DH:GetSetting("auto_activity")) ~= false and "auto"
+    def("setup@1", ActiveMode())
+    def("setup@2", (DH.GetSetting and DH:GetSetting("role")))
+    def("content@1", (DH.GetSetting and DH:GetSetting("auto_activity")) ~= false and "auto"
         or ((DH.GetSetting and DH:GetSetting("activity_profile")) or "raid"))
-    def("target@1", (DH.GetSetting and DH:GetSetting("target_mode")) or "auto")
+    def("content@2", (DH.GetSetting and DH:GetSetting("target_mode")) or "auto")
     def("display@1", (DH.GetSpellFrameIconCount and DH:GetSpellFrameIconCount()) or 3)
     def("display@2", (DH.GetSetting and DH:GetSetting("icon_size")) or 36)
     def("display@3", (DH.GetSetting and DH:GetSetting("orientation")) or "horizontal")
-    def("display2@1", YN((DH.GetSetting and DH:GetSetting("show_keybind")) ~= false))
-    def("display2@2", YN((DH.GetSetting and DH:GetSetting("show_gcd_timer")) ~= false))
-    def("display2@3", YN((DH.GetSetting and DH:GetSetting("show_priority_numbers")) or
-        (DH.GetSetting and DH:GetSetting("show_numbers")) or false))
+    def("display@4", YN((DH.GetSetting and DH:GetSetting("spellframe_compact")) == true))
+    def("display@5", YN((DH.GetSetting and DH:GetSetting("adaptive_queue")) ~= false))
     local autoCd = (DH.GetSetting and DH:GetSetting("auto_cooldowns")) ~= false
     local order = (DH.GetSetting and DH:GetSetting("cooldown_order")) or "priority"
     def("cd@1", autoCd and (order == "burst" and "major" or "all") or "none")
     def("cd@2", YN((DH.GetSetting and DH:GetSetting("sound_procs")) == true))
-    def("cd@3", YN((DH.GetSetting and DH:GetSetting("proc_flash")) == true))
-    def("cd@4", YN((DH.GetSetting and DH:GetSetting("training_mode")) == true))
-    def("extra@1", (DH.GetSetting and DH:GetSetting("adaptive_rotation")) or "auto")
-    def("extra@2", YN((DH.GetSetting and DH:GetSetting("phase_indicators")) ~= false))
-    def("extra@3", YN((DH.GetSetting and DH:GetSetting("group_awareness_enabled")) ~= false))
-    def("extra@4", YN((DH.GetSetting and DH:GetSetting("combat_forecast_enabled")) == true))
-    def("menu@1", (DH.GetSetting and DH:GetSetting("menu_mode")) or "simple")
     def("healer@1", YN((DH.GetSetting and DH:GetSetting("heal_assist_enabled")) == true))
     def("healer@2", YN((DH.GetSetting and DH:GetSetting("party_health_enabled")) == true))
     def("healer@3", (DH.GetSetting and DH:GetSetting("heal_dps_mode")) or "auto")
-    def("display@4", YN((DH.GetSetting and DH:GetSetting("spellframe_compact")) == true))
-    def("extras@1", YN((DH.GetSetting and DH:GetSetting("enemy_count_enabled")) ~= false))
-    def("extras@2", YN((DH.GetSetting and DH:GetSetting("resource_warning_enabled")) ~= false))
-    def("extras@3", YN((DH.GetSetting and DH:GetSetting("dot_panel_enabled")) == true))
-    def("extras@4", YN((DH.GetSetting and DH:GetSetting("swing_timer_enabled")) == true))
-    def("extras@5", YN((DH.GetSetting and DH:GetSetting("timeline_bars_enabled")) ~= false))
-    def("extras@6", YN((DH.GetSetting and DH:GetSetting("colorblind_mode")) == true))
 end
 
 local function ApplyAnswers()
@@ -237,23 +178,23 @@ local function ApplyAnswers()
     if not DH.db then return end
     local function v(stepId, gi) return a[GKey(stepId, gi)] end
 
-    local spec = v("spec", 1)
+    local spec = v("setup", 1)
     if spec and spec ~= ActiveMode() then DH:SetMode(spec) end
-    if v("role", 1) then DH:SetSetting("role", v("role", 1)) end
-    if v("activity", 1) then
-        if v("activity", 1) == "auto" then
+    if v("setup", 2) then DH:SetSetting("role", v("setup", 2)) end
+
+    if v("content", 1) then
+        if v("content", 1) == "auto" then
             DH:SetSetting("auto_activity", true)
             if DH.RefreshAutoActivity then DH:RefreshAutoActivity() end
         else
             DH:SetSetting("auto_activity", false)
-            DH:SetSetting("activity_profile", v("activity", 1))
+            DH:SetSetting("activity_profile", v("content", 1))
         end
     end
-    if v("target", 1) then DH:SetSetting("target_mode", v("target", 1)) end
+    if v("content", 2) then DH:SetSetting("target_mode", v("content", 2)) end
 
     local icons = tonumber(v("display", 1)) or 3
     if v("display", 1) then
-        DH:SetSetting("num_icons", icons)
         if DH.SetSpellFrameIconCount then
             DH:SetSpellFrameIconCount(icons)
         elseif DH.db and DH.db.display then
@@ -262,12 +203,8 @@ local function ApplyAnswers()
     end
     if v("display", 2) then DH:SetSetting("icon_size", tonumber(v("display", 2))) end
     if v("display", 3) then DH:SetSetting("orientation", v("display", 3)) end
-    if v("display2", 1) then DH:SetSetting("show_keybind", v("display2", 1) == "yes") end
-    if v("display2", 2) then DH:SetSetting("show_gcd_timer", v("display2", 2) == "yes") end
-    if v("display2", 3) then
-        local on = v("display2", 3) == "yes"
-        DH:SetSetting("show_priority_numbers", on)
-    end
+    if v("display", 4) then DH:SetSetting("spellframe_compact", v("display", 4) == "yes") end
+    if v("display", 5) then DH:SetSetting("adaptive_queue", v("display", 5) == "yes") end
 
     if v("cd", 1) then
         if v("cd", 1) == "none" then
@@ -278,27 +215,11 @@ local function ApplyAnswers()
         end
     end
     if v("cd", 2) then DH:SetSetting("sound_procs", v("cd", 2) == "yes") end
-    if v("cd", 3) then DH:SetSetting("proc_flash", v("cd", 3) == "yes") end
-    if v("cd", 4) then DH:SetSetting("training_mode", v("cd", 4) == "yes") end
 
-    if v("extra", 1) then DH:SetSetting("adaptive_rotation", v("extra", 1)) end
-    if v("extra", 2) then DH:SetSetting("phase_indicators", v("extra", 2) == "yes") end
-    if v("extra", 3) then DH:SetSetting("group_awareness_enabled", v("extra", 3) == "yes") end
-    if v("extra", 4) then DH:SetSetting("combat_forecast_enabled", v("extra", 4) == "yes") end
-
-    if v("menu", 1) then DH:SetSetting("menu_mode", v("menu", 1)) end
     if v("healer", 1) then DH:SetSetting("heal_assist_enabled", v("healer", 1) == "yes") end
     if v("healer", 2) then DH:SetSetting("party_health_enabled", v("healer", 2) == "yes") end
     if v("healer", 3) then DH:SetSetting("heal_dps_mode", v("healer", 3)) end
-    if v("display", 4) then DH:SetSetting("spellframe_compact", v("display", 4) == "yes") end
-    if v("extras", 1) then DH:SetSetting("enemy_count_enabled", v("extras", 1) == "yes") end
-    if v("extras", 2) then DH:SetSetting("resource_warning_enabled", v("extras", 2) == "yes") end
-    if v("extras", 3) then DH:SetSetting("dot_panel_enabled", v("extras", 3) == "yes") end
-    if v("extras", 4) then DH:SetSetting("swing_timer_enabled", v("extras", 4) == "yes") end
-    if v("extras", 5) then DH:SetSetting("timeline_bars_enabled", v("extras", 5) == "yes") end
-    if v("extras", 6) then DH:SetSetting("colorblind_mode", v("extras", 6) == "yes") end
 
-    if a["welcome"] == "yes" and DH.db then DH.db.wizardShown = false end
     if a["test"] == "yes" and ns.ShowTestGlow then ns.ShowTestGlow() end
 
     if DH.ApplyShellStyle then DH:ApplyShellStyle() end
@@ -316,9 +237,9 @@ local function PlayerInfoLines()
     end
     local level = UnitLevel and UnitLevel("player") or nil
     local ilvl = DH.GetItemLevel and DH:GetItemLevel() or nil
-    return string.format("Class: %s | Spec: %s | Level: %s | iLvl: %s",
-        tostring(cls or "?"), tostring(spec or "?"),
-        tostring(level or "?"), tostring(ilvl or "?"))
+    return string.format("%s: %s | %s: %s | %s: %s | iLvl: %s",
+        L("Class"), tostring(cls or "?"), L("Spec"), tostring(spec or "?"),
+        L("Level"), tostring(level or "?"), tostring(ilvl or "?"))
 end
 
 local function SummaryLines()
@@ -328,16 +249,16 @@ local function SummaryLines()
     if v("cd", 1) == "none" then cdTxt = "No"
     elseif v("cd", 1) == "major" then cdTxt = "Major only" end
     return {
-        string.format("Spec: %s", tostring(v("spec", 1) or "?")),
-        string.format("Role: %s | Activity: %s", tostring(v("role", 1) or "?"),
-            tostring(v("activity", 1) or "?")),
-        string.format("Target mode: %s", tostring(v("target", 1) or "?")),
-        string.format("Display: %s icons, %s, size %s", tostring(v("display", 1) or "?"),
+        string.format("%s: %s | %s: %s", L("Spec"), tostring(v("setup", 1) or "?"),
+            L("Role"), tostring(v("setup", 2) or "?")),
+        string.format("%s: %s | %s: %s", L("Activity"), tostring(v("content", 1) or "?"),
+            L("Target mode"), tostring(v("content", 2) or "?")),
+        string.format("%s: %s | %s | %s", L("Display"), tostring(v("display", 1) or "?"),
             tostring(v("display", 3) or "?"), tostring(v("display", 2) or "?")),
-        string.format("Cooldowns: %s | Proc sound: %s", cdTxt, tostring(v("cd", 2) or "?")),
-        string.format("Complexity: %s", tostring(v("extra", 1) or "?")),
-        string.format("Menu: %s | Compact window: %s", tostring(v("menu", 1) or "?"),
-            tostring(v("display", 4) or "?")),
+        string.format("%s: %s | %s: %s", L("Compact"), tostring(v("display", 4) or "?"),
+            L("Adapt queue to target HP"), tostring(v("display", 5) or "?")),
+        string.format("%s: %s | %s: %s", L("Cooldowns"), cdTxt,
+            L("Proc alert sound"), tostring(v("cd", 2) or "?")),
     }
 end
 
@@ -483,9 +404,12 @@ local function RebuildBody()
                 local nCols
                 if n >= 3 then nCols = 3 elseif n == 2 then nCols = 2 else nCols = 1 end
                 nCols = math.min(nCols, n)
-                local bw = 210
-                local total = nCols * bw + (nCols - 1) * 12
                 local ww = (frame and frame:GetWidth()) or w
+                local avail = math.max(320, ww - 52)
+                local gapX = 10
+                local bw = math.floor((avail - (nCols - 1) * gapX) / nCols)
+                bw = math.max(150, math.min(240, bw))
+                local total = nCols * bw + (nCols - 1) * gapX
                 local bx = 26 + math.max(0, (ww - 26 - total) / 2)
                 local rowsNeeded = math.ceil(n / nCols)
                 for oi = 1, n do
@@ -513,17 +437,18 @@ local function RebuildBody()
                     local col = (oi - 1) % nCols
                     local row = math.floor((oi - 1) / nCols)
                     b:ClearAllPoints()
-                    b:SetPoint("TOPLEFT", frame, "TOPLEFT", bx + col * (bw + 12), cy - row * 28)
-                    b:SetSize(bw, 26)
+                    b:SetPoint("TOPLEFT", frame, "TOPLEFT", bx + col * (bw + gapX), cy - row * 30)
+                    b:SetSize(bw, 28)
                     local sel = SelFunc(step, gi, opt.value)
                     SetButtonText(b, (sel and ("|cFFFFD100> " .. L(opt.text) .. "|r") or L(opt.text)))
+                    if ns.StyleButton then ns.StyleButton(b, sel) end
                     b:SetScript("OnClick", function()
                         W.answers[GKey(step.id, gi)] = opt.value
                         RebuildBody()
                     end)
                     b:Show()
                 end
-                cy = cy - rowsNeeded * 28 - 6
+                cy = cy - rowsNeeded * 30 - 6
             end
         end
     end
@@ -583,7 +508,7 @@ local function UpdateStep()
     -- modes (they load after this file), so (re)build it on every show/step.
     local specGroup
     for _, st in ipairs(STEPS) do
-        if st.id == "spec" and st.groups and st.groups[1] then specGroup = st.groups[1]; break end
+        if st.id == "setup" and st.groups and st.groups[1] then specGroup = st.groups[1]; break end
     end
     if specGroup then specGroup.options = GetModeOptions() end
     PrefillAnswers()
@@ -595,8 +520,8 @@ local function EnsureFrameRaw()
     if frame then return frame end
 
     local size = (DH.GetSetting and DH:GetSetting("wizard_window_size")) or nil
-    local w = (size and size.w) or 780
-    local h = (size and size.h) or 560
+    local w = (size and size.w) or 720
+    local h = (size and size.h) or 500
 
     frame = CreateFrame("Frame", "RotationCoreWizard", UIParent)
     frame:SetSize(w, h)
@@ -623,8 +548,8 @@ local function EnsureFrameRaw()
     -- is preserved and the size is persisted (wizard_window_size).
     local baseW, baseH = w, h
     local function ApplyWizardSize(nw, nh)
-        nw = math.max(520, math.min(1200, nw))
-        nh = math.max(360, math.min(900, nh))
+        nw = math.max(560, math.min(1000, nw))
+        nh = math.max(400, math.min(760, nh))
         frame:SetSize(nw, nh)
         if DH.SetSetting then
             DH:SetSetting("wizard_window_size", { w = math.floor(nw + 0.5), h = math.floor(nh + 0.5) })
@@ -691,7 +616,7 @@ local function EnsureFrameRaw()
     track:SetTexture(0.1, 0.1, 0.1, 0.9)
 
     -- Segmented progress: one cell per step (class-coloured when reached).
-    local SEG = 10
+    local SEG = math.max(1, W.totalSteps or #STEPS)
     frame.segs = {}
     for i = 1, SEG do
         local t = frame:CreateTexture(nil, "OVERLAY")
@@ -776,6 +701,15 @@ local function EnsureFrameRaw()
         PrefillAnswers()
         UpdateStep()
     end)
+
+    if ns.StyleButton then
+        ns.StyleButton(nextButton, true)
+        ns.StyleButton(backButton)
+        ns.StyleButton(skipButton)
+        ns.StyleButton(cancelButton)
+        ns.StyleButton(openAdvancedButton)
+        ns.StyleButton(startOverButton)
+    end
 
     msgFs = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     msgFs:SetPoint("CENTER", frame, "CENTER", 0, 12)
