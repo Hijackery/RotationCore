@@ -190,10 +190,6 @@ function IsSpellInRange()
     return 1
 end
 
-function CheckInteractDistance()
-    return true
-end
-
 function UnitInRange()
     return true, true
 end
