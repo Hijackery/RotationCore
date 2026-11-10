@@ -431,6 +431,10 @@ DH:RegisterFallbackAbilities({
     "mind_blast", "shadow_word_pain",
 })
 
+DH:RegisterExecutors("shadow", {
+    { key = "shadow_word_death", below = 25, finish = true, instant = true },
+})
+
 DH:RegisterDefaults({
     shadow = {
         enabled = true,

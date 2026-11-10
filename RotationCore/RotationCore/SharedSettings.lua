@@ -58,6 +58,51 @@ function DH:GetSetting(key)
     return nil
 end
 
+-- The queue icon count historically lived in two places: db.display for the
+-- renderer and db.common for GetSetting(). Old wizard runs could set one to 1
+-- while leaving the other at 3, so the window showed a single icon. Use one
+-- clamped value and keep both stores in sync.
+local function ClampIconCount(value)
+    local n = tonumber(value) or 3
+    n = math.floor(n)
+    if n < 1 then
+        n = 1
+    elseif n > 10 then
+        n = 10
+    end
+    return n
+end
+
+function DH:GetSpellFrameIconCount()
+    local display = self.db and self.db.display and tonumber(self.db.display.spellframe_icons)
+    local common = self.GetSetting and tonumber(self:GetSetting("spellframe_icons"))
+    local n = math.max(display or 0, common or 0)
+    if n < 1 then
+        n = 3
+    end
+    n = ClampIconCount(n)
+    -- Legacy profiles (and old wizard answers) stored 1 even though the
+    -- wizard question was meant to choose the queue size. Treat 1 as 3 until
+    -- the user explicitly picks 1 with the current slider.
+    local explicit = self.db and self.db.display and self.db.display.spellframe_icons_explicit == true
+    if not explicit and n < 2 then
+        n = 3
+    end
+    return n
+end
+
+function DH:SetSpellFrameIconCount(value)
+    local n = ClampIconCount(value)
+    if self.db and self.db.display then
+        self.db.display.spellframe_icons = n
+        self.db.display.spellframe_icons_explicit = true
+    end
+    if self.SetSetting then
+        self:SetSetting("spellframe_icons", n)
+    end
+    return n
+end
+
 local function SetSettingRaw(self, key, value)
     if not self.db or key == nil then
         return false
@@ -275,7 +320,7 @@ end
 -- one enemy, the 2-3 target cleave band, or aoe at/above aoe_threshold.
 -- ("auto_cleave" is accepted as a legacy alias for the same 3-way split.)
 function DH:ResolveTargetMode(sim)
-    local mode = self:GetSetting("target_mode") or "single"
+    local mode = self:GetSetting("target_mode") or "auto"
     -- Improvement 5: optional phase-driven override (phase 2 -> aoe, 3 -> single)
     if self.GetSetting and self:GetSetting("timeline_auto_phase") and ns.GetPhaseTargetMode then
         local pm = ns.GetPhaseTargetMode()

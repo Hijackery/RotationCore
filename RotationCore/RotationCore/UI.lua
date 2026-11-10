@@ -27,8 +27,12 @@ local PRIORITY_STYLE = {
     [2] = { r = 1.00, g = 0.85, b = 0.10, base = 0.80, amp = 0.18, freq = 1.7 },
     [3] = { r = 0.25, g = 0.60, b = 1.00, base = 0.85, amp = 0.12, freq = 1.2 },
 }
+-- Finishers/executes get their own colour so a low-HP burst recommendation is
+-- visually distinct from the normal priority-1 highlight.
+local EXECUTE_STYLE = { r = 1.00, g = 0.32, b = 0.05, base = 0.85, amp = 0.25, freq = 3.2 }
 -- Shared with SpellFrame.lua (icon window colors)
 ns.PRIORITY_STYLE = PRIORITY_STYLE
+ns.EXECUTE_STYLE = EXECUTE_STYLE
 
 -- Prompt 3.1: accessibility palettes. Each maps the three priority slots
 -- (1 = press now, 2 = next, 3 = after) to an RGB triple. Red/green colour
@@ -692,7 +696,7 @@ local function EnsureGlow(btn)
             self.arrow:SetPoint("BOTTOM", self, "TOP", 0, math.sin(self.t * 4) * 3)
         end
         RefreshGlowCache()
-        local style = PRIORITY_STYLE[self.prio] or PRIORITY_STYLE[1]
+        local style = self.style or PRIORITY_STYLE[self.prio] or PRIORITY_STYLE[1]
         local gs = glowCache.style
         local freq = glowCache.freq
         local rings = self.ringCount
@@ -749,13 +753,14 @@ local function EnsureGlow(btn)
     return glow
 end
 
-local function ShowGlow(btn, prio, flash)
+local function ShowGlow(btn, prio, flash, execute)
     local display = DH.db and DH.db.display or {}
 
-    local style = PRIORITY_STYLE[prio] or PRIORITY_STYLE[1]
+    local style = execute and EXECUTE_STYLE or PRIORITY_STYLE[prio] or PRIORITY_STYLE[1]
     local glow = EnsureGlow(btn)
 
     glow.prio = prio
+    glow.style = style
     glow:SetFrameStrata(btn:GetFrameStrata() or "MEDIUM")
     glow:SetFrameLevel((btn:GetFrameLevel() or 1) + 5)
     glow:ClearAllPoints()
@@ -967,7 +972,7 @@ function ns.UpdateUI(addon)
                 local s = snap[i]
                 if not assigned[s.btn] and SnapMatches(s, tex, id, lowerName) then
                     assigned[s.btn] = prio
-                    ShowGlow(s.btn, prio, ns.glowButtons and ns.glowButtons[prio])
+                    ShowGlow(s.btn, prio, ns.glowButtons and ns.glowButtons[prio], rec.execute)
                     found = true
                 end
             end
@@ -982,11 +987,11 @@ function ns.UpdateUI(addon)
     end
 
     -- Icon window shows the same picks
-    local shown = {}
-    for i = 1, math.min(maxShow, #recs) do
-        shown[i] = recs[i]
-    end
-    ShowWindow(shown)
+    -- The action-bar glow count (`num_icons`) is independent from the icon
+    -- window. Pass the whole queue here; SpellFrame applies its own icon-count
+    -- setting. Previously this passed only REC1 when num_icons defaulted to 1,
+    -- so the window could never show more than one icon.
+    ShowWindow(recs)
 
     ns.UpdateDebugFrame()
 end

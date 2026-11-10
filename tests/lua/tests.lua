@@ -23,6 +23,9 @@ local function reset()
     mock.roles = {}
     mock.health = { player = 100 }
     mock.healthMax = { player = 100 }
+    mock.level = 80
+    mock.spellbook = {}
+    mock.spellNames = {}
     mock.power = { player = 100 }
     mock.enemies = {}
     mock.known = {}
@@ -55,6 +58,22 @@ local function injuredParty(count, hp)
         mock.healthMax[unit] = 100
         mock.roles[unit] = (i == 1) and "TANK" or "NONE"
     end
+end
+
+local function setTarget(pct, maxHp)
+    maxHp = maxHp or 1000
+    mock.target = true
+    mock.enemies.target = true
+    mock.health.target = math.max(1, math.floor(maxHp * pct / 100))
+    mock.healthMax.target = maxHp
+    local st = DH.State
+    st.target.exists = true
+    st.target.canAttack = true
+    st.target.health.current = mock.health.target
+    st.target.health.max = maxHp
+    st.target.health.pct = pct
+    st.target.time_to_die = pct < 20 and 10 or 30
+    st.active_enemies = 1
 end
 
 local function findMode(key)
@@ -259,4 +278,286 @@ do
     check("Known-spell cache: stays cached until invalidated", DH:IsSpellKnownId(id) == false)
     DH:InvalidateKnownSpells()
     check("Known-spell cache: rebuild after talent change", DH:IsSpellKnownId(id) == true)
+end
+
+-- Executor/finisher layer: the shared table must exist and class modules must
+-- register at least one level-aware execute.
+check("Executors: shared registry exists", type(ns.executors) == "table")
+
+-- Low-level spellbook fallback: a player who only knows rank 1 Fire Blast
+-- must still get the max-rank ID resolved to the learned lower rank.
+if findMode("frost_mage") then
+    reset()
+    DH.db.mode = "frost_mage"
+    mock.known[ns.SPELLS.FIRE_BLAST] = false
+    mock.spellNames[ns.SPELLS.FIRE_BLAST] = "Fire Blast"
+    mock.spellbook = { { name = "Fire Blast", id = 133 } }
+    DH:InvalidateKnownSpells()
+    check("Known-spell fallback: low-rank Fire Blast is known", DH:IsAbilityKnown("fire_blast"), "lower rank not resolved")
+    check("Known-spell fallback: max rank resolves to learned rank", DH:ResolveKnownSpellId(ns.SPELLS.FIRE_BLAST) == 133)
+end
+
+-- Paladin: Hammer of Wrath is selected and the shared simulation marks it.
+if findMode("ret") then
+    reset()
+    DH.db.mode = "ret"
+    setTarget(15)
+    local sim = {
+        target_pct = 15,
+        target_health = 150,
+        cd = {},
+        ready = function()
+            return true
+        end,
+    }
+    check("Paladin ret: Hammer of Wrath picker active", DH:PickExecutor(sim, "ret") == "hammer_of_wrath")
+    local cfg = {
+        gcdType = "melee",
+        maxRecs = 1,
+        cds = { hammer_of_wrath = "hammer_of_wrath" },
+        baseCDs = { hammer_of_wrath = 6 },
+        getPriority = function()
+            return "hammer_of_wrath"
+        end,
+    }
+    local recs = DH:RunSimulation(DH.State, cfg)
+    check("Paladin ret: Hammer of Wrath marked execute", recs[1] and recs[1].ability == "hammer_of_wrath" and recs[1].execute == true)
+end
+
+-- Mage: Fire Blast is the instant finisher, not a normal filler.
+if findMode("frost_mage") then
+    reset()
+    DH.db.mode = "frost_mage"
+    setTarget(15)
+    local sim = {
+        target_pct = 15,
+        target_health = 150,
+        cd = {},
+        ready = function()
+            return true
+        end,
+    }
+    check("Mage frost: Fire Blast picker active", DH:PickExecutor(sim, "frost_mage") == "fire_blast")
+    local cfg = {
+        gcdType = "spell",
+        maxRecs = 1,
+        cds = { fire_blast = "fire_blast" },
+        baseCDs = { fire_blast = 8 },
+        getPriority = function()
+            return "fire_blast"
+        end,
+    }
+    local recs = DH:RunSimulation(DH.State, cfg)
+    check("Mage frost: Fire Blast marked execute", recs[1] and recs[1].ability == "fire_blast" and recs[1].execute == true)
+    sim.target_pct = 80
+    sim.target_health = 100000
+    check("Mage frost: Fire Blast idle at 80%", DH:PickExecutor(sim, "frost_mage") == nil)
+end
+
+-- Druid: Ferocious Bite replaces Rip maintenance when the target is low.
+if findMode("feral_cat") then
+    reset()
+    DH.db.mode = "feral_cat"
+    setTarget(15)
+    mock.power.player = 100
+    mock.known[ns.SPELLS.FEROCIOUS_BITE or 48577] = true
+    local sim = {
+        cp = 5,
+        energy = 100,
+        target_pct = 15,
+        target_health = 150,
+        cd = {},
+        ready = function()
+            return true
+        end,
+    }
+    check("Druid feral: Ferocious Bite picker active", DH:PickExecutor(sim, "feral_cat") == "ferocious_bite")
+end
+
+-- Queue length is a display concern, not a rotation-complexity concern.
+-- Simple adaptive rotations must still feed the configured multi-icon queue.
+do
+    reset()
+    ns.ResetSmoothing()
+    local recs = {}
+    for i = 1, 5 do
+        recs[i] = { ability = "queue_test_" .. i }
+    end
+    local out = ns.SmoothRecommendations(recs)
+    check("Queue: smoothing keeps slots beyond the third", #out == 5, "queue was truncated")
+    check("Queue: fifth slot survives smoothing", out[5] and out[5].ability == "queue_test_5")
+
+    ns.ResetSmoothing()
+    local repeated = { { ability = "frostbolt" }, { ability = "frostbolt" }, { ability = "frostbolt" } }
+    local preserved = ns.SmoothRecommendations(repeated)
+    check(
+        "Queue: smoothing preserves repeated filler icons",
+        #preserved == 3 and preserved[2].ability == "frostbolt" and preserved[3].ability == "frostbolt"
+    )
+
+    ns.ResetSmoothing()
+    local before = { { ability = "a" }, { ability = "b" }, { ability = "c" } }
+    ns.SmoothRecommendations(before)
+    local after = { { ability = "a", execute = true }, { ability = "b" }, { ability = "c" } }
+    local marked = ns.SmoothRecommendations(after)
+    check("Queue: execute flag bypasses the smoothing cache", marked[1] and marked[1].execute == true)
+end
+
+if DH.Class and DH.Class.abilities then
+    reset()
+    local oldGetActiveMode = DH.GetActiveMode
+    local oldUpdateState = DH.UpdateState
+    local oldIsSimpleRotation = DH.IsSimpleRotation
+    local oldForecast = ns.UpdateDPSForecast
+    local oldRecord = ns.RecordRecommendations
+
+    local stubRecs = {}
+    for i = 1, 5 do
+        local key = "queue_stub_" .. i
+        DH.Class.abilities[key] = { id = 900000 + i, name = key, texture = 134400 }
+        stubRecs[i] = { ability = key, name = key, texture = 134400 }
+    end
+
+    DH.GetActiveMode = function()
+        return { key = "queue_test", rotation = function() return stubRecs end }
+    end
+    DH.UpdateState = function() end
+    DH.IsSimpleRotation = function() return true end
+    ns.UpdateDPSForecast = function() end
+    ns.RecordRecommendations = function() end
+    DH.db = {
+        enabled = true,
+        mode = "queue_test",
+        common = { target_mode = "single", aoe_threshold = 4, cleave_threshold = 2 },
+        display = { spellframe_icons = 5 },
+    }
+    mock.target = true
+    mock.enemies.target = true
+    ns.ResetSmoothing()
+    local out = DH:UpdateRecommendations()
+    check("Queue: simple rotation keeps the multi-icon queue", type(out) == "table" and #out == 5, "queue was truncated")
+
+    DH.GetActiveMode = oldGetActiveMode
+    DH.UpdateState = oldUpdateState
+    DH.IsSimpleRotation = oldIsSimpleRotation
+    ns.UpdateDPSForecast = oldForecast
+    ns.RecordRecommendations = oldRecord
+end
+
+-- A no-cooldown execute must not monopolise the simulation. Once an executor
+-- is queued, the next pass has to fall through to the next distinct ability.
+if findMode("frost_mage") then
+    reset()
+    DH.db.mode = "frost_mage"
+    setTarget(15, 1000000)
+    local cfg = {
+        gcdType = "spell",
+        maxRecs = 2,
+        cds = { fire_blast = "fire_blast" },
+        baseCDs = { fire_blast = 0 },
+        getPriority = function(sim)
+            return DH:PickExecutor(sim, "frost_mage") or "frostbolt"
+        end,
+    }
+    local recs = DH:RunSimulation(DH.State, cfg)
+    check(
+        "Queue: queued executor falls through to the next ability",
+        recs[1] and recs[1].ability == "fire_blast" and recs[2] and recs[2].ability == "frostbolt",
+        "executor stayed at the top of the queue"
+    )
+end
+
+-- Filler repeats are allowed to fill the visible queue; executors and
+-- cooldown abilities remain distinct.
+if findMode("frost_mage") then
+    reset()
+    DH.db.mode = "frost_mage"
+    setTarget(100, 100000)
+    local cfg = {
+        gcdType = "spell",
+        maxRecs = 3,
+        allowDupes = true,
+        getPriority = function()
+            return "frostbolt"
+        end,
+    }
+    local recs = DH:RunSimulation(DH.State, cfg)
+    check(
+        "Queue: filler repeats fill the requested icon count",
+        #recs == 3 and recs[1].ability == "frostbolt" and recs[3].ability == "frostbolt",
+        "filler was not repeated"
+    )
+end
+
+-- Queue icon count: display/common must not disagree, or an old wizard value
+-- of 1 silently overrides the configured 3-10 icons.
+do
+    reset()
+    DH.db.display = {}
+    DH.db.display.spellframe_icons = 1
+    DH.db.common.spellframe_icons = 3
+    check("Queue settings: stale display=1 + common=3 resolves to 3", DH:GetSpellFrameIconCount() == 3)
+    DH:SetSpellFrameIconCount(5)
+    check(
+        "Queue settings: setter syncs display and common",
+        DH.db.display.spellframe_icons == 5 and DH.db.common.spellframe_icons == 5
+    )
+
+    reset()
+    DH.db.display = { spellframe_icons = 1 }
+    check("Queue settings: legacy stored 1 repairs to 3", DH:GetSpellFrameIconCount() == 3)
+    DH:SetSpellFrameIconCount(1)
+    check("Queue settings: explicit 1 is respected", DH:GetSpellFrameIconCount() == 1)
+end
+
+-- Adaptive queue: the row shortens when the target will die in fewer casts,
+-- and AoE uses the pack HP so the row does not collapse on a low-HP add.
+if findMode("frost_mage") then
+    local function frostQueue(hp, enemies, targetMode)
+        reset()
+        DH.db.mode = "frost_mage"
+        DH.db.common.target_mode = targetMode
+        setTarget(100, hp)
+        DH.State.active_enemies = enemies
+        DH.State.level = 80
+        DH.State.stat = { spell_haste = 1, haste = 0, spell_power = 2000, attack_power = 0, crit = 0 }
+        local cfg = {
+            gcdType = "spell",
+            maxRecs = 5,
+            allowDupes = true,
+            getPriority = function()
+                return "frostbolt"
+            end,
+        }
+        return DH:RunSimulation(DH.State, cfg)
+    end
+
+    check("Adaptive queue: low target HP shortens the row", #frostQueue(2000, 1, "single") == 1)
+    check("Adaptive queue: high target HP fills the row", #frostQueue(100000, 1, "single") == 5)
+    check(
+        "Adaptive queue: AoE uses the pack HP",
+        #frostQueue(2000, 4, "aoe") > #frostQueue(2000, 1, "single"),
+        "AoE queue collapsed like a single target"
+    )
+end
+
+-- Low level / no damage samples: HP percentage is the fallback so the row
+-- still adapts instead of always showing the maximum number of icons.
+if findMode("frost_mage") then
+    reset()
+    DH.db.mode = "frost_mage"
+    setTarget(10)
+    DH.State.level = 1
+    DH.State.stat = { spell_haste = 1, haste = 0, spell_power = 0, attack_power = 0, crit = 0 }
+    DH.ns.skillStats = {}
+    local cfg = {
+        gcdType = "spell",
+        maxRecs = 5,
+        allowDupes = true,
+        getPriority = function()
+            return "frostbolt"
+        end,
+    }
+    local recs = DH:RunSimulation(DH.State, cfg)
+    check("Adaptive queue: low-level HP fallback shortens the row", #recs == 1, tostring(#recs))
 end

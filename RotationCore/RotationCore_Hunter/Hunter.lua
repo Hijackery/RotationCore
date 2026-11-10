@@ -410,6 +410,16 @@ DH:RegisterFallbackAbilities({
     "steady_shot", "arcane_shot", "serpent_sting",
 })
 
+DH:RegisterExecutors("beast_mastery", {
+    { key = "kill_shot", below = 20, finish = true, instant = true },
+})
+DH:RegisterExecutors("marksmanship", {
+    { key = "kill_shot", below = 20, finish = true, instant = true },
+})
+DH:RegisterExecutors("survival", {
+    { key = "kill_shot", below = 20, finish = true, instant = true },
+})
+
 -- Buffs whose rising edge plays the proc sound (see DH:RegisterProcBuff).
 DH:RegisterProcBuff("lock_and_load")
 

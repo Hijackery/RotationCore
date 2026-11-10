@@ -220,8 +220,8 @@ DH:RegisterMode("shadow", {
 local function BuildHealDps()
     local s = state
     local recs = {}
-    local function push(key)
-        recs[#recs + 1] = { ability = key, priority = #recs + 1 }
+    local function push(key, execute)
+        recs[#recs + 1] = { ability = key, priority = #recs + 1, execute = execute or nil }
     end
     local function Ready(key)
         local a = class.abilities[key]
@@ -233,7 +233,7 @@ local function BuildHealDps()
         push("holy_nova")
     end
     if hp < 25 and Ready("shadow_word_death") then
-        push("shadow_word_death")
+        push("shadow_word_death", true)
     end
     if Ready("holy_fire") then
         push("holy_fire")

@@ -512,6 +512,27 @@ DH:RegisterFallbackAbilities({
     "shadow_bolt", "incinerate", "corruption",
 })
 
+local function hasShard(sim)
+    return (sim.soul_shards or 0) > 0
+end
+
+DH:RegisterExecutors("affliction", {
+    {
+        key = "drain_soul",
+        below = 25,
+        setting = "use_drain_soul_execute",
+        require = function(sim)
+            return sim.has_drain_soul_execute == true
+        end,
+    },
+})
+DH:RegisterExecutors("demonology", {
+    { key = "shadowburn", below = 20, finish = true, instant = true, require = hasShard },
+})
+DH:RegisterExecutors("destruction", {
+    { key = "shadowburn", below = 20, finish = true, instant = true, require = hasShard },
+})
+
 DH:RegisterDefaults({
     affliction = {
         enabled = true,

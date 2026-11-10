@@ -141,7 +141,11 @@ local afflictionConfig = {
         end
 
         -- Execute phase: Drain Soul below 25% HP (or boss phase 3 via the timeline)
-        if sim.has_drain_soul_execute and (sim.in_execute or (DH.IsExecutePhase and DH:IsExecutePhase())) then
+        if
+            sim.has_drain_soul_execute
+            and (sim.in_execute or (DH.IsExecutePhase and DH:IsExecutePhase()))
+            and not (sim._queued and sim._queued["drain_soul"])
+        then
             return "drain_soul"
         end
 
@@ -221,12 +225,14 @@ local demonologyConfig = {
         demonic_empowerment = "demonic_empowerment",
         immolation_aura = "immolation_aura",
         curse_of_doom = "curse_of_doom",
+        shadowburn = "shadowburn",
     },
     baseCDs = {
         metamorphosis = 180,
         demonic_empowerment = 60,
         immolation_aura = 30,
         curse_of_doom = 60,
+        shadowburn = 15,
     },
     auras = {
         { up = "corruption_up", remains = "corruption_remains" },
@@ -240,6 +246,7 @@ local demonologyConfig = {
     initState = function(sim, s)
         sim._spec = "demonology"
         sim.in_execute = s.target.health.pct < 25
+        sim.soul_shards = GetItemCount and GetItemCount(6265) or 0
         -- DoTs
         sim.corruption_up = s.debuff.corruption.up
         sim.corruption_remains = s.debuff.corruption.remains
@@ -346,6 +353,11 @@ local demonologyConfig = {
             return "incinerate"
         end
 
+        local executor = DH:PickExecutor(sim, "demonology")
+        if executor then
+            return executor
+        end
+
         -- Filler: Shadow Bolt
         return "shadow_bolt"
     end,
@@ -365,6 +377,8 @@ local demonologyConfig = {
         elseif key == "soul_fire" then
             sim.decimation_up = false
             sim.decimation_remains = 0
+        elseif key == "shadowburn" then
+            sim.soul_shards = math.max(0, (sim.soul_shards or 0) - 1)
         elseif key == "incinerate" then
             sim.molten_core_stacks = sim.molten_core_stacks - 1
             if sim.molten_core_stacks <= 0 then
@@ -417,11 +431,13 @@ local destructionConfig = {
         conflagrate = "conflagrate",
         chaos_bolt = "chaos_bolt",
         shadowfury = "shadowfury",
+        shadowburn = "shadowburn",
     },
     baseCDs = {
         conflagrate = 10,
         chaos_bolt = 12,
         shadowfury = 20,
+        shadowburn = 15,
     },
     auras = {
         { up = "immolate_up", remains = "immolate_remains" },
@@ -432,6 +448,7 @@ local destructionConfig = {
     initState = function(sim, s)
         sim._spec = "destruction"
         sim.in_execute = s.target.health.pct < 25
+        sim.soul_shards = GetItemCount and GetItemCount(6265) or 0
         -- DoTs
         sim.immolate_up = s.debuff.immolate.up
         sim.immolate_remains = s.debuff.immolate.remains
@@ -510,6 +527,11 @@ local destructionConfig = {
             return "corruption"
         end
 
+        local executor = DH:PickExecutor(sim, "destruction")
+        if executor then
+            return executor
+        end
+
         -- Filler: Incinerate (boosted by Immolate)
         return "incinerate"
     end,
@@ -532,6 +554,8 @@ local destructionConfig = {
         elseif key == "corruption" then
             sim.corruption_up = true
             sim.corruption_remains = 18
+        elseif key == "shadowburn" then
+            sim.soul_shards = math.max(0, (sim.soul_shards or 0) - 1)
         elseif key == "life_tap" then
             sim.mana_pct = math.min(100, sim.mana_pct + 20)
             if sim.has_life_tap_glyph then

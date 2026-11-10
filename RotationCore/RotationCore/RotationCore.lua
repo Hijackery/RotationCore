@@ -6,7 +6,7 @@
 RotationCore = {}
 local DH = RotationCore
 
-DH.Version = "1.1.0"
+DH.Version = "1.2.0"
 
 -- Namespace for internal data
 local ns = {}
@@ -1352,10 +1352,9 @@ function DH:DescribeRecommendation(rec)
     local key = rec.ability
     local ability = (self.Class and self.Class.abilities and self.Class.abilities[key]) or {}
     local st = self.State
-    local tgtPct = st and st.target and st.target.health and st.target.health.pct
     local manaPct = st and st.mana and st.mana.pct
     local rk
-    if ability.execute or (tgtPct and tgtPct < 20) then
+    if rec.execute then
         rk = "execute_phase"
     elseif ability.cd and ability.cd >= 60 then
         rk = "burst_cd_ready"
@@ -1578,11 +1577,6 @@ function DH:UpdateRecommendations()
     if not useHealRotation and self:GetSetting("custom_apl_enabled") == true and ns.EvaluateAPL then
         local aplRecs, aplValid = ns.EvaluateAPL(self)
         if aplValid then recommendations = aplRecs end
-    end
-
-    -- phase-3 #1: a "simple" adaptive rotation shows only the top ability.
-    if self.IsSimpleRotation and self:IsSimpleRotation() and #recommendations > 1 then
-        recommendations = { recommendations[1] }
     end
 
     -- Never recommend abilities the player has not learned yet

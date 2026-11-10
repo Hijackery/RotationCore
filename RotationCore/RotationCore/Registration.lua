@@ -337,44 +337,11 @@ end
 -- Settings stored under the `common` key are identical for every class bar a
 -- handful of extras. Classes call RegisterCommonDefaults(extras); extras win
 -- over the base values and the merged table is registered as usual.
-ns.COMMON_DEFAULTS = {
-    dummy_ttd = 300,
-    menu_mode = "simple",
-    auto_cooldowns = true,
-    cooldown_order = "priority",
-    target_mode = "single",
-    activity_profile = "raid",
-    ttd_raid = 300,
-    ttd_dungeon = 60,
-    ttd_solo = 15,
-    ttd_pvp = 30,
-    hold_cd_at_end = true,
-    cd_hold_ttd = 30,
-    use_glyphs = true,
-    raid_buffs = true,
-    display_count = 3,
-    sound_procs = false,
-    sound_procs_file = "Sound\\Interface\\AlarmClockWarning3.wav",
-    proc_flash = false,
-    proc_flash_speed = 3.0,
-    log_decisions = false,
-    log_max_lines = 1000,
-    icon_size = 36,
-    icon_gap = 4,
-    icon_columns = 3,
-    glow_style = "pulse",
-    guide_marker = false, -- bobbing chevron above the next ability button
-    glow_frequency = 1.0, -- pulse speed multiplier (1 = style default)
-    glow_lines = 1, -- concentric border rings (1 = classic single ring)
-    glow_thickness = 1.5, -- border size multiplier
-    spellframe_font = "default",
-    spellframe_font_size = 0, -- 0 = keep the client default size
-    spellFrame_pos_per_spec = false,
-}
 
 function DH:RegisterCommonDefaults(extra)
     local merged = {}
-    for k, v in pairs(ns.COMMON_DEFAULTS) do
+    local base = ns.coreCommonDefaults or {}
+    for k, v in pairs(base) do
         merged[k] = v
     end
     if type(extra) == "table" then

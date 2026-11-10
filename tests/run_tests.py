@@ -23,6 +23,7 @@ CORE_FILES = [
     "Registration.lua",
     "KnownSpells.lua",
     "SharedSettings.lua",
+    "Executors.lua",
     "Profiles.lua",
     "BossProfiles.lua",
     "BossTimeline.lua",
@@ -38,6 +39,11 @@ CLASS_SUITES = [
     ("Paladin", "PALADIN", ["RotationCore_Paladin/Paladin.lua", "RotationCore_Paladin/Core.lua"]),
     ("Shaman", "SHAMAN", ["RotationCore_Shaman/Shaman.lua", "RotationCore_Shaman/Core.lua"]),
     ("Priest", "PRIEST", ["RotationCore_Priest/Priest.lua", "RotationCore_Priest/Core.lua"]),
+    ("Mage", "MAGE", ["RotationCore_Mage/Mage.lua", "RotationCore_Mage/Core.lua"]),
+    ("Hunter", "HUNTER", ["RotationCore_Hunter/Hunter.lua", "RotationCore_Hunter/Core.lua"]),
+    ("Warrior", "WARRIOR", ["RotationCore_Warrior/Warrior.lua", "RotationCore_Warrior/Core.lua"]),
+    ("Warlock", "WARLOCK", ["RotationCore_Warlock/Warlock.lua", "RotationCore_Warlock/Core.lua"]),
+    ("Rogue", "ROGUE", ["RotationCore_Rogue/Rogue.lua", "RotationCore_Rogue/Core.lua"]),
 ]
 
 
@@ -53,6 +59,7 @@ SMOKE_FILES = [
     "Registration.lua",
     "KnownSpells.lua",
     "SharedSettings.lua",
+    "Executors.lua",
     "Profiles.lua",
     "Events.lua",
     "BossProfiles.lua",
@@ -137,6 +144,49 @@ def run_suite(class_name: str, class_tag: str, class_files: list[str]) -> tuple[
     return passed, failed
 
 
+
+def run_queue_window_test() -> bool:
+    """Regression: the action-bar glow count must not truncate the icon queue."""
+    runtime = lupa.LuaRuntime(unpack_returned_tuples=True)
+    execute_file(runtime, TESTS / "mock.lua")
+    runtime.execute('mock.class = "Mage"; mock.classTag = "MAGE"')
+    for name in CORE_FILES:
+        execute_file(runtime, CORE / name)
+    for name in ("RotationCore_Mage/Mage.lua", "RotationCore_Mage/Core.lua"):
+        execute_file(runtime, ROOT / "RotationCore" / name)
+    for name in ("UI.lua", "SpellFrame.lua"):
+        execute_file(runtime, CORE / name)
+    runtime.execute(
+        """
+        local DH = RotationCore
+        local ns = DH.ns
+        DH.db = {
+            enabled = true,
+            mode = "frost_mage",
+            common = { target_mode = "single", aoe_threshold = 4, cleave_threshold = 2 },
+            display = { num_icons = 1, spellframe_icons = 4, show_spellframe = true },
+        }
+        ns.UpdateSpellFrame = function(recs) QUEUE_WINDOW_COUNT = #recs end
+        ns.glowVisible = true
+        local recs = {}
+        for i = 1, 4 do
+            recs[i] = { ability = "frostbolt", texture = 135846, name = "Frostbolt" }
+        end
+        ns.recommendations = recs
+        pcall(ns.UpdateUI, DH)
+        QUEUE_COLUMNS_OK = ns.GetQueueColumns("horizontal", 7) == 7
+            and ns.GetQueueColumns("vertical", 7) == 1
+        """
+    )
+    count = int(runtime.globals().QUEUE_WINDOW_COUNT or 0)
+    columns_ok = bool(runtime.globals().QUEUE_COLUMNS_OK)
+    ok = count == 4 and columns_ok
+    print(
+        f"\n[Queue window] {'1 passed' if ok else '1 failed'} "
+        f"(icons passed to window: {count}/4, row layout: {columns_ok})"
+    )
+    return ok
+
 def main() -> int:
     total_passed = 0
     total_failed = 0
@@ -146,8 +196,13 @@ def main() -> int:
         total_failed += failed
 
     smoke_ok = run_smoke()
+    queue_ok = run_queue_window_test()
+    if queue_ok:
+        total_passed += 1
+    else:
+        total_failed += 1
     print(f"\nTotal: {total_passed} passed, {total_failed} failed")
-    return 0 if total_passed and not total_failed and smoke_ok else 1
+    return 0 if total_passed and not total_failed and smoke_ok and queue_ok else 1
 
 
 if __name__ == "__main__":

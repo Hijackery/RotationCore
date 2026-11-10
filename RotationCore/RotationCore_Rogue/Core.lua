@@ -115,6 +115,11 @@ local assConfig = {
             return "hunger_for_blood"
         end
 
+        local executor = DH:PickExecutor(sim, "assassination")
+        if executor then
+            return executor
+        end
+
         -- Cold Blood right before the damage finisher so its guaranteed crit
         -- is not wasted on a maintenance finisher (Slice and Dice).
         if
@@ -319,6 +324,11 @@ local combatConfig = {
             end
         end
 
+        local executor = DH:PickExecutor(sim, "combat")
+        if executor then
+            return executor
+        end
+
         -- Killing Spree (low energy, dump)
         if
             sim.has_killing_spree
@@ -502,6 +512,11 @@ local subConfig = {
             if (sim.rupture_up and sim.rupture_remains > 6) or sim.ttd < 10 then
                 return "eviscerate"
             end
+        end
+
+        local executor = DH:PickExecutor(sim, "subtlety")
+        if executor then
+            return executor
         end
 
         -- Hemorrhage (builder, applies debuff)

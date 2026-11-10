@@ -150,6 +150,7 @@ end
 function DH:SimInitTarget(simState, s)
     simState.ttd = s.target.time_to_die
     simState.target_pct = s.target.health.pct
+    simState.target_health = s.target.health.current
     simState.in_execute = s.target.health.pct < 20
     simState.target_exists = s.target.exists
     simState.active_enemies = s.active_enemies
@@ -302,7 +303,8 @@ function DH:RunSimulation(s, config)
     local maxRecs = config.maxRecs or 3
     -- The icon window can show up to 10 icons; let the simulation produce
     -- enough recommendations to fill it (never more than the slot count).
-    local windowIcons = self.db and self.db.display and self.db.display.spellframe_icons
+    local windowIcons = self.GetSpellFrameIconCount and self:GetSpellFrameIconCount()
+        or (self.db and self.db.display and self.db.display.spellframe_icons)
     if windowIcons and windowIcons > maxRecs then
         maxRecs = math.min(windowIcons, 10)
     end
@@ -335,6 +337,21 @@ function DH:RunSimulation(s, config)
         sim.group_buffs = self:GetGroupBuffs()
     end
 
+    -- How many icons are actually useful? Stop once the estimated damage of
+    -- the queued casts covers the target's HP. For AoE/cleave, use the whole
+    -- pack's HP so the row stays useful instead of collapsing to one icon.
+    local adaptive = (self.GetSetting and self:GetSetting("adaptive_queue")) ~= false
+    local queueBudget = 0
+    if adaptive then
+        queueBudget = tonumber(s.target.health.current) or 0
+        local targetMode = self.ResolveTargetMode and self:ResolveTargetMode(sim) or "single"
+        if targetMode ~= "single" and queueBudget > 0 then
+            queueBudget = queueBudget * math.max(1, sim.active_enemies or 1)
+        end
+    end
+    local queueDamage = 0
+    local queueFinished = false
+
     -- Initialize resources from state
     if config.resources then
         for _, res in ipairs(config.resources) do
@@ -350,6 +367,7 @@ function DH:RunSimulation(s, config)
     -- Initialize CD tracking: sim.cd[key] = remaining seconds
     sim.cd = {}
     sim._blocked = {}
+    sim._queued = {}
     -- Base cooldown durations (hold-at-end gate in CanUseCooldown)
     sim.baseCDs = config.baseCDs
     -- Expose the active mode's cooldown map so the Cooldowns display (phase 2.1)
@@ -411,8 +429,17 @@ function DH:RunSimulation(s, config)
             -- This stops e.g. "frostbolt > frostbolt > frostbolt".
             local ability = self.Class.abilities[action]
             local isSpam = ability and ability.spam == true
+            local baseCD = config.baseCDs and config.baseCDs[action]
+            -- Fill the visible queue with the real next casts. Abilities that
+            -- are on a cooldown or are true executors stay distinct; a plain
+            -- no-cooldown filler (Frostbolt / Shadow Bolt / Slam) may repeat.
+            local repeatable = allowDupes
+                and ability ~= nil
+                and ability.id ~= nil
+                and ability.execute ~= true
+                and not (type(baseCD) == "number" and baseCD > 0)
             local dominated = false
-            if (not allowDupes) or not isSpam then
+            if (not repeatable) and ((not allowDupes) or not isSpam) then
                 for _, rec in ipairs(recommendations) do
                     if rec.ability == action then
                         dominated = true
@@ -422,12 +449,28 @@ function DH:RunSimulation(s, config)
             end
             if not dominated then
                 if ability then
+                    local execute = self.IsExecutorActive and self:IsExecutorActive(sim, action) or false
                     table.insert(recommendations, {
                         ability = action,
                         texture = ability.texture,
                         name = ability.name,
+                        execute = execute or nil,
                     })
+                    sim._queued[action] = true
+                    if adaptive and self.EstimateAbilityDamage then
+                        local damage = self:EstimateAbilityDamage(action)
+                        if damage and damage > 0 then
+                            queueDamage = queueDamage + damage
+                        end
+                    end
                 end
+                if adaptive and queueBudget > 0 and queueDamage >= queueBudget and #recommendations > 0 then
+                    queueFinished = true
+                end
+            end
+
+            if queueFinished then
+                break
             end
 
             -- Set the ability's CD in sim
@@ -446,6 +489,55 @@ function DH:RunSimulation(s, config)
                 advanceTime = config.getAdvanceTime(sim, action)
             end
             AdvanceSimTime(self, sim, config, advanceTime)
+        end
+    end
+
+    -- The rotation ran out of distinct actions before the configured icon
+    -- count. Keep the window useful by repeating the last plain filler (no
+    -- cooldown, not a finisher); cooldown abilities and executors stay single.
+    while (not queueFinished) and #recommendations < maxRecs do
+        local last = recommendations[#recommendations]
+        if not last then
+            break
+        end
+        local ability = self.Class.abilities[last.ability]
+        local baseCD = config.baseCDs and config.baseCDs[last.ability]
+        if
+            not ability
+            or not ability.id
+            or ability.execute == true
+            or (type(baseCD) == "number" and baseCD > 0)
+        then
+            break
+        end
+        table.insert(recommendations, {
+            ability = last.ability,
+            texture = ability.texture,
+            name = ability.name,
+            execute = last.execute,
+        })
+        if adaptive and self.EstimateAbilityDamage then
+            local damage = self:EstimateAbilityDamage(last.ability)
+            if damage and damage > 0 then
+                queueDamage = queueDamage + damage
+                if queueBudget > 0 and queueDamage >= queueBudget then
+                    break
+                end
+            end
+        end
+    end
+
+    -- Low-level fallback: registered spell damage is only valid at 80, and
+    -- observed combat-log samples may not exist yet. Use the target's HP
+    -- percentage so the row still shortens instead of always maxing out.
+    if adaptive and queueDamage <= 0 and queueBudget > 0 then
+        local targetMode = self.ResolveTargetMode and self:ResolveTargetMode(sim) or "single"
+        local pct = tonumber(s.target.health.pct) or 100
+        if targetMode == "single" and pct < 100 and #recommendations > 0 then
+            local desired = math.max(1, math.ceil(maxRecs * pct / 100))
+            while #recommendations > desired do
+                table.remove(recommendations)
+            end
         end
     end
 

@@ -542,6 +542,31 @@ DH:RegisterFallbackAbilities({
     "mortal_strike", "heroic_strike", "cleave", "shield_slam",
 })
 
+local function executeReady(sim)
+    return (sim.rage or 0) >= 15
+end
+
+DH:RegisterExecutors("arms", {
+    {
+        key = "execute",
+        below = 20,
+        finish = true,
+        setting = "use_execute",
+        require = executeReady,
+        proc = "sudden_death",
+    },
+})
+DH:RegisterExecutors("fury", {
+    {
+        key = "execute",
+        below = 20,
+        finish = true,
+        setting = "use_execute",
+        require = executeReady,
+        proc = "sudden_death",
+    },
+})
+
 DH:RegisterDefaults({
     arms = {
         enabled = true,

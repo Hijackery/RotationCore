@@ -138,12 +138,19 @@ local armsConfig = {
             (sim.in_execute or (DH.IsExecutePhase and DH:IsExecutePhase()))
             and sim.rage >= 15
             and DH:GetSetting("use_execute")
+            and not (sim._queued and sim._queued["execute"])
         then
             return "execute"
         end
 
         -- Sudden Death proc: Execute outside execute phase
-        if sim.has_sudden_death and sim.sudden_death and sim.rage >= 15 and DH:GetSetting("use_execute") then
+        if
+            sim.has_sudden_death
+            and sim.sudden_death
+            and sim.rage >= 15
+            and DH:GetSetting("use_execute")
+            and not (sim._queued and sim._queued["execute"])
+        then
             return "execute"
         end
 

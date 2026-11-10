@@ -27,6 +27,7 @@ local SPELLS = {
 
     -- Fire
     FIREBALL = 42833,
+    FIRE_BLAST = 42873,
     PYROBLAST = 42891,
     SCORCH = 42859,
     LIVING_BOMB = 55360,
@@ -98,6 +99,11 @@ class.abilities = {
         id = SPELLS.FIREBALL,
         name = "Fireball",
         texture = 135812,
+    },
+    fire_blast = {
+        id = SPELLS.FIRE_BLAST,
+        name = "Fire Blast",
+        texture = 135807,
     },
     pyroblast = {
         id = SPELLS.PYROBLAST,
@@ -261,6 +267,7 @@ DH:RegisterCooldowns({
     arcane_power = 12042,
     presence_of_mind = 12043,
     fireball = 42833,
+    fire_blast = 42873,
     pyroblast = 42891,
     scorch = 42859,
     living_bomb = 55360,
@@ -507,6 +514,19 @@ DH:RegisterFallbackAbilities({
     "frostbolt", "fireball", "scorch", "arcane_blast", "fire_blast",
 })
 
+-- Fire Blast is the instant finisher shared by every mage spec. It is only
+-- recommended when the target is low; lower ranks are resolved from the
+-- player's spellbook by KnownSpells.lua.
+DH:RegisterExecutors("arcane", {
+    { key = "fire_blast", below = 20, finish = true, instant = true },
+})
+DH:RegisterExecutors("fire", {
+    { key = "fire_blast", below = 20, finish = true, instant = true },
+})
+DH:RegisterExecutors("frost_mage", {
+    { key = "fire_blast", below = 20, finish = true, instant = true },
+})
+
 -- Buffs whose rising edge plays the proc sound (see DH:RegisterProcBuff).
 DH:RegisterProcBuff("missile_barrage")
 DH:RegisterProcBuff("hot_streak")
@@ -641,6 +661,7 @@ end)
 DH:RegisterSpellDamage({
   arcane_blast = { min=580, max=670, coeff=0.71, cast=2.5 },
   fireball = { min=590, max=760, coeff=1.15, cast=3.0 },
+  fire_blast = { min=925, max=1095, coeff=0.43 },
   frostbolt = { min=560, max=700, coeff=0.86, cast=2.5 },
   frostfire_bolt = { min=650, max=830, coeff=0.96, cast=3.0 },
   ice_lance = { min=280, max=370, coeff=0.33 },

@@ -450,6 +450,20 @@ DH:RegisterFallbackAbilities({
     "sinister_strike", "backstab", "mutilate", "hemorrhage",
 })
 
+local function cpFinisher(sim)
+    return (sim.cp or 0) >= 4 and (sim.energy or 0) >= 35
+end
+
+DH:RegisterExecutors("assassination", {
+    { key = "envenom", below = 20, finish = true, require = cpFinisher },
+})
+DH:RegisterExecutors("combat", {
+    { key = "eviscerate", below = 20, finish = true, require = cpFinisher },
+})
+DH:RegisterExecutors("subtlety", {
+    { key = "eviscerate", below = 20, finish = true, require = cpFinisher },
+})
+
 DH:RegisterDefaults({
     assassination = {
         enabled = true,

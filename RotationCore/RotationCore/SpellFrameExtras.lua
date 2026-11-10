@@ -393,6 +393,46 @@ local function GetSpellRemains(spellId)
     return remains
 end
 
+-- Smooth countdown text for the cooldown / interrupt windows. RenderExtra
+-- still decides which slots exist; this ticker only refreshes the number.
+local function EnsureExtraTicker(f)
+    if not f or f.cdTicker then
+        return
+    end
+    local ticker = CreateFrame("Frame", nil, f)
+    ticker:SetAllPoints(f)
+    ticker:Show()
+    ticker.elapsed = 0
+    ticker:SetScript("OnUpdate", function(self, elapsed)
+        self.elapsed = self.elapsed + elapsed
+        if self.elapsed < 0.03 then
+            return
+        end
+        self.elapsed = 0
+        for i = 1, MAX_SLOTS do
+            local slot = f.slots and f.slots[i]
+            if slot and slot:IsShown() and slot.spellId then
+                local remains = GetSpellRemains(slot.spellId)
+                if remains > 0.05 then
+                    if remains >= 10 then
+                        slot.cd:SetText(string.format("%d", math.ceil(remains)))
+                    else
+                        slot.cd:SetText(string.format("%.1f", remains))
+                    end
+                    if f.kind == "interrupt" then
+                        slot.cd:SetTextColor(1, 0.3, 0.3)
+                    else
+                        slot.cd:SetTextColor(1, 1, 1)
+                    end
+                else
+                    slot.cd:SetText("")
+                end
+            end
+        end
+    end)
+    f.cdTicker = ticker
+end
+
 ns.cooldownsFrame = nil
 -- Candidate list for the cooldown display. It only depends on the active mode's
 -- baseCDs, the class ability table, the min-CD filter and which spells are
@@ -507,6 +547,7 @@ function ns.UpdateCooldownsFrame()
         ns.cooldownsFrame.refresh = ns.UpdateCooldownsFrame
         ns.cooldownsFrame.noItemsKeep = true
     end
+    EnsureExtraTicker(ns.cooldownsFrame)
     if #GetCooldownItems() == 0 and ns.cooldownsFrame then
         local cdTitle = (DH.L and DH.L["No cooldowns"]) or "No cooldowns"
         if ns.cooldownsFrame.title and ns.cooldownsFrame.title.SetText then
@@ -600,6 +641,7 @@ function ns.UpdateInterruptsFrame()
             CreateExtraFrame("InterruptsFrame", title, "interrupts_position", 170, -250, "interrupts_scale")
         ns.interruptFrame.refresh = ns.UpdateInterruptsFrame
     end
+    EnsureExtraTicker(ns.interruptFrame)
     local items = GetInterruptItem()
     -- Interrupt-ready sound: play once when the kick comes off cooldown.
     do

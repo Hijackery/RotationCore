@@ -202,7 +202,7 @@ local function PrefillAnswers()
     def("activity@1", (DH.GetSetting and DH:GetSetting("auto_activity")) ~= false and "auto"
         or ((DH.GetSetting and DH:GetSetting("activity_profile")) or "raid"))
     def("target@1", (DH.GetSetting and DH:GetSetting("target_mode")) or "auto")
-    def("display@1", (DH.GetSetting and DH:GetSetting("num_icons")) or 3)
+    def("display@1", (DH.GetSpellFrameIconCount and DH:GetSpellFrameIconCount()) or 3)
     def("display@2", (DH.GetSetting and DH:GetSetting("icon_size")) or 36)
     def("display@3", (DH.GetSetting and DH:GetSetting("orientation")) or "horizontal")
     def("display2@1", YN((DH.GetSetting and DH:GetSetting("show_keybind")) ~= false))
@@ -254,7 +254,11 @@ local function ApplyAnswers()
     local icons = tonumber(v("display", 1)) or 3
     if v("display", 1) then
         DH:SetSetting("num_icons", icons)
-        if DH.db and DH.db.display then DH.db.display.spellframe_icons = icons end
+        if DH.SetSpellFrameIconCount then
+            DH:SetSpellFrameIconCount(icons)
+        elseif DH.db and DH.db.display then
+            DH.db.display.spellframe_icons = icons
+        end
     end
     if v("display", 2) then DH:SetSetting("icon_size", tonumber(v("display", 2))) end
     if v("display", 3) then DH:SetSetting("orientation", v("display", 3)) end
@@ -263,7 +267,6 @@ local function ApplyAnswers()
     if v("display2", 3) then
         local on = v("display2", 3) == "yes"
         DH:SetSetting("show_priority_numbers", on)
-        if DH.db and DH.db.display then DH.db.display.show_numbers = on end
     end
 
     if v("cd", 1) then

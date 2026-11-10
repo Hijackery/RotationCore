@@ -40,6 +40,60 @@ local FALLBACK_STYLE = {
     [3] = { r = 0.25, g = 0.60, b = 1.00 },
 }
 
+-- Shared by the full render and the lightweight ticker below. The full render
+-- still owns names/layout; the ticker only refreshes the countdown text so the
+-- numbers move smoothly instead of jumping at the recommendation poll rate.
+local function UpdateCooldownText(slot, index, spellId, showTime, showGCD)
+    if not slot or not slot.cd then
+        return
+    end
+    local id = spellId or slot.tipId
+    if showTime == nil then
+        showTime = (DH.GetSetting and DH:GetSetting("show_time")) ~= false
+    end
+    if showGCD == nil then
+        showGCD = (DH.GetSetting and DH:GetSetting("show_gcd_timer")) ~= false
+    end
+    local remains = 0
+    if showTime and id and type(GetSpellCooldown) == "function" then
+        local start, duration = GetSpellCooldown(id)
+        if start and duration and duration > 0 then
+            remains = (start + duration) - GetTime()
+            if remains < 0 then
+                remains = 0
+            end
+        end
+    end
+    local gcdRem = 0
+    if index == 1 and showGCD then
+        local st = DH.State
+        local start = st and st._gcd_start
+        if start and start > 0 then
+            gcdRem = math.max(0, start + (st.gcd or 1.5) - GetTime())
+        end
+    end
+    if remains > 0.05 then
+        if remains >= 10 then
+            slot.cd:SetText(string.format("%d", math.ceil(remains)))
+        else
+            slot.cd:SetText(string.format("%.1f", remains))
+        end
+    elseif index == 1 and gcdRem > 0.05 then
+        slot.cd:SetText(string.format("%.1f", gcdRem))
+    else
+        slot.cd:SetText("")
+    end
+end
+
+-- Horizontal means one row, regardless of legacy icon_columns values. Vertical
+-- means one column. Shared by the fixed-size and render paths.
+function ns.GetQueueColumns(orientation, showCount)
+    if orientation == "vertical" then
+        return 1
+    end
+    return math.max(1, tonumber(showCount) or 1)
+end
+
 local frame
 local slots = {}
 ns.moveMode = false -- /rc move: show labelled boxes and live coordinates
@@ -51,8 +105,12 @@ ns.moveMode = false -- /rc move: show labelled boxes and live coordinates
 -- skipped when the setting is off, when the window is refreshed very often
 -- (busy CPU) and when icons change faster than RAPID_CHANGE.
 -- ============================================================================
-local ANIM_IN, ANIM_CROSS, ANIM_OUT = 0.20, 0.15, 0.15
-local RAPID_CHANGE = 0.30
+local ANIM_IN, ANIM_CROSS, ANIM_OUT = 0.18, 0.12, 0.15
+local ANIM_MOVE = 0.16
+-- The rotation is polled at ~5 Hz by default (0.2 s). The old 0.30 s guard
+-- treated every normal queue change as "rapid" and snapped the icon, which
+-- looked jarring; only really fast (>16 Hz) churn skips the tween now.
+local RAPID_CHANGE = 0.06
 
 local function AnimEnabled()
     return (DH.GetSetting and DH:GetSetting("animations_enabled")) ~= false
@@ -97,6 +155,27 @@ local function SnapSlot(slot)
         slot.iconPrev:SetAlpha(0)
     end
     slot:Show()
+end
+
+local function UpdateSlotMove(slot, dt)
+    if not slot.moveActive then
+        return
+    end
+    slot.moveElapsed = (slot.moveElapsed or 0) + dt
+    local dur = slot.moveDur or ANIM_MOVE
+    local t = dur > 0 and (slot.moveElapsed / dur) or 1
+    if t > 1 then
+        t = 1
+    end
+    local ease = t * t * (3 - 2 * t)
+    local x = slot.moveFromX + (slot.moveToX - slot.moveFromX) * ease
+    local y = slot.moveFromY + (slot.moveToY - slot.moveFromY) * ease
+    if frame then
+        slot:SetPoint("BOTTOM", frame, "BOTTOM", x, y)
+    end
+    if t >= 1 then
+        slot.moveActive = false
+    end
 end
 
 local function UpdateSlotAnim(slot, elapsed)
@@ -505,7 +584,7 @@ EnsureFrame = function()
     modeBtn.text:SetJustifyH("CENTER")
     modeBtn.text:SetTextColor(0.4, 1, 0.4)
     modeBtn:SetScript("OnClick", function()
-        local cur = (DH.GetSetting and DH:GetSetting("target_mode")) or "single"
+        local cur = (DH.GetSetting and DH:GetSetting("target_mode")) or "auto"
         local nextMode = (cur == "single" and "aoe") or (cur == "aoe" and "auto") or "single"
         if DH.SetSetting then
             DH:SetSetting("target_mode", nextMode)
@@ -605,6 +684,32 @@ EnsureFrame = function()
         slots[i] = slot
     end
 
+    -- Countdown ticker: parented to the window, so it only runs while the
+    -- window is shown. 30 Hz is enough for a smooth tenths display and costs
+    -- less than repainting the whole queue every frame.
+    local cdTicker = CreateFrame("Frame", nil, frame)
+    cdTicker:SetAllPoints(frame)
+    cdTicker:Show()
+    cdTicker.elapsed = 0
+    cdTicker:SetScript("OnUpdate", function(self, elapsed)
+        self.elapsed = self.elapsed + elapsed
+        if self.elapsed < 0.03 then
+            return
+        end
+        local step = self.elapsed
+        self.elapsed = 0
+        local showTime = (DH.GetSetting and DH:GetSetting("show_time")) ~= false
+        local showGCD = (DH.GetSetting and DH:GetSetting("show_gcd_timer")) ~= false
+        for i = 1, MAX_SLOTS do
+            local slot = slots[i]
+            if slot and slot:IsShown() then
+                UpdateCooldownText(slot, i, nil, showTime, showGCD)
+                UpdateSlotMove(slot, step)
+            end
+        end
+    end)
+    frame.cdTicker = cdTicker
+
     frame:SetScript("OnDragStart", function(self)
         -- v3.4.0-hotfix6: windows are movable by default; lock via /rc lock
         -- or the "Lock windows" option. Dragging over an icon slot is blocked
@@ -685,7 +790,7 @@ local function UpdateModeIndicator()
         frame.modeButton:Hide()
         return
     end
-    local tm = (DH.GetSetting and DH:GetSetting("target_mode")) or "single"
+    local tm = (DH.GetSetting and DH:GetSetting("target_mode")) or "auto"
     local label = (tm == "aoe" and "A") or (tm == "auto" and "Au") or "S"
     frame.modeButton.text:SetText(label)
     frame.modeButton:Show()
@@ -730,19 +835,10 @@ local function ComputeFixedFrameSize(shownCount)
     local baseGap = (DH.GetSetting and DH:GetSetting("icon_gap")) or GAP
     local iconSize = math.max(16, math.floor(baseIcon * scale + 0.5))
     local gap = math.max(2, math.floor(baseGap * scale))
-    local showCount = tonumber(
-        (DH.db and DH.db.display and DH.db.display.spellframe_icons)
-            or (DH.GetSetting and DH:GetSetting("spellframe_icons"))
-    ) or 3
+    local showCount = (DH.GetSpellFrameIconCount and DH:GetSpellFrameIconCount()) or 3
     showCount = math.max(1, math.min(showCount, MAX_SLOTS))
     local orientation = (DH.GetSetting and DH:GetSetting("orientation")) or "horizontal"
-    local columns
-    if orientation == "vertical" then
-        columns = 1
-    else
-        local iconColumns = tonumber(DH.GetSetting and DH:GetSetting("icon_columns")) or showCount
-        columns = math.max(1, math.min(iconColumns, showCount))
-    end
+    local columns = ns.GetQueueColumns(orientation, showCount)
     local layoutCount = tonumber(shownCount) or showCount
     layoutCount = math.max(1, math.min(layoutCount, showCount, MAX_SLOTS))
     local rows = math.ceil(layoutCount / columns)
@@ -1001,22 +1097,14 @@ function ns.UpdateSpellFrame(recs)
 
     -- v3.4.0-hotfix6: window width is fixed by the configured icon count so
     -- the frame does not jump when the number of recommendations changes.
-    local showCount = tonumber(
-        (db.display and db.display.spellframe_icons) or (DH.GetSetting and DH:GetSetting("spellframe_icons"))
-    ) or 3
+    local showCount = (DH.GetSpellFrameIconCount and DH:GetSpellFrameIconCount()) or 3
     local maxShow = math.min(showCount, MAX_SLOTS, #recs)
     -- v3.3.0 exam mode: only REC1 is shown.
     if DH.GetSetting and DH:GetSetting("exam_mode") then
         maxShow = math.min(maxShow, 1)
     end
     local orientation = (DH.GetSetting and DH:GetSetting("orientation")) or "horizontal"
-    local columns
-    if orientation == "vertical" then
-        columns = 1
-    else
-        local iconColumns = tonumber(DH.GetSetting and DH:GetSetting("icon_columns")) or showCount
-        columns = math.max(1, math.min(iconColumns, showCount))
-    end
+    local columns = ns.GetQueueColumns(orientation, showCount)
     local fixed = (DH.GetSetting and DH:GetSetting("spellframe_fixed_size")) ~= false
     -- Layout acts (width) vs draw (rows) counts.
     local layoutCount = fixed and math.max(1, math.min(showCount, MAX_SLOTS)) or maxShow
@@ -1114,6 +1202,11 @@ function ns.UpdateSpellFrame(recs)
         end
     end
 
+    if frame.title then
+        local exam = DH.GetSetting and DH:GetSetting("exam_mode")
+        frame.title:SetText(exam and "RotationCore [EXAM]" or "RotationCore")
+    end
+
     if not frame.isMoving then
         if fixed then
             local fw, fh = ComputeFixedFrameSize(drawCount)
@@ -1138,7 +1231,7 @@ function ns.UpdateSpellFrame(recs)
         if i <= maxShow and rec then
             local ability = classes[rec.ability]
             local tex = (ability and ability.texture) or rec.texture
-            local style = GetStyle(i)
+            local style = (rec.execute and ns.EXECUTE_STYLE) or GetStyle(i)
 
             slot:SetSize(iconSize, iconSize)
             slot:ClearAllPoints()
@@ -1148,11 +1241,25 @@ function ns.UpdateSpellFrame(recs)
             local rowW = rowCols * iconSize + (rowCols - 1) * gap
             local x = -rowW / 2 + iconSize / 2 + (col - 1) * (iconSize + gap)
             local bottom = FRAME_PAD_BOTTOM + (rows - row) * (iconSize + gap)
-            slot:SetPoint("BOTTOM", frame, "BOTTOM", x, bottom)
+            local wasShown = slot:IsShown()
+            local oldX, oldY = slot.posX, slot.posY
+            local canMove = AnimEnabled() and not UIUnderLoad() and wasShown and oldX and oldY
+            local moved = canMove and (math.abs(oldX - x) > 0.5 or math.abs(oldY - bottom) > 0.5)
+            if moved then
+                slot:SetPoint("BOTTOM", frame, "BOTTOM", oldX, oldY)
+                slot.moveFromX, slot.moveFromY = oldX, oldY
+                slot.moveToX, slot.moveToY = x, bottom
+                slot.moveElapsed = 0
+                slot.moveDur = ANIM_MOVE / AnimSpeed()
+                slot.moveActive = true
+            else
+                slot:SetPoint("BOTTOM", frame, "BOTTOM", x, bottom)
+                slot.moveActive = false
+            end
+            slot.posX, slot.posY = x, bottom
 
             local key = tostring(rec.ability)
             local newTex = tex or "Interface\\Icons\\INV_Misc_QuestionMark"
-            local wasShown = slot:IsShown()
             local changed = (slot.lastKey ~= nil) and (slot.lastKey ~= key)
             if changed and slot.iconPrev then
                 -- stash the outgoing texture so it can fade out under the new one
@@ -1175,10 +1282,11 @@ function ns.UpdateSpellFrame(recs)
                 slot.topline:SetVertexColor(style.r, style.g, style.b, 0.85)
             end
 
-            if
-                db.display.show_numbers ~= false
-                or (DH.GetSetting and DH:GetSetting("show_priority_numbers")) == true
-            then
+            local showNumbers = DH.GetSetting and DH:GetSetting("show_priority_numbers")
+            if showNumbers == nil then
+                showNumbers = db.display.show_numbers
+            end
+            if showNumbers then
                 slot.num:SetText(i)
                 slot.num:SetTextColor(style.r, style.g, style.b)
             else
@@ -1194,35 +1302,7 @@ function ns.UpdateSpellFrame(recs)
             end
 
             -- Cooldown countdown / GCD timer, each gated by its own setting.
-            if slot.cd then
-                local showTime = (DH.GetSetting and DH:GetSetting("show_time")) ~= false
-                local showGCD = (DH.GetSetting and DH:GetSetting("show_gcd_timer")) ~= false
-                local remains = 0
-                if showTime and ability and ability.id and type(GetSpellCooldown) == "function" then
-                    local start, duration = GetSpellCooldown(ability.id)
-                    if start and duration and duration > 0 then
-                        remains = (start + duration) - GetTime()
-                        if remains < 0 then
-                            remains = 0
-                        end
-                    end
-                end
-                local gcdRem = (DH.State and DH.State.gcd_remains) or 0
-                if remains > 0.05 then
-                    if remains >= 10 then
-                        slot.cd:SetText(string.format("%d", math.ceil(remains)))
-                    else
-                        slot.cd:SetText(string.format("%.1f", remains))
-                    end
-                elseif i == 1 and showGCD and gcdRem > 0.05 then
-                    slot.cd:SetText(string.format("%.1f", gcdRem))
-                else
-                    slot.cd:SetText("")
-                end
-                if slot.cd:GetText() == nil then
-                    slot.cd:SetText("")
-                end
-            end
+            UpdateCooldownText(slot, i, ability and ability.id)
 
             -- Prompt 3.2: animated appear / crossfade, or a plain snap when
             -- animations are off, the CPU is busy, or icons change too fast.
@@ -1273,6 +1353,8 @@ function ns.UpdateSpellFrame(recs)
             slot.tipReason = rec.reason
         else
             slot.tipName, slot.tipId, slot.tipReason = nil, nil, nil
+            slot.moveActive = false
+            slot.posX, slot.posY = nil, nil
             -- Prompt 3.2: fade the outgoing icon, then hide it.
             if slot.animActive and slot.animTarget == 0 then
                 -- already fading out: let it finish
@@ -2321,3 +2403,64 @@ end
 function ns.IsMoveMode()
     return ns.moveMode
 end
+
+-- Debug: /rc queuediag prints the settings and the actual recommendation
+-- list behind the icon window, so a one-icon report can be diagnosed quickly.
+function ns.GetRenderedSlotCount()
+    local n = 0
+    for i = 1, MAX_SLOTS do
+        local slot = slots[i]
+        if slot and slot:IsShown() and slot.tipName then
+            n = n + 1
+        end
+    end
+    return n
+end
+
+DH:RegisterSlashCommand("queuediag", function()
+    if DH.UpdateRecommendations then
+        DH:UpdateRecommendations()
+    end
+    local recs = ns.recommendations or {}
+    local display = DH.db and DH.db.display and DH.db.display.spellframe_icons
+    local common = DH.GetSetting and DH:GetSetting("spellframe_icons")
+    local explicit = DH.db and DH.db.display and DH.db.display.spellframe_icons_explicit
+    local n = (DH.GetSpellFrameIconCount and DH:GetSpellFrameIconCount()) or 3
+    local showPrimary = DH.db and DH.db.display and DH.db.display.show_spellframe ~= false
+    local cooldownsShown = ns.cooldownsFrame and ns.cooldownsFrame:IsShown()
+    DH:Print(string.format(
+        "Queue: icons=%d (display=%s explicit=%s common=%s), recs=%d, rendered=%d, primary=%s shown=%s, cooldowns=%s, mode=%s",
+        n,
+        tostring(display),
+        tostring(explicit),
+        tostring(common),
+        #recs,
+        ns.GetRenderedSlotCount and ns.GetRenderedSlotCount() or -1,
+        tostring(showPrimary),
+        frame and tostring(frame:IsShown()) or "nil",
+        tostring(cooldownsShown),
+        tostring(DH.db and DH.db.mode)
+    ))
+    local parts = {}
+    for i = 1, math.min(#recs, 10) do
+        parts[#parts + 1] = i .. ":" .. tostring(recs[i].ability) .. (recs[i].execute and "!" or "")
+    end
+    DH:Print("Queue abilities: " .. (#parts > 0 and table.concat(parts, ", ") or "none"))
+    local target = UnitExists and UnitExists("target") and true or false
+    local combat = ns.inCombat or (UnitAffectingCombat and UnitAffectingCombat("player")) or false
+    local paused = DH.db and DH.db.paused and true or false
+    local enabled = DH.db and DH.db.enabled ~= false
+    local idle = ns.GetIdleReason and ns.GetIdleReason() or nil
+    DH:Print(string.format(
+        "Queue state: target=%s combat=%s paused=%s enabled=%s exam=%s idle=%s",
+        tostring(target),
+        tostring(combat),
+        tostring(paused),
+        tostring(enabled),
+        tostring(DH.GetSetting and DH:GetSetting("exam_mode") == true),
+        tostring(idle)
+    ))
+    if #recs == 0 then
+        DH:Print("Queue is empty (no attackable target / out of combat). The Cooldowns window is a separate window and still lists cooldowns.")
+    end
+end, "queuediag - show queue icon count and recommendations")

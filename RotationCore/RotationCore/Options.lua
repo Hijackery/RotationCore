@@ -975,23 +975,15 @@ local function BuildGeneral()
         return not (DH.db and DH.db.auto_mode)
     end)
     AddInfo(CurrentModeText())
-
-    AddHeader("Targets")
     AddDropdown("Build detection", STRING_CHOICES.build_detect_mode, function()
         return (DH.GetSetting and DH:GetSetting("build_detect_mode")) or "talents_glyphs_stats"
     end, function(v)
         DH:SetSetting("build_detect_mode", v)
         DH:NotifyOptions()
     end)
-    AddCheckbox("Show option tooltips", function()
-        return DH.GetSetting and DH:GetSetting("show_tooltips") ~= false
-    end, function(v)
-        DH:SetSetting("show_tooltips", v)
-    end)
-
     AddHeader("Targets")
     AddDropdown("Target mode", STRING_CHOICES.target_mode, function()
-        return (DH.GetSetting and DH:GetSetting("target_mode")) or "single"
+        return (DH.GetSetting and DH:GetSetting("target_mode")) or "auto"
     end, function(v)
         DH:SetSetting("target_mode", v)
         DH:NotifyOptions()
@@ -1002,7 +994,7 @@ local function BuildGeneral()
         DH:SetSetting("aoe_threshold", v)
         DH:NotifyOptions()
     end, function()
-        local m = (DH.GetSetting and DH:GetSetting("target_mode")) or "single"
+        local m = (DH.GetSetting and DH:GetSetting("target_mode")) or "auto"
         return m == "auto" or m == "aoe"
     end)
     AddSlider("Cleave threshold (enemies)", 2, 6, 1, function()
@@ -1011,7 +1003,7 @@ local function BuildGeneral()
         DH:SetSetting("cleave_threshold", v)
         DH:NotifyOptions()
     end, function()
-        local m = (DH.GetSetting and DH:GetSetting("target_mode")) or "single"
+        local m = (DH.GetSetting and DH:GetSetting("target_mode")) or "auto"
         return m == "auto" or m == "cleave"
     end)
 
@@ -1120,21 +1112,11 @@ local function BuildGeneral()
         DH:SetSetting("menu_mode", v)
         DH:NotifyOptions()
     end)
-    AddDropdown("Theme", STRING_CHOICES.theme, function()
-        return (DH.GetSetting and DH:GetSetting("theme")) or "class"
+    AddCheckbox("Show option tooltips", function()
+        return DH.GetSetting and DH:GetSetting("show_tooltips") ~= false
     end, function(v)
-        DH:SetSetting("theme", v)
-        DH:NotifyOptions()
+        DH:SetSetting("show_tooltips", v)
     end)
-    AddColorRow("Accent color", function()
-        local c = (DH.GetSetting and DH:GetSetting("theme_custom_color")) or { 1, 0.82, 0 }
-        return c[1] or 1, c[2] or 0.82, c[3] or 0
-    end, function(r, g, b)
-        DH:SetSetting("theme_custom_color", { r, g, b })
-    end, nil, function()
-        DH:SetSetting("theme", "custom")
-    end)
-    AddInfo(L("Editing a colour switches the palette to Custom."))
 end
 
 local function BuildSpellQueue()
@@ -1150,10 +1132,10 @@ local function BuildSpellQueue()
     end)
 
     AddSlider("Number of icons", 1, 10, 1, function()
-        return (DH.db and DH.db.display and DH.db.display.spellframe_icons) or 3
+        return (DH.GetSpellFrameIconCount and DH:GetSpellFrameIconCount()) or 3
     end, function(v)
-        if DH.db and DH.db.display then
-            DH.db.display.spellframe_icons = v
+        if DH.SetSpellFrameIconCount then
+            DH:SetSpellFrameIconCount(v)
         end
         if DH.UpdateUI then DH:UpdateUI() end
     end)
@@ -1169,6 +1151,14 @@ local function BuildSpellQueue()
     end, function(v)
         DH:SetSetting("icon_gap", v)
     end)
+
+    AddCheckbox("Adapt queue to target HP", function()
+        return (DH.GetSetting and DH:GetSetting("adaptive_queue")) ~= false
+    end, function(v)
+        DH:SetSetting("adaptive_queue", v)
+        if DH.UpdateUI then DH:UpdateUI() end
+    end)
+    AddInfo("Shows only the casts likely needed to finish the target; AoE uses the pack's total HP.")
 
     AddCheckbox("Show keybind", function()
         return (DH.GetSetting and DH:GetSetting("show_keybind")) ~= false
@@ -1191,11 +1181,9 @@ local function BuildSpellQueue()
     end)
 
     AddCheckbox("Show priority numbers", function()
-        return (DH.db and DH.db.display and DH.db.display.show_numbers) == true
+        return (DH.GetSetting and DH:GetSetting("show_priority_numbers")) == true
     end, function(v)
-        if DH.db and DH.db.display then
-            DH.db.display.show_numbers = v
-        end
+        DH:SetSetting("show_priority_numbers", v)
         if DH.UpdateUI then DH:UpdateUI() end
     end)
 end
@@ -1267,6 +1255,21 @@ end
 -- Prompt 3.1: colour palettes (improvement 1).
 local function BuildColors()
     AddHeader("Colors")
+    AddDropdown("Theme", STRING_CHOICES.theme, function()
+        return (DH.GetSetting and DH:GetSetting("theme")) or "class"
+    end, function(v)
+        DH:SetSetting("theme", v)
+        DH:NotifyOptions()
+    end)
+    AddColorRow("Accent color", function()
+        local c = (DH.GetSetting and DH:GetSetting("theme_custom_color")) or { 1, 0.82, 0 }
+        return c[1] or 1, c[2] or 0.82, c[3] or 0
+    end, function(r, g, b)
+        DH:SetSetting("theme_custom_color", { r, g, b })
+    end, nil, function()
+        DH:SetSetting("theme", "custom")
+    end)
+    AddInfo(L("Editing a colour switches the palette to Custom."))
     AddDropdown("Color palette", STRING_CHOICES.color_palette, function()
         return (DH.GetSetting and DH:GetSetting("color_palette")) or "default"
     end, function(v)
@@ -1285,6 +1288,12 @@ local function BuildAnimations()
         return (DH.GetSetting and DH:GetSetting("animations_enabled")) ~= false
     end, function(v)
         DH:SetSetting("animations_enabled", v)
+        DH:UpdateUI()
+    end)
+    AddSlider("Animation speed", 0.5, 2.0, 0.1, function()
+        return (DH.GetSetting and DH:GetSetting("animation_speed")) or 1.0
+    end, function(v)
+        DH:SetSetting("animation_speed", v)
         DH:UpdateUI()
     end)
     AddInfo("Icons fade in (0.2s), crossfade on change (0.15s), fade out (0.15s).")
@@ -1326,103 +1335,8 @@ local function BuildLayout()
 end
 
 
-local function BuildIconWindow()
-    AddHeader("Icon window options")
-    AddCheckbox("Show icon window", function()
-        return DH.db.display.show_spellframe ~= false
-    end, function(v)
-        DH.db.display.show_spellframe = v
-        DH:UpdateUI()
-    end)
-    AddCheckbox("Compact (icons only, no frame)", function()
-        return (DH.GetSetting and DH:GetSetting("spellframe_compact")) == true
-    end, function(v)
-        DH:SetSetting("spellframe_compact", v)
-        DH:UpdateUI()
-    end)
-
-    AddSlider("Icon window icons", 1, 10, 1, function()
-        return DH.db.display.spellframe_icons or 3
-    end, function(v)
-        DH.db.display.spellframe_icons = v
-        DH:UpdateUI()
-    end)
-
-    AddCheckbox("Hide icon window out of combat", function()
-        return (DH.GetSetting and DH:GetSetting("spellframe_combat_only")) == true
-    end, function(v)
-        DH:SetSetting("spellframe_combat_only", v)
-        DH:UpdateUI()
-    end)
-
-    AddSlider("Icon window scale", 0.5, 2.5, 0.1, function()
-        return DH.db.display.spellframe_scale or 1
-    end, function(v)
-        DH.db.display.spellframe_scale = v
-        DH:UpdateUI()
-    end)
-
-    AddDropdown("Font", ns.ListFonts and ns.ListFonts() or { { value = "default", text = "Default" } }, function()
-        return (DH.GetSetting and DH:GetSetting("spellframe_font")) or "default"
-    end, function(v)
-        DH:SetSetting("spellframe_font", v)
-        DH:UpdateUI()
-    end)
-    AddSlider("Font size", 8, 24, 1, function()
-        local s = DH.GetSetting and DH:GetSetting("spellframe_font_size")
-        if not s or s < 8 then return 12 end
-        return s
-    end, function(v)
-        DH:SetSetting("spellframe_font_size", v)
-        DH:UpdateUI()
-    end)
-    AddInfo("Fonts come from LibSharedMedia when it is installed.")
-
-    AddButton("Reset icon window position", function()
-        if DH.db.spellFrame then
-            DH.db.spellFrame.x = 0
-            DH.db.spellFrame.y = -250
-        end
-        if ns.RefreshSpellFrame then
-            ns.RefreshSpellFrame()
-        end
-        DH:Print(L("Icon window position reset."))
-    end, 220)
-
-    AddInfo("Drag the window to move it - the position is saved per profile.")
-
-
-    AddHeader("Icon window text")
-    AddCheckbox("Show idle reason when nothing to do", function()
-        return (DH.GetSetting and DH:GetSetting("show_idle_reason")) ~= false
-    end, function(v)
-        DH:SetSetting("show_idle_reason", v)
-        DH:UpdateUI()
-    end)
-
-    AddCheckbox("Show target-mode indicator (S/A/Au)", function()
-        return (DH.GetSetting and DH:GetSetting("show_mode_indicator")) ~= false
-    end, function(v)
-        DH:SetSetting("show_mode_indicator", v)
-        DH:UpdateUI()
-    end)
-
-    AddCheckbox("Show priority color legend", function()
-        return (DH.GetSetting and DH:GetSetting("show_color_legend")) ~= false
-    end, function(v)
-        DH:SetSetting("show_color_legend", v)
-        DH:NotifyOptions()
-    end)
-
-    if (DH.GetSetting and DH:GetSetting("show_color_legend")) ~= false then
-        AddColorInfo("1 - press now", 0.15, 1.0, 0.15)
-        AddColorInfo("2 - next", 1.0, 0.85, 0.10)
-        AddColorInfo("3 - after that", 0.25, 0.60, 1.0)
-    end
-end
-
 local function BuildAdvanced()
-    AddNote(L("Action-bar scanner, extras and animation timers."))
+    AddNote(L("Optional panels and fine tooltip timing."))
     AddHeader("Extras")
     AddCheckbox("Enemy counter", function()
         return (DH.GetSetting and DH:GetSetting("enemy_count_enabled")) ~= false
@@ -1465,19 +1379,7 @@ local function BuildAdvanced()
     end, function()
         return (DH.GetSetting and DH:GetSetting("show_tooltips")) ~= false
     end)
-    AddSlider("Animation speed", 0.5, 2.0, 0.1, function()
-        return (DH.GetSetting and DH:GetSetting("animation_speed")) or 1.0
-    end, function(v)
-        DH:SetSetting("animation_speed", v)
-    end)
-    AddInfo("These fine-tuning sliders were moved here to keep General/Display simple.")
-
-    AddHeader("Action bar scanner")
-    AddButton("Test glow on action bars", function()
-        if ns.ShowTestGlow then
-            ns.ShowTestGlow()
-        end
-    end, 220)
+    AddInfo(L("These fine-tuning sliders were moved here to keep General/Display simple."))
 end
 
 local function BuildCoaching()
@@ -2230,13 +2132,14 @@ local function BuildHelp()
     AddInfo("Menu mode (General) picks Simple (main tabs) or Advanced (all tabs).")
     AddInfo("General - enable, build, targets, activity, cooldowns, alerts, interface.")
     AddInfo("Display - queue, icon window, highlight, colours, animations and layout.")
+    AddInfo("Adaptive queue shortens the forecast when the target is about to die (Display > Spell queue).")
     AddInfo("Training - training mode, exam and mentor, learning stats.")
     AddInfo("Healer - heal assist, group health and heal-DPS (visible to all; editable by healer classes).")
     AddInfo("Class - per-class rotation options and rotation complexity.")
     AddInfo("Coaching - custom priorities (APL), DPS forecast, class pulse.")
     AddInfo("Timeline - boss timeline window, deep DBM/BigWigs phases, burst countdown.")
     AddInfo("System - arena and interface style.")
-    AddInfo("Advanced - action-bar scanner, extras, timers and fine-tuning.")
+    AddInfo("Advanced - extras, tooltip timing and fine-tuning.")
     AddInfo("Status - version, live addon state, integrations, conflicts, diagnostics.")
     AddInfo("Profiles - switch or create a profile; advanced options add import/export, per-spec and boss profiles.")
     AddInfo("Help - this page.")
@@ -2280,8 +2183,8 @@ local function BuildHelp()
     AddNote("Profile import is parsed safely - no code is executed from the text.")
 
     AddHeader("G. Look and feel")
-    AddInfo("Theme presets: Class color, Dark, Light, High contrast (General > Theme).")
-    AddInfo("Custom palette: choose any accent colour applied to all windows (General > Interface).")
+    AddInfo("Theme presets: Class color, Dark, Light, High contrast (Display > Colors).")
+    AddInfo("Custom palette: choose any accent colour applied to all windows (Display > Colors).")
     AddInfo("Compact icon window and a unified window font (Advanced / System).")
     AddInfo("Colourblind-friendly priority palette (Display > Highlight).")
     AddInfo("Background style presets (default / matte) in System > Interface style.")
@@ -2391,6 +2294,11 @@ local function BuildDisplayGlow()
         DH:SetSetting("glow_frequency", v)
         DH:UpdateUI()
     end)
+    AddButton("Test glow on action bars", function()
+        if ns.ShowTestGlow then
+            ns.ShowTestGlow()
+        end
+    end, 220)
 end
 
 local function BuildDisplayExtras()

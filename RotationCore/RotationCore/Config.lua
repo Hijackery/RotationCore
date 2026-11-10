@@ -144,17 +144,43 @@ end
 ns.SmoothRecommendations = function(newRecs)
     local now = GetTime()
 
-    local sig = (newRecs[1] and newRecs[1].ability or "-") .. "|" ..
-                (newRecs[2] and newRecs[2].ability or "-") .. "|" ..
-                (newRecs[3] and newRecs[3].ability or "-")
+    local sigParts = {}
+    for i = 1, math.min(#newRecs, 10) do
+        local rec = newRecs[i]
+        sigParts[i] = (rec and rec.ability or "-") .. ((rec and rec.execute) and "!" or "")
+    end
+    local sig = table.concat(sigParts, "|")
     if sig == smoothCache.sig and now < smoothCache.safeUntil then
         return smoothCache.result
+    end
+
+    -- The simulation may deliberately repeat a filler to fill the queue.
+    -- Preserve that sequence exactly; the old duplicate filter would drop
+    -- the second Frostbolt/Shadow Bolt and leave holes in the window.
+    local seen = {}
+    local hasDuplicates = false
+    for i = 1, #newRecs do
+        local key = newRecs[i].ability
+        if seen[key] then
+            hasDuplicates = true
+            break
+        end
+        seen[key] = true
+    end
+    if hasDuplicates then
+        smoothCache.sig = sig
+        smoothCache.result = newRecs
+        smoothCache.safeUntil = 0
+        return newRecs
     end
 
     local smoothed = {}
     local used = {}  -- Prevent same ability in multiple slots
 
-    for i = 1, 3 do
+    for i = 1, math.max(#newRecs, 3) do
+        if i > 3 then
+            smoothed[i] = newRecs[i]
+        else
         local newAbility = newRecs[i] and newRecs[i].ability or nil
         local oldAbility = smoothState.abilities[i]
         local lastChange = smoothState.changeTime[i] or 0
@@ -206,6 +232,7 @@ ns.SmoothRecommendations = function(newRecs)
                 smoothState.abilities[i] = smoothed[i] and smoothed[i].ability or nil
                 smoothState.changeTime[i] = now
             end
+        end
         end
     end
 

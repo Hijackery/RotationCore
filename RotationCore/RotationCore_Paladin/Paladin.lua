@@ -436,6 +436,10 @@ DH:RegisterFallbackAbilities({
     "crusader_strike", "exorcism", "judgement_of_light",
 })
 
+DH:RegisterExecutors("ret", {
+    { key = "hammer_of_wrath", below = 20, finish = true, instant = true },
+})
+
 -- Buffs whose rising edge plays the proc sound (see DH:RegisterProcBuff).
 DH:RegisterProcBuff("art_of_war")
 

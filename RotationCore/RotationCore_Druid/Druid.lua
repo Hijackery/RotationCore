@@ -644,6 +644,17 @@ DH:RegisterFallbackAbilities({
     "wrath", "moonfire", "shred", "maul",
 })
 
+local function biteReady(sim)
+    return sim.cp == 5 and (sim.energy or 0) >= (sim.berserk and 17 or 35)
+end
+
+DH:RegisterExecutors("feral_cat", {
+    { key = "ferocious_bite", below = 20, finish = true, require = biteReady },
+})
+DH:RegisterExecutors("feral_cat_bearweave", {
+    { key = "ferocious_bite", below = 20, finish = true, require = biteReady },
+})
+
 -- Buffs whose rising edge plays the proc sound (see DH:RegisterProcBuff).
 DH:RegisterProcBuff("clearcasting")
 

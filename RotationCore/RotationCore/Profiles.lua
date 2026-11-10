@@ -100,12 +100,16 @@ local coreDefaults = {
         log_max_lines = 1000,
         icon_size = 36,
         icon_gap = 4,
-        icon_columns = 3,
         orientation = "horizontal", -- "horizontal" (row) / "vertical" (column)
-        spellframe_icons = 3, -- how many queue icons are drawn (1-10)
+        adaptive_queue = true, -- shorten the queue by estimated target HP
+        glow_frequency = 1.0,
+        glow_lines = 1,
+        glow_thickness = 1.5,
+        guide_marker = false,
+        spellframe_font = "default",
+        spellframe_font_size = 0,
         show_gcd_timer = true, -- show the global-cooldown sweep timer
         show_time = true, -- show the remaining-time text on icons
-        show_priority_numbers = false, -- overlay the priority index on each icon
         show_background = true, -- draw the backdrop behind the queue window
         show_border = true, -- draw the border around the queue window
         show_title = true, -- show the window title text
@@ -227,6 +231,10 @@ local coreDefaults = {
         auto_activity = true, -- auto-adjust activity (raid/dungeon/pvp/world)
     },
 }
+
+-- Single source of truth for the shared `common` defaults. Class addons
+-- merge their extras onto this table instead of keeping a second copy.
+ns.coreCommonDefaults = coreDefaults.common
 
 -- Deep copy function for defaults
 local function DeepCopy(orig)

@@ -4,6 +4,9 @@
 mock = {
     class = "Druid",
     classTag = "DRUID",
+    level = 80,
+    spellbook = {},
+    spellNames = {},
     group = false,
     party = {},
     raid = {},
@@ -92,6 +95,13 @@ function UnitIsUnit(a, b)
     return a == b
 end
 
+function UnitLevel(unit)
+    if unit == "player" then
+        return mock.level or 80
+    end
+    return 0
+end
+
 function UnitHealth(unit)
     return mock.health[unit] or 100
 end
@@ -165,7 +175,7 @@ function IsSpellKnown(id)
 end
 
 function GetSpellInfo(id)
-    return "Spell " .. tostring(id), nil, 134400
+    return mock.spellNames[id] or ("Spell " .. tostring(id)), nil, 134400
 end
 
 function GetSpellCooldown(id)
@@ -178,6 +188,10 @@ end
 
 function IsSpellInRange()
     return 1
+end
+
+function CheckInteractDistance()
+    return true
 end
 
 function UnitInRange()
@@ -201,11 +215,27 @@ function GetShapeshiftForm()
 end
 
 function GetNumSpellTabs()
-    return 0
+    return #mock.spellbook > 0 and 1 or 0
 end
 
-function GetSpellTabInfo()
-    return nil
+function GetSpellTabInfo(tab)
+    if tab ~= 1 or #mock.spellbook == 0 then
+        return nil
+    end
+    return "General", "", 0, #mock.spellbook
+end
+
+function GetSpellBookItemName(index)
+    local entry = mock.spellbook[index]
+    return entry and entry.name or nil
+end
+
+function GetSpellBookItemInfo(index)
+    local entry = mock.spellbook[index]
+    if not entry then
+        return nil
+    end
+    return "SPELL", entry.id
 end
 
 function IsAddOnLoaded()

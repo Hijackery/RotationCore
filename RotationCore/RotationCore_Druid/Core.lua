@@ -302,6 +302,11 @@ local function GetNextCatAbility()
         return "mangle_cat"
     end
 
+    local executor = DH:PickExecutor(sim, sim._spec or "feral_cat")
+    if executor then
+        return executor
+    end
+
     -- Priority 5: Rip at 5 CP when needs refresh
     if sim.cp == 5 and rip_needs_refresh and sim.ttd >= 10 and sim.energy >= rip_cost and not bite_at_end then
         return "rip"

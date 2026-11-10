@@ -29,6 +29,7 @@ local arcaneConfig = {
         presence_of_mind = "presence_of_mind",
         mirror_image = "mirror_image",
         evocation = "evocation",
+        fire_blast = "fire_blast",
     },
     baseCDs = {
         arcane_power = 120,
@@ -36,6 +37,7 @@ local arcaneConfig = {
         presence_of_mind = 120,
         mirror_image = 180,
         evocation = 240,
+        fire_blast = 8,
     },
     initState = function(sim, s)
         -- Arcane Blast stacks
@@ -116,6 +118,11 @@ local arcaneConfig = {
             return "presence_of_mind"
         end
 
+        local executor = DH:PickExecutor(sim, "arcane")
+        if executor then
+            return executor
+        end
+
         -- Build stacks with Arcane Blast
         return "arcane_blast"
     end,
@@ -165,12 +172,14 @@ local fireConfig = {
         blast_wave = "blast_wave",
         mirror_image = "mirror_image",
         evocation = "evocation",
+        fire_blast = "fire_blast",
     },
     baseCDs = {
         combustion = 120,
         blast_wave = 30,
         mirror_image = 180,
         evocation = 240,
+        fire_blast = 8,
     },
     auras = {
         { up = "living_bomb_up", remains = "living_bomb_remains" },
@@ -273,6 +282,11 @@ local fireConfig = {
             return is_ffb and "frostfire_bolt" or "fireball"
         end
 
+        local executor = DH:PickExecutor(sim, "fire")
+        if executor then
+            return executor
+        end
+
         -- Fireball filler (Frostfire Bolt for FFB builds)
         if is_ffb then
             return "frostfire_bolt"
@@ -341,6 +355,7 @@ local frostConfig = {
         cone_of_cold = "cone_of_cold",
         mirror_image = "mirror_image",
         evocation = "evocation",
+        fire_blast = "fire_blast",
     },
     baseCDs = {
         icy_veins = 180,
@@ -349,6 +364,7 @@ local frostConfig = {
         cone_of_cold = 10,
         mirror_image = 180,
         evocation = 240,
+        fire_blast = 8,
     },
     initState = function(sim, s)
         -- Procs
@@ -429,6 +445,11 @@ local frostConfig = {
         -- Fingers of Frost: Ice Lance (instant, 3x damage)
         if sim.has_fof and sim.fingers_of_frost and sim.fof_stacks > 0 then
             return "ice_lance"
+        end
+
+        local executor = DH:PickExecutor(sim, "frost_mage")
+        if executor then
+            return executor
         end
 
         -- Frostbolt filler
