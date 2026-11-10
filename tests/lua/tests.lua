@@ -293,8 +293,15 @@ if findMode("frost_mage") then
     mock.spellNames[ns.SPELLS.FIRE_BLAST] = "Fire Blast"
     mock.spellbook = { { name = "Fire Blast", id = 133 } }
     DH:InvalidateKnownSpells()
-    check("Known-spell fallback: low-rank Fire Blast is known", DH:IsAbilityKnown("fire_blast"), "lower rank not resolved")
-    check("Known-spell fallback: max rank resolves to learned rank", DH:ResolveKnownSpellId(ns.SPELLS.FIRE_BLAST) == 133)
+    check(
+        "Known-spell fallback: low-rank Fire Blast is known",
+        DH:IsAbilityKnown("fire_blast"),
+        "lower rank not resolved"
+    )
+    check(
+        "Known-spell fallback: max rank resolves to learned rank",
+        DH:ResolveKnownSpellId(ns.SPELLS.FIRE_BLAST) == 133
+    )
 end
 
 -- Paladin: Hammer of Wrath is selected and the shared simulation marks it.
@@ -321,7 +328,10 @@ if findMode("ret") then
         end,
     }
     local recs = DH:RunSimulation(DH.State, cfg)
-    check("Paladin ret: Hammer of Wrath marked execute", recs[1] and recs[1].ability == "hammer_of_wrath" and recs[1].execute == true)
+    check(
+        "Paladin ret: Hammer of Wrath marked execute",
+        recs[1] and recs[1].ability == "hammer_of_wrath" and recs[1].execute == true
+    )
 end
 
 -- Mage: Fire Blast is the instant finisher, not a normal filler.
@@ -348,7 +358,10 @@ if findMode("frost_mage") then
         end,
     }
     local recs = DH:RunSimulation(DH.State, cfg)
-    check("Mage frost: Fire Blast marked execute", recs[1] and recs[1].ability == "fire_blast" and recs[1].execute == true)
+    check(
+        "Mage frost: Fire Blast marked execute",
+        recs[1] and recs[1].ability == "fire_blast" and recs[1].execute == true
+    )
     sim.target_pct = 80
     sim.target_health = 100000
     check("Mage frost: Fire Blast idle at 80%", DH:PickExecutor(sim, "frost_mage") == nil)
@@ -419,10 +432,17 @@ if DH.Class and DH.Class.abilities then
     end
 
     DH.GetActiveMode = function()
-        return { key = "queue_test", rotation = function() return stubRecs end }
+        return {
+            key = "queue_test",
+            rotation = function()
+                return stubRecs
+            end,
+        }
     end
     DH.UpdateState = function() end
-    DH.IsSimpleRotation = function() return true end
+    DH.IsSimpleRotation = function()
+        return true
+    end
     ns.UpdateDPSForecast = function() end
     ns.RecordRecommendations = function() end
     DH.db = {
@@ -435,7 +455,11 @@ if DH.Class and DH.Class.abilities then
     mock.enemies.target = true
     ns.ResetSmoothing()
     local out = DH:UpdateRecommendations()
-    check("Queue: simple rotation keeps the multi-icon queue", type(out) == "table" and #out == 5, "queue was truncated")
+    check(
+        "Queue: simple rotation keeps the multi-icon queue",
+        type(out) == "table" and #out == 5,
+        "queue was truncated"
+    )
 
     DH.GetActiveMode = oldGetActiveMode
     DH.UpdateState = oldUpdateState

@@ -502,12 +502,7 @@ function DH:RunSimulation(s, config)
         end
         local ability = self.Class.abilities[last.ability]
         local baseCD = config.baseCDs and config.baseCDs[last.ability]
-        if
-            not ability
-            or not ability.id
-            or ability.execute == true
-            or (type(baseCD) == "number" and baseCD > 0)
-        then
+        if not ability or not ability.id or ability.execute == true or (type(baseCD) == "number" and baseCD > 0) then
             break
         end
         table.insert(recommendations, {
